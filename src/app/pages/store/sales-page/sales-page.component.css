@@ -1,0 +1,29 @@
+.payment-credit {
+  background-color: #2196f3; /* Roxo claro */
+  color: #1b3d9a; /* Roxo escuro */
+}
+
+.payment-cash {
+  background-color: #34913c; /* Verde claro */
+  color: #2e7d32; /* Verde escuro */
+}
+
+.payment-pix {
+  background-color: #d6790e; /* Azul claro */
+  color: #aa7f21; /* Azul escuro */
+}
+
+.payment-debit {
+  background-color: #d8c40e; /* Amarelo claro */
+  color: #f5e500; /* Laranja escuro */
+}
+
+.payment-total {
+  background-color: #726d6d; /* Cinza claro */
+  color: #424242; /* Preto */
+}
+
+.payment-others {
+  background-color: #524d4d; /* Cinza neutro */
+  color: #616161; /* Cinza escuro */
+}
