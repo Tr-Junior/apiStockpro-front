@@ -1,0 +1,217 @@
+import { Component } from '@angular/core';
+import { Budget } from '../../../../models/budget-model';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { DataService } from '../../../../services/data.service';
+import { BoxService } from '../../../../services/box.Service';
+import { ImportsService } from '../../../../services/imports.service';
+
+@Component({
+  selector: 'app-budget-page',
+  standalone: true,
+  imports: [ImportsService.imports],
+  providers: [ImportsService.providers, DataService],
+  templateUrl: './budget-page.component.html',
+  styleUrl: './budget-page.component.css'
+})
+export class BudgetPageComponent {
+  public boxItems: any[] = [];
+  public products: any[] = [];
+  public subtotal: number = 0;
+  public grandTotal: number = 0;
+  public generalDiscount: number = 0;
+  public busy = false;
+  public budgets: Budget[] = [];
+  public customerName: string = '';
+  public clonedBudgets: { [s: string]: Budget } = {};
+
+  quantityDialogVisible: boolean = false;
+  selectedBudget: Budget | null = null;
+  selectedItem: any = null;
+  quantityToRemove: number = 1;
+
+  constructor(
+    private messageService: MessageService,
+    private service: DataService,
+    private confirmationService: ConfirmationService,
+    private boxService: BoxService
+  ) {}
+
+  async ngOnInit() {
+    await this.loadBox();
+    this.listBudget();
+  }
+
+  async loadBox() {
+    this.boxItems = await this.boxService.getItems();
+    this.calculateTotals();
+  }
+
+  calculateTotals() {
+    this.subtotal = this.boxItems.reduce((total, item) => total + item.price * item.quantity, 0);
+    this.grandTotal = this.subtotal - this.generalDiscount;
+  }
+
+  listBudget() {
+    this.busy = true;
+    this.service.getBudget().subscribe({
+      next: (data: Budget[]) => {
+        this.busy = false;
+        this.budgets = data;
+      },
+      error: (err: any) => {
+        this.busy = false;
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: err.message });
+      }
+    });
+  }
+
+  onRowEditInit(budget: Budget) {
+    this.clonedBudgets[budget.number] = { ...budget };
+  }
+
+  onRowEditSave(budget: Budget) {
+    if (budget.client.trim()) {
+      this.service.updateClientName({ id: budget._id, client: budget.client }).subscribe({
+        next: () => {
+          delete this.clonedBudgets[budget.number];
+          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Nome do cliente atualizado com sucesso' });
+        },
+        error: (err: any) => {
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: err.message });
+        }
+      });
+    } else {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'O nome do cliente é obrigatório.' });
+    }
+  }
+
+  onRowEditCancel(budget: Budget, index: number) {
+    this.budgets[index] = this.clonedBudgets[budget.number];
+    delete this.clonedBudgets[budget.number];
+  }
+
+  openQuantityModal(budget: Budget, item: any) {
+    this.selectedBudget = budget;
+    this.selectedItem = item;
+    this.quantityToRemove = 1;
+    this.quantityDialogVisible = true;
+  }
+
+  confirmQuantity() {
+    if (this.selectedBudget && this.selectedItem) {
+      this.removeItemFromBudget(this.selectedBudget, this.selectedItem._id, this.quantityToRemove);
+      this.quantityDialogVisible = false;
+    }
+  }
+
+  removeItemFromBudget(budget: Budget, itemId: string, quantityToRemove: number) {
+    this.service.removeItemFromBudget(budget._id, itemId, quantityToRemove).subscribe({
+      next: () => {
+        const item = budget.budget.items.find(item => item._id === itemId);
+        if (item && item.quantity > quantityToRemove) {
+          item.quantity -= quantityToRemove;
+        } else {
+          budget.budget.items = budget.budget.items.filter(item => item._id !== itemId);
+        }
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Quantidade removida com sucesso!' });
+      },
+      error: (err: any) => {
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: err.message });
+      }
+    });
+  }
+
+  calculateTotalO(items: any[]): number {
+    return items.reduce((total, item) => total + item.price * item.quantity, 0);
+  }
+
+  confirmDelete(budget: Budget) {
+    if (!budget) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Orçamento inválido para exclusão' });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `Deseja realmente excluir o orçamento de ${budget.client}?`,
+      header: 'Atenção',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        const index = this.budgets.indexOf(budget);
+        if (index !== -1) {
+          this.removeBudget(index);
+        } else {
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Orçamento não encontrado' });
+        }
+      },
+      reject: () => {
+        this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'A exclusão foi cancelada' });
+      }
+    });
+  }
+
+  removeBudget(index: number) {
+    if (index < 0 || index >= this.budgets.length) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Índice inválido para exclusão' });
+      return;
+    }
+
+    const budget = this.budgets[index];
+    if (!budget || !budget._id) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Orçamento inválido para exclusão' });
+      return;
+    }
+
+    this.service.delBudget(budget._id).subscribe({
+      next: () => {
+        this.budgets.splice(index, 1);
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Orçamento removido com sucesso' });
+      },
+      error: (err: any) => {
+        console.error('Erro ao excluir orçamento:', err);
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: err.message });
+      }
+    });
+  }
+
+  async addBudgetToBox(budget: any) {
+    const items = budget.budget.items;
+
+    for (const item of items) {
+      try {
+        const productDetails = await this.service.getProductById(item.product).toPromise();
+
+        if (!productDetails) {
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Produto não encontrado!' });
+          return;
+        }
+
+        const boxItem = {
+          _id: productDetails._id,
+          title: productDetails.title,
+          price: productDetails.price,
+          quantity: item.quantity,
+          discount: 0
+        };
+
+        await this.boxService.addItem(boxItem);
+      } catch (error) {
+        console.error('Erro ao adicionar item à caixa:', error);
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao adicionar item à caixa' });
+        return;
+      }
+    }
+
+    try {
+      this.removeBudget(this.budgets.indexOf(budget));
+      this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Orçamento adicionado à caixa!' });
+      await this.loadBox();
+      await this.listBudget();
+    } catch (error) {
+      console.error('Erro ao finalizar a adição do orçamento:', error);
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao processar o orçamento' });
+    }
+  }
+
+
+  generatePDF(budget: any){}
+}
