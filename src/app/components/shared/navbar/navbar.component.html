@@ -25,13 +25,18 @@
         </div>
       </ng-template>
     </ng-template>
+
     <ng-template pTemplate="end">
-      <p-button label="{{ user.name }}" styleClass="p-button-link text-2xl"
-      (click)="userOverlay.toggle($event)"></p-button>
-      <p-overlayPanel #userOverlay [dismissable]="true">
-        <p-menu [model]="userItems"></p-menu>
-      </p-overlayPanel>
       <div class="flex align-items-center gap-2">
+        <div class="flex align-items-center gap-2 cursor-pointer" (click)="userOverlay.toggle($event)">
+          <p-avatar label="{{ user.name.charAt(0) }}" shape="circle" styleClass="mr-2 bg-primary text-white"></p-avatar>
+          <span class="text-lg font-semibold">{{ user.name }}</span>
+          <i class="pi pi-angle-down text-lg"></i>
+        </div>
+        <p-overlayPanel #userOverlay [dismissable]="true">
+          <p-menu [model]="userItems" class="p-menu-overlay"></p-menu>
+        </p-overlayPanel>
+
         <p-button icon="pi pi-sign-out" label="Sair" styleClass="p-button-rounded p-button-text"
           (click)="logout()"></p-button>
       </div>
