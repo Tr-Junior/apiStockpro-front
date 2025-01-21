@@ -1,0 +1,38 @@
+<div [formGroup]="form" class="card form-container p-fluid p-grid p-align-center mt-3">
+  <div class="field col">
+    <span class="font-bold block mb-1">Nome do Produto</span>
+    <input pInputText id="product" formControlName="title"
+      [ngClass]="{'uk-form-danger': (!form.controls['title'].valid && !form.controls['title'].pristine) }" />
+  </div>
+  <div class="field col">
+    <span class="font-bold block mb-1 truncate" pTooltip="Quantidade" tooltipPosition="top">Estoque</span>
+    <p-inputNumber formControlName="quantity" id="productQuantity" inputId="integeronly"
+      [ngClass]="{'uk-form-danger': (!form.controls['quantity'].valid && !form.controls['quantity'].pristine) }">
+    </p-inputNumber>
+  </div>
+  <div class="field col">
+    <span class="font-bold block mb-1">Fornecedor</span>
+    <p-autoComplete formControlName="supplier" [suggestions]="filteredSuppliers"
+      (completeMethod)="filterSuppliers($event)" (onSelect)="onSupplierSelect($event)" field="name" [dropdown]="true"
+      placeholder="Selecione um fornecedor">
+    </p-autoComplete>
+  </div>
+  <div class="field col">
+    <span class="font-bold block mb-1 truncate" pTooltip="Custo" tooltipPosition="top">Valor de compra</span>
+    <p-inputNumber formControlName="purchasePrice" inputId="currency-us" mode="currency" currency="BRL" locale="pt"
+      id="productPurchasePrice"
+      [ngClass]="{'uk-form-danger': (!form.controls['purchasePrice'].valid && !form.controls['purchasePrice'].pristine) }">
+    </p-inputNumber>
+  </div>
+  <div class="field col">
+    <span class="font-bold block mb-1 truncate" pTooltip="Valor de venda" tooltipPosition="top">Valor de venda</span>
+    <p-inputNumber formControlName="price" id="productPrice" inputId="currency-us" mode="currency" currency="BRL"
+      locale="pt" [ngClass]="{'uk-form-danger': (!form.controls['price'].valid && !form.controls['price'].pristine) }">
+    </p-inputNumber>
+  </div>
+  <div class="field col buttons-container text-center pt-5">
+    <p-button class="mr-2" icon="pi pi-check" label="Salvar" (click)="submit()" *ngIf="!busy"></p-button>
+    <p-button class="p-button-danger" label="Cancelar" icon="pi pi-times" (click)="resetForm();"
+      styleClass="p-button-danger"></p-button>
+  </div>
+</div>
