@@ -35,10 +35,15 @@ import { SplitButtonModule } from 'primeng/splitbutton';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
+import { SidebarModule } from 'primeng/sidebar';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { DividerModule } from 'primeng/divider';
 // PrimeNG Services
 import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
 import { CurrencyMaskModule } from 'ng2-currency-mask';
+import { PasswordModule } from 'primeng/password';
 
 // Registro da localidade brasileira
 registerLocaleData(localePt, 'pt-BR');
@@ -83,7 +88,12 @@ export class ImportsService {
     ReactiveFormsModule,
     CardModule,
     ChartModule,
-    OverlayPanelModule
+    PasswordModule,
+    OverlayPanelModule,
+    SidebarModule,
+    InputIconModule,
+    IconFieldModule,
+    DividerModule
   ];
 
   static providers = [
