@@ -17,7 +17,6 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 export class BuyPageComponent {
   public productsBuy: ProductsBuy[] = [];
   public busy = false;
-  public status: SelectItem[] = [];
   public form: FormGroup;
   selectedProducts: any[] = [];
   metaKeySelection: boolean = false;
@@ -28,7 +27,6 @@ export class BuyPageComponent {
     private fb: FormBuilder,
     private messageService: MessageService // Removido ToastrService
   ) {
-    this.status = this.getStatus().map(option => ({ label: option, value: option })).sort((a, b) => a.label.localeCompare(b.label));
     this.form = this.fb.group({
       title: ['', Validators.compose([
         Validators.required
@@ -68,19 +66,11 @@ export class BuyPageComponent {
     this.loadProducts();
   }
 
-  getStatus(): string[] {
-    return ['A fazer', 'Pedido feito'];
-  }
-
   loadProducts() {
     this.busy = true;
     this.service.getProductBuy().subscribe(
       (data: any) => {
         this.productsBuy = data.sort((a: any, b: any) => {
-          const statusComparison = a.status.toLowerCase().localeCompare(b.status.toLowerCase());
-          if (statusComparison !== 0) {
-            return statusComparison;
-          }
           return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
         });
         this.busy = false;
@@ -102,10 +92,9 @@ export class BuyPageComponent {
     if (this.form.valid) {
       this.busy = true;
 
-      // Adiciona o status "A fazer" aos valores do formulário
+      // Removido o campo "status"
       const formValue = {
-        ...this.form.value,
-        status: 'A fazer'
+        ...this.form.value
       };
 
       this.service.createProductBuy(formValue).subscribe({
@@ -173,7 +162,6 @@ export class BuyPageComponent {
       this.loadProducts();
       return;
     }
-    // Crie um objeto com o campo "title" contendo o termo de pesquisa
     const searchData = { title: this.searchQuery };
 
     this.service.searchProductBuy(searchData).subscribe({
@@ -193,7 +181,7 @@ export class BuyPageComponent {
         this.service.delProductBuy(product._id).subscribe(
           () => {
             this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: `Produto ${product.title} excluído com sucesso.` });
-            this.loadProducts(); // Recarregar os produtos após a exclusão
+            this.loadProducts();
           },
           (error: HttpErrorResponse) => {
             this.messageService.add({ severity: 'error', summary: 'Erro', detail: `Erro ao excluir produto: ${product.title}` });
@@ -209,5 +197,4 @@ export class BuyPageComponent {
     this.searchQuery = '';
     this.loadProducts();
   }
-
 }
