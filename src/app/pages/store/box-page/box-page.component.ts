@@ -6,7 +6,10 @@ import { DataService } from '../../../../services/data.service';
 import { Product } from '../../../../models/product.model';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { MenuItem, MessageService } from 'primeng/api';
-import { Budget } from '../../../../models/budget-model';
+import { Budget } from '../../../../models/budget.model';
+import { User } from '../../../../models/user.model';
+import { Security } from '../../../../utils/Security.util';
+import { PdfService } from '../../../../common/printPdf.service';
 
 @Component({
   selector: 'app-box-page',
@@ -24,10 +27,8 @@ export class BoxPageComponent {
   currentPage: number = 1; // Inicialize com 1 ou conforme a lógica do seu componente
   totalPages: number = 0;
   public searchQuery: string = '';
-  //public formPaymentOptions: { label: string, value: string }[];
   public selectedPayment?: string;
   public generalDiscount: number = 0; // Desconto aplicado
-  public customer: string = 'junior'; // Nome do cliente
   public loading = false;
   searchQueryChanged = new Subject<string>();
   public customerName: string = '';  // Adicionado
@@ -35,18 +36,25 @@ export class BoxPageComponent {
   public customerNames: string[] = [];
   public budgets: Budget[] = [];
   items!: MenuItem[];
+  public sidebarVisible: boolean = false; // Controle de visibilidade da barra lateral
+  public selectedProduct: Product | null = null; // Produto selecionado
+  public availableStock: number = 0;
+  public user!: User;
+  public editedPrice: number | null = null; // Valor editado do item
+  total: number = 0; // Valor recebido
+  totalTroco: number = 0; // Valor do troco
 
   constructor(
     private boxService: BoxService,
     private service: DataService,
     private messageService: MessageService,
+    private pdfService: PdfService
 
   ) {
-    //this.formPaymentOptions = this.getPaymentMethods().map(option => ({ label: option, value: option }));
-
   }
 
   async ngOnInit() {
+    this.user = Security.getUser();
     this.boxService.items$.subscribe(items => {
       this.boxItems = items;
     });
@@ -61,8 +69,8 @@ export class BoxPageComponent {
     });
     this.listBudget();
     this.items = [
-      { label: 'Salvar como PDF', icon: 'pi pi-file-pdf'},
-      { label: 'Salvar como Ticket', icon: 'pi pi-ticket'}
+      { label: 'Salvar como PDF', icon: 'pi pi-file-pdf', command: () => this.saveBoxAsPdf() },
+      { label: 'Salvar como Cupom Fiscal', icon: 'pi pi-ticket', command: () => this.printReceipt() }
     ];
     this.loadCustomerNames();
   }
@@ -97,7 +105,7 @@ export class BoxPageComponent {
 
     const newItem: BoxItem = existingItem
       ? { ...existingItem, quantity: existingItem.quantity + 1 }
-      : { _id: product._id, title: product.title, price: product.price, quantity: 1, discount: 0 };
+      : { _id: product._id, title: product.title, price: product.price, purchasePrice: product.purchasePrice,  quantity: 1, discount: 0 };
 
     await this.boxService.addItem(newItem);
 
@@ -263,29 +271,36 @@ export class BoxPageComponent {
 
     const order = this.createOrderObject(validItems);
 
-    this.service.createOrder(order).subscribe({
-        next: () => {
-            this.messageService.add({
-                severity: 'success',
-                summary: 'Venda Finalizada',
-                detail: 'Pedido realizado com sucesso!'
-            });
-            this.clearCart();
-            this.selectedPayment = undefined;
-        },
-        error: err => {
-            this.messageService.add({
-                severity: 'error',
-                summary: 'Erro',
-                detail: 'Falha ao finalizar a venda: ' + (err.message || 'Erro desconhecido.')
-            });
-        }
-    });
+    this.loading = true; // Ativa o loading
+
+    // Simula um atraso de 2 segundos (2000 ms) antes de finalizar a venda
+    setTimeout(() => {
+        this.service.createOrder(order).subscribe({
+            next: () => {
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Venda Finalizada',
+                    detail: 'Pedido realizado com sucesso!'
+                });
+                this.clearCart();
+                this.selectedPayment = undefined;
+            },
+            error: err => {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: 'Falha ao finalizar a venda: ' + (err.message || 'Erro desconhecido.')
+                });
+            }
+        });
+
+        this.loading = false; // Desativa o loading após a execução
+    }, 1000); // Atraso de 2 segundos
 }
 
 private createOrderObject(validItems: any[]): any {
     return {
-        customer: this.customer || 'Cliente não identificado',
+        customer: this.user.name,
         sale: {
             items: validItems.map(item => ({
                 quantity: item.quantity,
@@ -301,8 +316,7 @@ private createOrderObject(validItems: any[]): any {
     };
 }
 
-total: number = 0; // Valor recebido
-totalTroco: number = 0; // Valor do troco
+
 
 calcTroco() {
   // Certifique-se de tratar NaN para evitar problemas ao calcular
@@ -403,6 +417,137 @@ getQuantityInBudget(productId: string): { quantity: number, clients: string[] } 
     });
   });
 
-  return { quantity, clients: Array.from(clients) };  // Converte Set para Array
+  // Retorna a quantidade total do produto nos orçamentos e os nomes dos clientes únicos
+  return { quantity, clients: Array.from(clients) };
 }
+
+
+openSidebar(product: Product): void {
+  this.selectedProduct = product;
+
+  const boxItem = this.boxItems.find(item => item._id === product._id);
+  this.editedPrice = boxItem ? boxItem.price : product.price; // Valor inicial
+  this.sidebarVisible = true;
+
+  // Obter a quantidade real em estoque diretamente do banco
+  this.service.getProductById(product._id).subscribe({
+      next: (productFromDb) => {
+          if (!productFromDb) {
+              this.messageService.add({
+                  severity: 'error',
+                  summary: 'Erro',
+                  detail: 'Produto não encontrado no estoque'
+              });
+              return;
+          }
+
+          // Calcula a quantidade disponível sem alterar selectedProduct
+          const availableStock = this.calculateRealStock(productFromDb);
+
+          // Exibe a quantidade disponível em estoque na barra lateral sem sobrescrever o valor do produto
+          this.messageService.add({
+              severity: 'info',
+              summary: 'Estoque disponível',
+              detail: `Quantidade disponível em estoque: ${availableStock}`
+          });
+
+          // Armazenar a quantidade de estoque em uma variável separada, sem sobrescrever a quantidade do produto
+          this.availableStock = availableStock;
+      },
+      error: (err) => {
+          console.error('Erro ao buscar produto pelo ID:', err);
+          this.messageService.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: 'Não foi possível verificar o estoque do produto.'
+          });
+      }
+  });
+}
+
+calculateRealStock(product: Product): number {
+  // Retorna a quantidade total do produto sem considerar o carrinho
+  return product.quantity;
+}
+
+
+saveEditedPrice(): void {
+  if (this.selectedProduct && this.editedPrice !== null) {
+    const boxItem = this.boxItems.find(item => item._id === this.selectedProduct!._id);
+
+    if (boxItem) {
+      boxItem.price = this.editedPrice; // Atualiza o preço apenas para esta venda
+      this.calculateTotals(); // Recalcula os totais
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Preço Atualizado',
+        detail: `O preço do produto "${this.selectedProduct.title}" foi atualizado para ${this.editedPrice}.`
+      });
+    }
+    this.closeSidebar();
+  }
+}
+
+closeSidebar(): void {
+  this.sidebarVisible = false;
+  this.selectedProduct = null;
+  this.editedPrice = null;
+}
+
+
+saveBoxAsPdf(): void {
+  if (this.boxItems.length === 0) {
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Atenção',
+      detail: 'Nenhum item no caixa para salvar como PDF.',
+    });
+    return;
+  }
+
+  this.pdfService.saveBoxItemsAsPdf(this.boxItems, this.subtotal, this.grandTotal, this.generalDiscount);
+  this.messageService.add({
+    severity: 'success',
+    summary: 'PDF Gerado',
+    detail: 'O resumo do caixa foi salvo como PDF.',
+  });
+}
+
+async printReceipt() {
+  if (this.boxItems.length === 0) {
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Atenção',
+      detail: 'Nenhum item no caixa para imprimir como cupom fiscal.',
+    });
+    return;
+  }
+
+  try {
+    // Chama o serviço para gerar e imprimir o cupom
+    this.pdfService.printReceipt(
+      this.boxItems,               // Itens do caixa
+      this.subtotal,               // Subtotal
+      this.grandTotal,             // Total com desconto
+      this.generalDiscount,        // Desconto geral
+      this.customerName || '',     // Nome do cliente (ou vazio, caso não informado)
+      this.selectedPayment || 'Não especificado' // Método de pagamento
+    );
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Cupom Gerado',
+      detail: 'O cupom foi gerado com sucesso.',
+    });
+  } catch (error) {
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: 'Ocorreu um erro ao gerar o cupom fiscal.',
+    });
+    console.error('Erro ao gerar cupom:', error);
+  }
+}
+
+
 }
