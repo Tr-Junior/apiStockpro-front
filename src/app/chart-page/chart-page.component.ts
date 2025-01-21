@@ -147,18 +147,38 @@ export class ChartPageComponent {
       ]
     };
 
-    this.chartOptions = {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true
+
+  this.chartOptions = {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function (value: number) {
+            return value.toLocaleString('pt-BR', {
+              style: 'currency',
+              currency: 'BRL'
+            });
+          }
         }
       }
-    };
-  }
-
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function (context: any) {
+            const value = context.raw;
+            return value.toLocaleString('pt-BR', {
+              style: 'currency',
+              currency: 'BRL'
+            });
+          }
+        }
+      }
+    }
+  };
 }
-
+}
 
 
 
