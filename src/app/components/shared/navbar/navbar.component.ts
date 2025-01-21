@@ -8,18 +8,22 @@ import { ButtonModule } from 'primeng/button';
 import { filter } from 'rxjs/operators';
 import { Security } from '../../../../utils/Security.util';
 import { User } from '../../../../models/user.model';
+import { OverlayPanelModule } from 'primeng/overlaypanel';
+import { MenuModule } from 'primeng/menu';
 
 @Component({
     selector: 'app-navbar',
     templateUrl: './navbar.component.html',
     styleUrls: ['./navbar.component.css'],
     standalone: true,
-    imports: [MenubarModule, CommonModule, AvatarModule, ButtonModule],
+    imports: [MenubarModule, CommonModule, AvatarModule, ButtonModule, OverlayPanelModule, MenuModule],
 })
 export class NavbarComponent implements OnInit {
     items: MenuItem[] = [];
     activeItem: MenuItem | undefined;
     public user!: User;
+    userItems: MenuItem[] = [];
+
 
     constructor(private router: Router) {}
 
@@ -28,7 +32,7 @@ export class NavbarComponent implements OnInit {
         this.items = [
             {
                 label: 'Produtos',
-                icon: 'pi pi-list-check',
+                icon: 'pi pi-list',
                 routerLink: '/store',
             },
             {
@@ -38,7 +42,7 @@ export class NavbarComponent implements OnInit {
             },
             {
                 label: 'Orçamentos',
-                icon: 'pi pi-list',
+                icon: 'pi pi-clipboard',
                 routerLink: '/budgets',
             },
             {
@@ -52,23 +56,27 @@ export class NavbarComponent implements OnInit {
                   items:[
                     {
                         label: 'Vendas',
-                        icon: 'pi pi-cart-arrow-down',
+                        icon: 'pi pi-dollar',
                         routerLink: '/sales',
                     },
                     {
                       label: 'Faturamento mensal',
-                      icon: 'pi pi-cart-arrow-down',
+                      icon: 'pi pi-chart-bar',
                       routerLink: '/features/details',
                   },
                   {
                     label: 'saidas',
-                    icon: 'pi pi-cart-arrow-down',
+                    icon: 'pi pi-chart-line',
                     routerLink: '/features/exits',
                 }
                   ]
+
             },
         ];
-
+        this.userItems = [
+          { label: 'Cadastro de usuário', icon: 'pi pi-user-plus', routerLink: '/account/new-user' },
+          { label: 'Alterar senha', icon: 'pi pi-key', routerLink: '/account/passwordChange' }
+        ];
         // Atualiza o item ativo com base na rota atual ao inicializar
         this.updateActiveItem(this.router.url);
 
