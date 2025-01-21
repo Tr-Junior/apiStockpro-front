@@ -38,3 +38,20 @@
   font-weight: 600;
   color: #60a5fa; /* Cor do texto */
 }
+/* Botão Responsivo */
+/* Estilo Responsivo para o Botão */
+:host ::ng-deep .responsive-button .p-button-label {
+  display: inline-block; /* Exibe o texto por padrão */
+}
+
+@media screen and (max-width: 500px) {
+  :host ::ng-deep  .responsive-button .p-button-label {
+    display: none !important; /* Esconde o texto em telas menores */
+  }
+
+  :host ::ng-deep  .responsive-button {
+    justify-content: center; /* Garante o alinhamento central do ícone */
+    width: 100%; /* Ajusta o botão para o tamanho total, se necessário */
+  }
+}
+
