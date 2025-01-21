@@ -3,7 +3,6 @@ export class ProductsBuy{
    public _id: string,
    public codigo: string,
    public title: string,
-   public status: string
 ){
 
 }
