@@ -41,10 +41,15 @@ export class SalesPageComponent {
     let startDate: Date | undefined;
     let endDate: Date | undefined;
 
-    // Verifica se rangeDates foi definido e contém datas válidas
-    if (this.rangeDates && this.rangeDates.length === 2) {
-      startDate = this.rangeDates[0];
-      endDate = this.rangeDates[1];
+    if (this.rangeDates) {
+      if (this.rangeDates.length === 2) {
+        // Se `rangeDates` contém duas datas, considera um intervalo
+        startDate = this.rangeDates[0];
+        endDate = this.rangeDates[1];
+      } else if (this.rangeDates.length === 1) {
+        // Se `rangeDates` contém apenas uma data, considera apenas o início
+        startDate = this.rangeDates[0];
+      }
     }
 
     this.service.getOrderByDateRange(startDate, endDate).subscribe({
@@ -55,11 +60,17 @@ export class SalesPageComponent {
       },
       error: (err: any) => {
         console.error(err);
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: err.message }); // Alterado para MessageService
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: err.message || 'Erro ao carregar pedidos.'
+        });
         this.busy = false; // Indica que o carregamento foi concluído
       }
     });
   }
+
+
 
   clearSearch(): void {
     this.rangeDates = [];
