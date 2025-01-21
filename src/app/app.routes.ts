@@ -10,6 +10,9 @@ import { BudgetPageComponent } from './pages/store/budget-page/budget-page.compo
 import { BuyPageComponent } from './pages/store/buy-page/buy-page.component';
 import { CostsPageComponent } from './pages/billing/costs-page/costs-page.component';
 import { ExitsPageComponent } from './pages/billing/exits-page/exits-page.component';
+import { NewUserPageComponent } from './pages/account/new-user-page/new-user-page.component';
+import { UsersPageComponent } from './pages/account/users-page/users-page.component';
+import { CompanyInfoPageComponent } from './company-info-page/company-info-page.component';
 
 export const routes: Routes = [
 {
@@ -64,6 +67,21 @@ export const routes: Routes = [
    // { path: 'invoicing', component: InvoicingPageComponent, canActivate: [AuthService] },
     { path: 'exits', component: ExitsPageComponent, canActivate: [AuthService] },
     { path: 'details', component: CostsPageComponent, canActivate: [AuthService] }
+  ]
+},
+{
+  path: 'account',
+  component: FramePageComponent,
+  children: [
+    { path: 'new-user', component: NewUserPageComponent, canActivate: [AuthService] },
+    { path: 'passwordChange', component: UsersPageComponent, canActivate: [AuthService] },
+  ]
+},
+{
+  path: 'company',
+  component: FramePageComponent,
+  children: [
+    { path: '', component: CompanyInfoPageComponent, canActivate: [AuthService] },
   ]
 },
 ];
