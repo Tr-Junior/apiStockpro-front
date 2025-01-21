@@ -6,11 +6,13 @@ import { environment } from "../environments/environment.development";
 import { Security } from "../utils/Security.util";
 import { Exits } from "../models/exits.model";
 import { Entrances } from "../models/entrances.model";
-import { Budget } from "../models/budget-model";
+import { Budget } from "../models/budget.model";
 import { Order } from "../models/order.models";
 import { ProductsBuy } from "../models/productsBuy-model";
 import { Supplier } from "../models/supplier-model";
 import { User } from "../models/user.model";
+import { ICompany } from "../models/company.model";
+
 
 @Injectable({
   providedIn: 'root'
@@ -97,12 +99,15 @@ export class DataService {
   }
 
   getOrderByDateRange(startDate?: Date, endDate?: Date): Observable<Order[]> {
-    let url = `${this.API}/orders/sales`;
-    if (startDate && endDate) {
-      url += `?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
-    }
-    return this.http.get<Order[]>(url, { headers: this.composeHeaders() });
+    const url = `${this.API}/orders/sales`;
+    const body = {
+      startDate: startDate ? startDate.toISOString() : undefined,
+      endDate: endDate ? endDate.toISOString() : undefined
+    };
+
+    return this.http.post<Order[]>(url, body, { headers: this.composeHeaders() });
   }
+
 
 
   getOrderById(id: any): Observable<any> {
@@ -202,4 +207,17 @@ export class DataService {
   delSupplier(id: any): Observable<any> {
     return this.http.delete(`${this.API}/supplier/` + id, { headers: this.composeHeaders() });
   }
+
+  getCompany(): Observable<any> {
+  return this.http.get<ICompany[]>(`${this.API}/companyInfo/company`, { headers: this.composeHeaders() });
 }
+
+updateCompany(id: any): Observable<any> {
+  return this.http.put(`${this.API}/companyInfo/company/ `+ id, { headers: this.composeHeaders() });
+}
+
+
+
+}
+
+
