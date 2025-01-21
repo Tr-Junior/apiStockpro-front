@@ -3,3 +3,22 @@
   margin: 0 auto 2rem auto;
   display: block;
 }
+
+
+/* Ocultar o toolbar por padrão */
+:host ::ng-deep .show-on-small {
+  display: none;
+}
+
+/* Mostrar o toolbar em telas menores que 500px */
+@media screen and (max-width: 500px) {
+  :host ::ng-deep .show-on-small {
+    display: flex;
+  }
+  .hide-on-small {
+    display: none;
+  }
+  :host ::ng-deep .export-button {
+    display: none;
+  }
+}
