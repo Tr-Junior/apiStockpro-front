@@ -3,8 +3,6 @@
     [rowsPerPageOptions]="[100, 150, 200, 250, 350, 500]" [pSelectableRow]="true" dataKey="number" editMode="row"
     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} Orçamentos" styleClass="p-datatable-striped"
     toggleable="false">
-
-
     <ng-template pTemplate="header">
       <tr class="p-0" pTableToggler>
         <th></th>
@@ -23,8 +21,6 @@
         <th>Ação</th>
       </tr>
     </ng-template>
-
-
     <ng-template pTemplate="body" let-budget let-editing="editing" let-expanded="expanded" let-ri="rowIndex">
       <tr [pEditableRow]="budget">
         <td>
@@ -56,15 +52,10 @@
             <p-button *ngIf="!editing" icon="pi pi-trash"
               styleClass="p-button-rounded p-button-danger p-button-outlined" (click)="confirmDelete(budget)">
             </p-button>
-
-
-
           </div>
         </td>
       </tr>
     </ng-template>
-
-
     <ng-template pTemplate="rowexpansion" let-budget>
       <td colspan="4">
         <div class="p-4">
@@ -98,8 +89,6 @@
                   <p-button (click)="openQuantityModal(budget, item)" icon="pi pi-trash"
                     styleClass="p-button-rounded p-button-danger p-button-outlined">
                   </p-button>
-
-
                 </td>
               </tr>
             </ng-template>
