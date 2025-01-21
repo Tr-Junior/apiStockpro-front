@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
-import { Budget } from '../../../../models/budget-model';
+import { Budget } from '../../../../models/budget.model';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { DataService } from '../../../../services/data.service';
 import { BoxService } from '../../../../services/box.Service';
 import { ImportsService } from '../../../../services/imports.service';
+import { PdfService } from '../../../../common/printPdf.service';
 
 @Component({
   selector: 'app-budget-page',
@@ -33,7 +34,8 @@ export class BudgetPageComponent {
     private messageService: MessageService,
     private service: DataService,
     private confirmationService: ConfirmationService,
-    private boxService: BoxService
+    private boxService: BoxService,
+    private pdfService: PdfService
   ) {}
 
   async ngOnInit() {
@@ -189,6 +191,7 @@ export class BudgetPageComponent {
           _id: productDetails._id,
           title: productDetails.title,
           price: productDetails.price,
+          purchasePrice: productDetails.purchasePrice,
           quantity: item.quantity,
           discount: 0
         };
@@ -212,6 +215,22 @@ export class BudgetPageComponent {
     }
   }
 
+  generatePDF(budget: Budget): void {
+    if (!budget || !budget.budget || budget.budget.items.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atenção',
+        detail: 'Nenhum item no orçamento para salvar como PDF.',
+      });
+      return;
+    }
 
-  generatePDF(budget: any){}
+    this.pdfService.saveBudgetAsPdf(budget);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'PDF Gerado',
+      detail: 'O orçamento foi salvo como PDF.',
+    });
+  }
+
 }
