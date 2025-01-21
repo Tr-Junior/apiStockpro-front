@@ -1,15 +1,19 @@
 <div class="card p-3">
   <p-toast></p-toast>
-
-  <!-- Toolbar -->
-  <p-toolbar styleClass="mb-4 gap-2">
+  <app-product-registration-page class="hide-on-small"></app-product-registration-page>
+  <!-- Toolbar - Visível apenas em telas menores que 500px -->
+  <p-toolbar styleClass="mb-4 gap-2 show-on-small">
     <ng-template pTemplate="left">
-      <p-button severity="success" label="Novo" icon="pi pi-plus" class="mr-2"></p-button>
-      <p-button severity="danger" label="Deletar" icon="pi pi-trash"></p-button>
+      <p-button severity="success" label="Novo" icon="pi pi-plus" class="mr-2" (onClick)="showDialog()">
+      </p-button>
+      <p-dialog header="Novo Produto" [(visible)]="displayDialog" [modal]="true" [closable]="true">
+        <app-product-registration-page (onCancel)="closeDialog()"></app-product-registration-page>
+      </p-dialog>
+
     </ng-template>
 
     <ng-template pTemplate="right">
-      <p-button severity="help" label="Exportar" icon="pi pi-upload" (onClick)="exportToExcel()"></p-button>
+      <p-button severity="help" label="Exportar" icon="pi pi-file-excel" (onClick)="exportToExcel()"></p-button>
     </ng-template>
   </p-toolbar>
 
@@ -20,7 +24,7 @@
           <th></th>
           <th>produto</th>
           <th>Estoque</th>
-          <th>Estoque minimo</th>
+          <th>Em orçamento</th>
           <th>Fornecedor</th>
           <th>Valor de compra</th>
           <th>Valor de Venda</th>
@@ -49,15 +53,25 @@
     styleClass="p-datatable-striped" [value]="filteredProducts">
     <!-- Caption with Search -->
     <ng-template pTemplate="caption">
-      <div class="flex align-items-center justify-content-between">
-        <span class="p-input-icon-left">
-          <i class="pi pi-search"></i>
-          <input class="search" pInputText type="text" [(ngModel)]="searchQuery" (ngModelChange)="search()"
-            placeholder="Pesquisar produtos..." />
-        </span>
-        <h5 class="m-0">Gerenciar Produtos</h5>
+      <div class="flex align-items-center justify-content-between gap-3">
+        <!-- Campo de Pesquisa -->
+        <div class="flex align-items-center gap-2">
+          <p-iconField iconPosition="left">
+            <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+            <input type="text" pInputText placeholder="Pesquisar produtos..." [(ngModel)]="searchQuery"
+              (ngModelChange)="search()" />
+          </p-iconField>
+          <p-button icon="pi pi-times" styleClass="p-button-danger p-button-text" (onClick)="clearSearch()"
+            [disabled]="!searchQuery"></p-button>
+        </div>
+
+        <!-- Botão Exportar -->
+        <p-button severity="help" label="Exportar" icon="pi pi-file-excel" (onClick)="exportToExcel()"
+          class="export-button">
+        </p-button>
       </div>
     </ng-template>
+
 
     <!-- Header -->
     <ng-template pTemplate="header">
@@ -71,8 +85,8 @@
         <th pSortableColumn="quantity">
           Estoque<p-sortIcon field="quantity"></p-sortIcon>
         </th>
-        <th pSortableColumn="min_quantity">
-          Estoque minimo<p-sortIcon field="min_quantity"></p-sortIcon>
+        <th pSortableColumn="orcamentos">
+          Em orçamentos<p-sortIcon field="orcamentos"></p-sortIcon>
         </th>
         <th pSortableColumn="supplier.name">
           Fornecedor<p-sortIcon field="supplier.name"></p-sortIcon>
@@ -111,28 +125,32 @@
                 required>
             </ng-template>
             <ng-template pTemplate="output">
-              <div
-                pTooltip="Em orçamentos: {{ getQuantityInBudget(product._id).quantity }}  Clientes: {{ getQuantityInBudget(product._id).clients.join(', ') }}"
-                tooltipPosition="top"
-                [ngClass]="{'outofstock': product.quantity === 0, 'lowstock': (product.quantity != 0 && product.quantity <= 10),'instock': product.quantity > 10}">
-                <span *ngIf="product.quantity !== 0">
-                  {{ product.quantity }}
+              <div pTooltip="Em orçamentos: {{ getQuantityInBudget(product._id).quantity }}
+                                       Clientes: {{ getQuantityInBudget(product._id).clients.join(', ') }}"
+                tooltipPosition="top" [ngClass]="{'outofstock': (product.quantity - getQuantityInBudget(product._id).quantity) === 0,
+                               'lowstock': ((product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
+                                            (product.quantity - getQuantityInBudget(product._id).quantity) <= 10),
+                               'instock': (product.quantity - getQuantityInBudget(product._id).quantity) > 10}">
+                <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) > 0">
+                  {{ product.quantity - getQuantityInBudget(product._id).quantity }}
                 </span>
-                <span *ngIf="product.quantity === 0" class="badge">Fora de Estoque</span>
+                <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) === 0" class="badge">
+                  Fora de Estoque
+                </span>
               </div>
             </ng-template>
+
           </p-cellEditor>
+
         </td>
         <td style="text-align: center">
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <input size="6" pInputText type="text" pKeyFilter="num" id="number"
-                onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-                [(ngModel)]="selectedProduct.min_quantity" required>
+              <span>{{ getQuantityInBudget(product._id).quantity}}</span>
             </ng-template>
             <ng-template pTemplate="output">
               <div class="min-stok">
-                <span>{{ product.min_quantity }}</span>
+                <span>{{ getQuantityInBudget(product._id).quantity}}</span>
               </div>
             </ng-template>
           </p-cellEditor>
