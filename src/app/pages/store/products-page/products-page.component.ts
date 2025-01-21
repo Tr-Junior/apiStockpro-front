@@ -3,15 +3,16 @@ import { FormBuilder, FormGroup, FormsModule, Validators } from '@angular/forms'
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { DataService } from '../../../../services/data.service';
 import { Product } from '../../../../models/product.model';
-import { Budget } from '../../../../models/budget-model';
+import { Budget } from '../../../../models/budget.model';
 import { Supplier } from '../../../../models/supplier-model';
 import { debounceTime, distinctUntilChanged, Observable, Subject } from 'rxjs';
 import { ImportsService } from '../../../../services/imports.service';
-
+import * as XLSX from 'xlsx';
+import { ProductRegistrationPageComponent } from '../product-registration-page/product-registration-page.component';
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [ImportsService.imports],
+  imports: [ImportsService.imports, ProductRegistrationPageComponent],
   providers: [ImportsService.providers, DataService],
   templateUrl: './products-page.component.html',
   styleUrl: './products-page.component.css'
@@ -33,6 +34,9 @@ export class ProductsPageComponent {
   public totalPages: number = 0;
   public searchQueryChanged = new Subject<string>();
   public isLoading: boolean = true;
+  public page: number = 1; // Controla a página atual para busca ou paginação
+  public allProductsLoaded: boolean = false; // Indica se todos os produtos foram carregados
+
 
   constructor(
     private service: DataService,
@@ -52,6 +56,7 @@ export class ProductsPageComponent {
 
   ngOnInit() {
     this.listProd();
+    this.listBudget();
     this.loadSuppliers();
     this.searchQueryChanged.pipe(
       debounceTime(300), // Aguarda 300ms após o último evento
@@ -61,6 +66,19 @@ export class ProductsPageComponent {
       this.search();
     });
   }
+
+  displayDialog: boolean = false;
+
+  // Exibe o modal
+  showDialog() {
+    this.displayDialog = true;
+  }
+
+  // Opcional: Fecha o modal
+  closeDialog() {
+    this.displayDialog = false;
+  }
+
 
   listProd() {
     this.isLoading = true; // Inicia o carregamento
@@ -123,16 +141,22 @@ export class ProductsPageComponent {
 
 
   onRowEditInit(product: Product) {
-    this.selectedProduct = { ...product };
+    const quantityInBudget = this.getQuantityInBudget(product._id).quantity;
+
+    this.selectedProduct = {
+      ...product,
+      quantity: product.quantity - quantityInBudget, // Quantidade restante para edição
+    };
+
     this.form.patchValue({
       title: product.title,
-      quantity: product.quantity,
-      min_quantity: product.min_quantity,
+      quantity: this.selectedProduct.quantity,
       supplier: product.supplier,
       purchasePrice: product.purchasePrice,
       price: product.price,
     });
   }
+
 
   onRowEditSave(product: Product) {
     // Verifica se o produto é válido
@@ -276,11 +300,84 @@ export class ProductsPageComponent {
     });
   }
 
+  clearSearch() {
+    this.searchQuery = '';
+    this.page = 1;
+    this.allProductsLoaded = false;
+    this.product = [];
+    this.listProd();
+  }
 
-  saveProduct() {
+      exportToExcel() {
+        if (this.product.length === 0) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Aviso',
+            detail: 'Nenhum produto disponível para exportar.',
+          });
+          return;
+        }
 
+        // Mapeia os produtos para o formato da tabela
+        const dataToExport = this.product.map(product => ({
+          ID: product._id,
+          Nome: product.title,
+          Quantidade: product.quantity,
+          Fornecedor: product.supplier?.name || 'N/A',
+          'Preço de Compra (R$)': product.purchasePrice.toFixed(2).replace('.', ','),
+          'Preço de Venda (R$)': product.price.toFixed(2).replace('.', ','),
+        }));
+
+        // Cria a planilha e adiciona os dados
+        const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataToExport);
+
+        // Ajusta largura das colunas
+        const columnWidths = [
+          { wch: 25 }, // ID
+          { wch: 45 }, // Nome
+          { wch: 12 }, // Quantidade
+          { wch: 15 }, // Fornecedor
+          { wch: 20 }, // Preço de Compra
+          { wch: 20 }, // Preço de Venda
+        ];
+        worksheet['!cols'] = columnWidths;
+
+        // Adiciona cabeçalhos com estilo
+        const headerStyle = {
+          font: { bold: true, sz: 12 }, // Negrito e tamanho 12
+          alignment: { horizontal: 'center' }, // Alinhamento centralizado
+          fill: { fgColor: { rgb: 'FFD700' } }, // Fundo amarelo
+        };
+
+        // Aplica estilo aos cabeçalhos
+        const range = XLSX.utils.decode_range(worksheet['!ref']!);
+        for (let col = range.s.c; col <= range.e.c; col++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+          worksheet[cellAddress].s = headerStyle;
+        }
+
+        // Cria o workbook e adiciona a planilha
+        const workbook: XLSX.WorkBook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Produtos');
+
+        // Gera o arquivo Excel e baixa
+        const excelBuffer: ArrayBuffer = XLSX.write(workbook, {
+          bookType: 'xlsx',
+          type: 'array',
+          cellStyles: true, // Habilita estilos de células
+        });
+        const blob: Blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+        const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'produtos.xlsx';
+        link.click();
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: 'Arquivo Excel exportado com formatação!',
+        });
       }
-
-  exportToExcel(){}
-
-}
+    }
