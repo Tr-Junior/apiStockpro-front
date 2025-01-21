@@ -8,6 +8,7 @@ interface BoxItem {
   price: number;
   quantity: number;
   discount: number;
+  purchasePrice: number
 }
 
 @Injectable({
