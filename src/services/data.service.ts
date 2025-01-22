@@ -208,16 +208,37 @@ export class DataService {
     return this.http.delete(`${this.API}/supplier/` + id, { headers: this.composeHeaders() });
   }
 
-  getCompany(): Observable<any> {
-  return this.http.get<ICompany[]>(`${this.API}/companyInfo/company`, { headers: this.composeHeaders() });
+  //companyInfo
+getCompany(): Observable<any> {
+return this.http.get<ICompany[]>(`${this.API}/companyInfo/company`, { headers: this.composeHeaders() });
 }
 
-updateCompany(id: any): Observable<any> {
-  return this.http.put(`${this.API}/companyInfo/company/ `+ id, { headers: this.composeHeaders() });
+getCompanyId(id: any): Observable<any> {
+  return this.http.get(`${this.API}/companyInfo/company/` + id, { headers: this.composeHeaders() });
+  }
+
+createCompany(data: any): Observable<any> {
+  return this.http.post(`${this.API}/companyInfo/company`, data, { headers: this.composeHeaders() });
+}
+
+updateCompany(id: any, data: any): Observable<any> {
+  return this.http.put(`${this.API}/companyInfo/company/`+ id, data, { headers: this.composeHeaders() });
+}
+
+findCep(data: any): Observable<any> {
+  return this.http.post(`${this.API}/api/cep`, data, { headers: this.composeHeaders() });
 }
 
 
-
+//logo upload
+uploadLogo(data: any): Observable<any> {
+  console.log('Enviando logo para o servidor:', data);  // Verifique os dados no frontend
+  return this.http.post(`${this.API}/image/upload/logo`, data, { headers: this.composeHeaders() });
 }
 
+uploadPdf(data: any): Observable<any> {
+  console.log('Enviando PDF para o servidor:', data);  // Verifique os dados no frontend
+  return this.http.post(`${this.API}/image/upload/pdf`, data, { headers: this.composeHeaders() });
+}
 
+}
