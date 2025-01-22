@@ -1,29 +1,22 @@
-export interface IEndereco {
-  cep: string;
-  logradouro: string;
-  bairro: string;
-  cidade: string;
-  estado: string;
-  numero: string;
-  complemento: string;
+export interface IAddress {
+  zip: string;
+  backYard: string;
+  neighborhood: string;
+  addressLine: string;
+  addressLine2: string;
+  city: string;
+  state: string;
 }
 
-export interface IContatos {
-  telefone: string;
+export interface IContact {
+  telephone: string;
   email: string;
 }
 
-export interface IConfiguracoes {
-  abertura: string;
-  fechamento: string;
-  quantidadeCaixas: number;
-}
-
 export interface ICompany {
-  id: string;
-  nome: string;
+  _id: string;
+  name: string;
   cnpj: string;
-  endereco: IEndereco;
-  contatos: IContatos;
-  configuracoes: IConfiguracoes;
+  address: IAddress;
+  contact: IContact;
 }
