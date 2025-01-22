@@ -5,23 +5,21 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ICompany } from '../../models/company.model';
 import { Observable } from 'rxjs';
+import { UploadPageComponent } from '../upload-page/upload-page.component';
 
 @Component({
   selector: 'app-company-info-page',
   standalone: true,
-  imports: [ImportsService.imports],
+  imports: [ImportsService.imports, UploadPageComponent],
   providers: [ImportsService.providers, DataService, MessageService],
   templateUrl: './company-info-page.component.html',
   styleUrls: ['./company-info-page.component.css']
 })
 export class CompanyInfoPageComponent {
-  public company: ICompany[] = [];
+  public company: ICompany [] = [];
   public isLoading: boolean = true;
-  public editMode: boolean = false; // Controle do modo de edição
   public form: FormGroup;
   public busy = false;
-  isEditing = false;
-
 
   constructor(
     private service: DataService,
@@ -30,26 +28,18 @@ export class CompanyInfoPageComponent {
     private confirmationService: ConfirmationService
   ) {
     this.form = this.fb.group({
-      nome: [''],
+      id: [{ value: '', disabled: true }],
+      name: [''],
       cnpj: [''],
-      endereco: this.fb.group({
-        cep: [''],
-        logradouro: [''],
-        bairro: [''],
-        cidade: [''],
-        estado: [''],
-        numero: [''],
-        complemento: ['']
-      }),
-      contatos: this.fb.group({
-        telefone: [''],
-        email: ['']
-      }),
-      configuracoes: this.fb.group({
-        abertura: [''],
-        fechamento: [''],
-        quantidadeCaixas: ['']
-      })
+      email: [''],
+      telephone: [''],
+      addressLine: [''],
+      addressLine2: [''],
+      backYard: [''],
+      city: [''],
+      neighborhood: [''],
+      state: [''],
+      zip: ['']
     });
   }
 
@@ -61,9 +51,17 @@ export class CompanyInfoPageComponent {
     this.busy = true;
     this.service.getCompany().subscribe({
       next: (data: ICompany[]) => {
-        console.log('Dados recebidos:', data);  // Verifique o que está sendo retornado
         this.busy = false;
-        this.company = data; // Apenas atribui os dados sem adicionar o estado isEditing
+        this.company = data; // Atualiza o array de empresas
+        console.log('Dados recebidos:', data);
+
+
+        if (this.company.length > 0) {
+          const id = this.company[0]._id; // Garante que o array não está vazio
+          this.listCompanyById(id);
+        } else {
+          this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Nenhuma empresa encontrada.' });
+        }
       },
       error: (err: any) => {
         this.busy = false;
@@ -72,40 +70,135 @@ export class CompanyInfoPageComponent {
     });
   }
 
-
-
-  toggleEdit(loja: any) {
-    this.isEditing = true;
-    // Aqui você pode fazer algo mais, como preencher o formulário com os dados de "loja" para edição.
-  }
-
-
-  saveChanges(id: any) {
-    if (this.form.invalid) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Preencha corretamente todos os campos' });
+  listCompanyById(id: string) {
+    if (!id) {
+      this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'ID da empresa não fornecido' });
       return;
     }
 
     this.busy = true;
-    //const formData = this.form.value; // Pega todos os valores do formulário
-    this.service.updateCompany(id).subscribe(
-      () => {
+
+    this.service.getCompanyId(id).subscribe({
+      next: (data: ICompany) => {
         this.busy = false;
-        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Alterações salvas com sucesso!' });
-        //this.resetForm();
+        console.log('Dados recebidosID:', data);
+
+        this.form.patchValue({
+          id: data._id,
+          name: data.name,
+          cnpj: data.cnpj,
+          email: data.contact.email,
+          telephone: data.contact.telephone,
+          addressLine: data.address.addressLine,
+          addressLine2: data.address.addressLine2,
+          backYard: data.address.backYard,
+          city: data.address.city,
+          neighborhood: data.address.neighborhood,
+          state: data.address.state,
+          zip: data.address.zip
+        });
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Empresa carregada com sucesso' });
       },
-      (error) => {
+      error: (err: any) => {
         this.busy = false;
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível salvar as alterações.' });
-        console.error('Erro ao salvar alterações:', error);
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao buscar a empresa: ' + err.message });
       }
-    );
+    });
   }
 
 
-
-  cancelEdit() {
-    this.isEditing = false;
-    this.listCompany(); // Recarrega os dados originais
+  onCepBlur() {
+    const cep = this.form.get('zip')?.value;
+    if (cep) {
+      this.service.findCep({ cep }).subscribe({
+        next: (data: any) => {
+          console.log(data);
+          this.form.patchValue({
+            backYard: data.rua || '',
+            city: data.cidade || '',
+            neighborhood: data.bairro || '',
+            state: data.estado || ''
+          });
+        },
+        error: (err: any) => {
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'CEP não encontrado' });
+        }
+      });
+    }
   }
+
+  saveCompany() {
+    const id = this.form.get('id')?.value?.trim(); // Garantir que o ID não tenha espaços extras
+    const payload: ICompany = {
+      _id: id || '', // Pode ser vazio para criação
+      name: this.form.get('name')?.value,
+      cnpj: this.form.get('cnpj')?.value,
+      contact: {
+        email: this.form.get('email')?.value,
+        telephone: this.form.get('telephone')?.value,
+      },
+      address: {
+        zip: this.form.get('zip')?.value,
+        backYard: this.form.get('backYard')?.value,
+        neighborhood: this.form.get('neighborhood')?.value,
+        addressLine: this.form.get('addressLine')?.value,
+        addressLine2: this.form.get('addressLine2')?.value,
+        city: this.form.get('city')?.value,
+        state: this.form.get('state')?.value,
+      },
+    };
+
+    if (this.form.valid) {
+      if (id) {
+        // Atualizar empresa existente
+        this.service.updateCompany(id, payload).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Sucesso',
+              detail: 'Informações da empresa atualizadas com sucesso',
+            });
+          },
+          error: (err: any) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: 'Erro ao atualizar as informações da empresa: ' + err.message,
+            });
+          },
+        });
+      } else {
+        // Criar nova empresa
+        this.service.createCompany(payload).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Sucesso',
+              detail: 'Empresa criada com sucesso',
+            });
+            this.form.reset(); // Limpa o formulário após criação
+          },
+          error: (err: any) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: 'Erro ao criar a empresa: ' + err.message,
+            });
+          },
+        });
+      }
+    } else {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: 'Formulário inválido. Preencha os campos obrigatórios.',
+      });
+    }
+
+    console.log('formulario', this.form.value);
+    console.log('formulario válido:', this.form.valid);
+    console.log('id', id);
+  }
+
+
 }
