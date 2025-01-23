@@ -231,14 +231,23 @@ findCep(data: any): Observable<any> {
 
 
 //logo upload
-uploadLogo(data: any): Observable<any> {
-  console.log('Enviando logo para o servidor:', data);  // Verifique os dados no frontend
-  return this.http.post(`${this.API}/image/upload/logo`, data, { headers: this.composeHeaders() });
+uploadLogo(data: FormData): Observable<{ image: { filePath: string } }> {
+  console.log('Enviando logo para o servidor:', data);
+  return this.http.post<{ image: { filePath: string } }>(
+    `${this.API}/image/upload/logo`,
+    data,
+    { headers: this.composeHeaders() }
+  );
 }
 
-uploadPdf(data: any): Observable<any> {
-  console.log('Enviando PDF para o servidor:', data);  // Verifique os dados no frontend
-  return this.http.post(`${this.API}/image/upload/pdf`, data, { headers: this.composeHeaders() });
+uploadPdf(data: FormData): Observable<{ image: { filePath: string } }> {
+  console.log('Enviando PDF para o servidor:', data);
+  return this.http.post<{ image: { filePath: string } }>(
+    `${this.API}/image/upload/pdf`,
+    data,
+    { headers: this.composeHeaders() }
+  );
 }
+
 
 }
