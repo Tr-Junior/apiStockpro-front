@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { DataService } from '../../services/data.service';
 import { ImportsService } from '../../services/imports.service';
+import { environment } from '../../environments/environment.development';
 
 @Component({
   selector: 'app-upload-page',
@@ -16,7 +17,7 @@ export class UploadPageComponent {
   totalSize: number = 0;
   totalSizePercent: number = 0;
   uploadType: 'logo' | 'pdf' = 'logo'; // Tipo de upload atual ('logo' ou 'pdf')
-
+  image: { filePath: string } | null = null;
   constructor(
     private messageService: MessageService,
     private service: DataService
@@ -53,26 +54,30 @@ export class UploadPageComponent {
       ? this.service.uploadLogo(formData)
       : this.service.uploadPdf(formData);
 
-    uploadObservable.subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Upload Concluído',
-          detail: `${this.uploadType.toUpperCase()} enviado com sucesso.`,
-          life: 3000
-        });
-      },
-      error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro no Upload',
-          detail: `Não foi possível enviar o ${this.uploadType.toUpperCase()}.`,
-          life: 3000
-        });
-      }
-    });
-  }
-
+      uploadObservable.subscribe({
+        next: (response: any) => {
+          if (response && response.image) {
+            // Usa a URL do backend já configurada, sem adicionar o 'API' novamente
+            this.image = { filePath: response.image.filePath };
+            console.log('Imagem recebida:', this.image);
+          }
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Upload Concluído',
+            detail: `${this.uploadType.toUpperCase()} enviado com sucesso.`,
+            life: 3000
+          });
+        },
+        error: () => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erro no Upload',
+            detail: `Não foi possível enviar o ${this.uploadType.toUpperCase()}.`,
+            life: 3000
+          });
+        }
+      });
+    }
 
 
   onSelectedFiles(event: any) {
