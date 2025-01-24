@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { DataService } from '../../services/data.service';
 import { ImportsService } from '../../services/imports.service';
+import { Image } from '../../models/image.model';
 import { environment } from '../../environments/environment.development';
 
 @Component({
@@ -17,12 +18,17 @@ export class UploadPageComponent {
   totalSize: number = 0;
   totalSizePercent: number = 0;
   uploadType: 'logo' | 'pdf' = 'logo'; // Tipo de upload atual ('logo' ou 'pdf')
-  image: { filePath: string } | null = null;
+  logoImage: { filePath: string } | null = null;
+  pdfImage: { filePath: string } | null = null;
+  public imageUpload: Image[] = [];
   constructor(
     private messageService: MessageService,
     private service: DataService
   ) {}
 
+  ngOnInit() {
+    this.getImages();
+  }
   choose(event: any, callback: () => void) {
     callback();
   }
@@ -49,35 +55,32 @@ export class UploadPageComponent {
 
     console.log('Enviando arquivos:', this.files); // Para depuração
 
-    // Verifique o tipo de upload e faça a chamada apropriada
     const uploadObservable = this.uploadType === 'logo'
       ? this.service.uploadLogo(formData)
       : this.service.uploadPdf(formData);
 
-      uploadObservable.subscribe({
-        next: (response: any) => {
-          if (response && response.image) {
-            // Usa a URL do backend já configurada, sem adicionar o 'API' novamente
-            this.image = { filePath: response.image.filePath };
-            console.log('Imagem recebida:', this.image);
-          }
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Upload Concluído',
-            detail: `${this.uploadType.toUpperCase()} enviado com sucesso.`,
-            life: 3000
-          });
-        },
-        error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erro no Upload',
-            detail: `Não foi possível enviar o ${this.uploadType.toUpperCase()}.`,
-            life: 3000
-          });
-        }
-      });
-    }
+    uploadObservable.subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Upload Concluído',
+          detail: `${this.uploadType.toUpperCase()} enviado com sucesso.`,
+          life: 3000
+        });
+
+        // Buscar a imagem atualizada do banco de dados
+        this.getImages();
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro no Upload',
+          detail: `Não foi possível enviar o ${this.uploadType.toUpperCase()}.`,
+          life: 3000
+        });
+      }
+    });
+  }
 
 
   onSelectedFiles(event: any) {
@@ -94,5 +97,47 @@ export class UploadPageComponent {
 
   changeUploadType(type: 'logo' | 'pdf') {
     this.uploadType = type;
+  }
+
+  getImages() {
+    this.service.getImages('logo').subscribe(
+      (data: Image) => {
+        if (data && data.imageUrl) {
+          this.logoImage = { filePath: data.imageUrl };
+          console.log('Logo carregada do banco:', this.logoImage);
+        } else {
+          console.warn('Nenhuma logo encontrada');
+        }
+      },
+      (error) => {
+        console.error('Erro ao buscar logo:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro ao carregar logo',
+          detail: 'Não foi possível carregar a logo.',
+          life: 3000
+        });
+      }
+    );
+
+    this.service.getImages('pdf').subscribe(
+      (data: Image) => {
+        if (data && data.imageUrl) {
+          this.pdfImage = { filePath: data.imageUrl };
+          console.log('PDF carregado do banco:', this.pdfImage);
+        } else {
+          console.warn('Nenhuma imagem de PDF encontrada');
+        }
+      },
+      (error) => {
+        console.error('Erro ao buscar PDF:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro ao carregar PDF',
+          detail: 'Não foi possível carregar o PDF.',
+          life: 3000
+        });
+      }
+    );
   }
 }
