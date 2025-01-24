@@ -12,6 +12,7 @@ import { ProductsBuy } from "../models/productsBuy-model";
 import { Supplier } from "../models/supplier-model";
 import { User } from "../models/user.model";
 import { ICompany } from "../models/company.model";
+import { Image } from "../models/image.model";
 
 
 @Injectable({
@@ -247,6 +248,10 @@ uploadPdf(data: FormData): Observable<{ image: { filePath: string } }> {
     data,
     { headers: this.composeHeaders() }
   );
+}
+
+getImages(type: string): Observable<Image> {
+  return this.http.get<Image>(`${this.API}/image/image?type=${type}`, { headers: this.composeHeaders() });
 }
 
 
