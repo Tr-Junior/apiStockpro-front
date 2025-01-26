@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { DataService } from '../../services/data.service';
-import { ImportsService } from '../../services/imports.service';
+import { DataService } from '../../../core/services/data.service';
+import { ImportsService } from '../../../core/services/imports.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ICompany } from '../../models/company.model';
+import { ICompany } from '../../../core/models/company.model';
 import { Observable } from 'rxjs';
-import { UploadPageComponent } from '../upload-page/upload-page.component';
+import { UploadPageComponent } from '../pages/upload-page/upload-page.component';
 
 @Component({
   selector: 'app-company-info-page',
@@ -97,6 +97,7 @@ export class CompanyInfoPageComponent {
           state: data.address.state,
           zip: data.address.zip
         });
+        localStorage.setItem('companyData', JSON.stringify(data));
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Empresa carregada com sucesso' });
       },
       error: (err: any) => {
