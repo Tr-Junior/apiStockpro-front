@@ -77,6 +77,9 @@ export class LoginPageComponent {
   }
 
   setUser(user: any, token: any) {
+    // Após autenticar o usuário e obter o token e os dados do usuário
+    const sessionId = user._id; // ou qualquer identificador único
+    Security.setSessionId(sessionId);
     Security.set(user, token);
     this.router.navigate(['/store']);
   }
