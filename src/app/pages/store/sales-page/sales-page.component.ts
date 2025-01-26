@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
-import { Order } from '../../../../models/order.models';
-import { ImportsService } from '../../../../services/imports.service';
-import { DataService } from '../../../../services/data.service';
+import { Order } from '../../../../../core/models/order.models';
+import { ImportsService } from '../../../../../core/services/imports.service';
+import { DataService } from '../../../../../core/services/data.service';
 import { Router } from '@angular/router';
 import { PrimeNGConfig, MessageService, ConfirmationService } from 'primeng/api';
 import { Security } from '../../../../utils/Security.util';
