@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { DataService } from '../../../../services/data.service';
-import { ImportsService } from '../../../../services/imports.service';
+import { DataService } from '../../../../../core/services/data.service';
+import { ImportsService } from '../../../../../core/services/imports.service';
 import { ConfirmationService } from 'primeng/api/confirmationservice';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { User } from '../../../../models/user.model';
+import { User } from '../../../../../core/models/user.model';
 
 @Component({
   selector: 'app-new-user-page',
