@@ -1,20 +1,61 @@
 import { Injectable } from '@angular/core';
 import { jsPDF } from 'jspdf';
-import { BoxItem } from '../models/box-item.model';
-import { Budget } from '../models/budget.model';
+import { BoxItem } from '../../core/models/box-item.model';
+import { Budget } from '../../core/models/budget.model';
 import autoTable from 'jspdf-autotable';
+import { DataService } from '../../core/services/data.service';
+import { HttpClient } from '@angular/common/http';
+import { ICompany } from '../../core/models/company.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PdfService {
-  public logo = 'assets/image/logof2.png'; // Caminho da logo
-  public nome = 'Conexão elétrica e hidráulica';
-  public endereco = 'Qd 33 Conj "B" N° 01-A setor 2';
-  public cidade =  'Águas Lindas de Goiás'
-  public telefone = '(61) 99571-0019';
-  public cnpj = '52.068.148/0001-61';
-  constructor() {}
+  // public logo = 'assets/image/logof2.png'; // Caminho da logo
+  // public nome = 'Conexão elétrica e hidráulica';
+  // public endereco = 'Qd 33 Conj "B" N° 01-A setor 2';
+  // public cidade =  'Águas Lindas de Goiás'
+  // public telefone = '(61) 99571-0019';
+  // public cnpj = '52.068.148/0001-61';
+
+  public logo: string = '';
+  public nome: string = '';
+  public endereco: string = '';
+  public cidade: string = '';
+  public telefone: string = '';
+  public cnpj: string = '';
+  constructor(
+
+  ) {
+
+    const company = this.getCompanyFromStorage();
+    if (company) {
+      console.log('Empresa carregada do localStorage:', company);
+      this.nome = company.name;
+      this.endereco = `${company.address.backYard},${company.address.neighborhood},${company.address.addressLine} `;
+      this.cidade = `${company.address.city} - ${company.address.state}`;
+      this.telefone = company.contact.telephone;
+      this.cnpj = company.cnpj;
+    }
+
+    const logoUrl = this.getCompanyPdfFromStorage();
+    if (logoUrl) {
+      console.log('Logo carregada do localStorage:', logoUrl);
+      this.logo = logoUrl;
+    }
+    }
+    getCompanyFromStorage(): ICompany | null {
+      const companyData = localStorage.getItem('companyData');
+      return companyData ? JSON.parse(companyData) : null;
+    }
+
+    getCompanyLogoFromStorage(): string | null {
+      return localStorage.getItem('companyLogo');
+    }
+
+    getCompanyPdfFromStorage(): string | null {
+      return localStorage.getItem('companyPdf');
+    }
 
   private addHeader(doc: jsPDF): void {
     // Adiciona a logo centralizada
@@ -132,19 +173,25 @@ doc.addImage(this.logo, 'PNG', logoX, 5, logoWidth, 15);
 doc.setFont('helvetica', 'normal');
 
 // Personalização dos tamanhos das fontes
-doc.setFontSize(10);
+doc.setFontSize(11);
 doc.text(this.nome, doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
 
-doc.setFontSize(8);
-doc.text(`Endereço: ${this.endereco}`, doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
-doc.text(`Cidade: ${this.cidade}`, doc.internal.pageSize.getWidth() / 2, 35, { align: 'center' });
-doc.text(`Telefone: ${this.telefone}`, doc.internal.pageSize.getWidth() / 2, 40, { align: 'center' });
-doc.text(`CNPJ: ${this.cnpj}`, doc.internal.pageSize.getWidth() / 2, 45, { align: 'center' });
+doc.setFontSize(10);
+// Configurar o texto para quebra de linha
+const maxWidth = doc.internal.pageSize.getWidth(); // Largura máxima para o texto
+const enderecoQuebrado = doc.splitTextToSize(`Endereço: ${this.endereco}`, maxWidth);
+
+// Definir as coordenadas para as linhas
+doc.text(enderecoQuebrado, doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+doc.text(`Cidade: ${this.cidade}`, doc.internal.pageSize.getWidth() / 2, 38, { align: 'center' });
+doc.text(`Telefone: ${this.telefone}`, doc.internal.pageSize.getWidth() / 2, 42, { align: 'center' });
+doc.text(`CNPJ: ${this.cnpj}`, doc.internal.pageSize.getWidth() / 2, 46, { align: 'center' });
+
 
 
     // Adiciona uma linha separadora
     doc.setLineWidth(0.5);
-    doc.line(1, 48, doc.internal.pageSize.getWidth() - 1, 48);
+    doc.line(1, 48, doc.internal.pageSize.getWidth() - 1, 49);
 
     // Cabeçalhos da tabela
     const headers = [['Cod', 'Descrição', 'Qtd', 'Vlr Unit', 'Vlr Total']];
