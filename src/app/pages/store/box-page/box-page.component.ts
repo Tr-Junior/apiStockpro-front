@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import { ImportsService } from '../../../../services/imports.service';
-import { BoxItem} from '../../../../models/box-item.model';
-import { BoxService } from '../../../../services/box.Service';
-import { DataService } from '../../../../services/data.service';
-import { Product } from '../../../../models/product.model';
+import { ImportsService } from '../../../../../core/services/imports.service';
+import { BoxItem} from '../../../../../core/models/box-item.model';
+import { BoxService } from '../../../../../core/services/box.Service';
+import { DataService } from '../../../../../core/services/data.service';
+import { Product } from '../../../../../core/models/product.model';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { MenuItem, MessageService } from 'primeng/api';
-import { Budget } from '../../../../models/budget.model';
-import { User } from '../../../../models/user.model';
+import { Budget } from '../../../../../core/models/budget.model';
+import { User } from '../../../../../core/models/user.model';
 import { Security } from '../../../../utils/Security.util';
 import { PdfService } from '../../../../common/printPdf.service';
 
@@ -69,8 +69,8 @@ export class BoxPageComponent {
     });
     this.listBudget();
     this.items = [
-      { label: 'Salvar como PDF', icon: 'pi pi-file-pdf', command: () => this.saveBoxAsPdf() },
-      { label: 'Salvar como Cupom Fiscal', icon: 'pi pi-ticket', command: () => this.printReceipt() }
+      { label: 'Salvar PDF', icon: 'pi pi-file-pdf', command: () => this.saveBoxAsPdf() },
+      { label: 'Imprimir cupom', icon: 'pi pi-ticket', command: () => this.printReceipt() }
     ];
     this.loadCustomerNames();
   }
@@ -105,7 +105,7 @@ export class BoxPageComponent {
 
     const newItem: BoxItem = existingItem
       ? { ...existingItem, quantity: existingItem.quantity + 1 }
-      : { _id: product._id, title: product.title, price: product.price, purchasePrice: product.purchasePrice,  quantity: 1, discount: 0 };
+      : { _id: product._id, title: product.title, price: product.price, purchasePrice: product.purchasePrice,  quantity: 1, discount: 0  };
 
     await this.boxService.addItem(newItem);
 
