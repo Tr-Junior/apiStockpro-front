@@ -2,37 +2,52 @@ import { jwtDecode } from "jwt-decode";
 import { User } from "../../core/models/user.model";
 
 export class Security {
+  private static sessionId: string = '';
+
+  public static setSessionId(sessionId: string) {
+    this.sessionId = sessionId;
+    sessionStorage.setItem('sessionId', sessionId);
+  }
+
+  public static getSessionId(): string {
+    if (!this.sessionId) {
+      this.sessionId = sessionStorage.getItem('sessionId') || '';
+    }
+    return this.sessionId;
+  }
+
+  private static getStorageKey(key: string): string {
+    return `${this.getSessionId()}_${key}`;
+  }
+
   public static set(user: User, token: string) {
     const data = JSON.stringify(user);
-    localStorage.setItem('data', this.b64EncodeUnicode(data));
-    localStorage.setItem('token', token);
+    sessionStorage.setItem(this.getStorageKey('data'), this.b64EncodeUnicode(data));
+    sessionStorage.setItem(this.getStorageKey('token'), token);
   }
 
   public static isTokenExpired(): boolean {
     const token = this.getToken();
     if (token) {
-        // Decodifica o token JWT para obter os dados, mas não verifica a expiração
-        const decodedToken: any = jwtDecode(token);
-        // Pode-se adicionar outras verificações ou simplesmente retornar false
-        return false;
+      // Decodifica o token JWT para obter os dados, mas não verifica a expiração
+      const decodedToken: any = jwtDecode(token);
+      // Pode-se adicionar outras verificações ou simplesmente retornar false
+      return false;
     }
     return true; // Se o token não estiver disponível, assume-se que o token tenha expirado
-}
-
-
-
+  }
 
   public static setUser(user: User) {
     const data = JSON.stringify(user);
-    localStorage.setItem('data', this.b64EncodeUnicode(data));
+    sessionStorage.setItem(this.getStorageKey('data'), this.b64EncodeUnicode(data));
   }
 
   public static setToken(token: string) {
-    localStorage.setItem('token', token);
+    sessionStorage.setItem(this.getStorageKey('token'), token);
   }
 
   public static getUser(): User {
-    const data = localStorage.getItem('data');
+    const data = sessionStorage.getItem(this.getStorageKey('data'));
     if (data) {
       return JSON.parse(this.b64DecodeUnicode(data));
     } else {
@@ -41,7 +56,7 @@ export class Security {
   }
 
   public static getToken(): string {
-    const data = localStorage.getItem('token');
+    const data = sessionStorage.getItem(this.getStorageKey('token'));
     if (data) {
       return data;
     } else {
@@ -50,24 +65,22 @@ export class Security {
   }
 
   public static hasToken(): boolean {
-    if (this.getToken())
-      return true;
-    else
-      return false;
+    return !!this.getToken();
   }
 
   public static clear() {
-    localStorage.removeItem('data');
-    localStorage.removeItem('token');
+    sessionStorage.removeItem(this.getStorageKey('data'));
+    sessionStorage.removeItem(this.getStorageKey('token'));
+    sessionStorage.removeItem('sessionId');
   }
 
-    public static setPass(pass: User) {
+  public static setPass(pass: User) {
     const data = JSON.stringify(pass);
-    sessionStorage.setItem('user',this.b64EncodeUnicode(data));
+    sessionStorage.setItem(this.getStorageKey('user'), this.b64EncodeUnicode(data));
   }
 
   public static getPass(): User {
-    const data = sessionStorage.getItem('user');
+    const data = sessionStorage.getItem(this.getStorageKey('user'));
     if (data) {
       return JSON.parse(this.b64DecodeUnicode(data));
     } else {
@@ -75,9 +88,8 @@ export class Security {
     }
   }
 
-
   public static clearPass() {
-    sessionStorage.removeItem('user');
+    sessionStorage.removeItem(this.getStorageKey('user'));
   }
 
   public static hasRole(role: string): boolean {
