@@ -6,11 +6,11 @@ import { Router, NavigationEnd } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { Security } from '../../../../utils/Security.util';
-import { User } from '../../../../models/user.model';
+import { User } from '../../../../../core/models/user.model';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { MenuModule } from 'primeng/menu';
-import { DataService } from '../../../../services/data.service';
-import { ImportsService } from '../../../../services/imports.service';
+import { DataService } from '../../../../../core/services/data.service';
+import { ImportsService } from '../../../../../core/services/imports.service';
 
 @Component({
     selector: 'app-navbar',
@@ -85,6 +85,7 @@ export class NavbarComponent implements OnInit {
   }
 
   logout() {
-      console.log('Logout');
+    Security.clear();
+    this.router.navigate(['/']);
   }
 }
