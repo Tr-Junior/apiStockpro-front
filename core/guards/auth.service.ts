@@ -1,16 +1,17 @@
 import { Injectable } from "@angular/core";
 import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot } from "@angular/router";
 import { Security } from "../../src/utils/Security.util";
-@Injectable({
-  providedIn: 'root'  // Isso registra o serviço globalmente para toda a aplicação
-})
 
+@Injectable({
+  providedIn: 'root'
+})
 export class AuthService implements CanActivate {
 
   constructor(
     private router: Router,
   ) {
   }
+
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
     const token = Security.getToken();
     if (!token) {
@@ -23,10 +24,8 @@ export class AuthService implements CanActivate {
         this.router.navigate(['/']);
         return false;
       }
-
     }
 
     return true;
   }
-
 }
