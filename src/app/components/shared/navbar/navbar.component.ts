@@ -11,6 +11,7 @@ import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { MenuModule } from 'primeng/menu';
 import { DataService } from '../../../../../core/services/data.service';
 import { ImportsService } from '../../../../../core/services/imports.service';
+import { BoxService } from '../../../../../core/services/box.Service';
 
 @Component({
     selector: 'app-navbar',
@@ -27,9 +28,13 @@ export class NavbarComponent implements OnInit {
   userItems: MenuItem[] = [];
   logoUrl: string = ''; // Variável para armazenar a URL da logo
 
-  constructor(private router: Router, private service: DataService) {}
+  constructor(private router: Router, private service: DataService,
+        private boxService: BoxService,
+
+  ) {}
 
   ngOnInit() {
+
       this.user = Security.getUser();
       this.items = [
           { label: 'Produtos', icon: 'pi pi-list', routerLink: '/store' },
