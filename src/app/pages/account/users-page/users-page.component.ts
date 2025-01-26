@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { DataService } from '../../../../services/data.service';
-import { ImportsService } from '../../../../services/imports.service';
+import { DataService } from '../../../../../core/services/data.service';
+import { ImportsService } from '../../../../../core/services/imports.service';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { Security } from '../../../../utils/Security.util';
