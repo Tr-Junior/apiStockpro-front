@@ -1,12 +1,11 @@
-
 import { jwtDecode } from "jwt-decode";
-import { User } from "../models/user.model";
+import { User } from "../../core/models/user.model";
 
 export class Security {
   public static set(user: User, token: string) {
     const data = JSON.stringify(user);
-    localStorage.setItem('wrconexao', this.b64EncodeUnicode(data));
-    localStorage.setItem('wrconexaotoken', token);
+    localStorage.setItem('data', this.b64EncodeUnicode(data));
+    localStorage.setItem('token', token);
   }
 
   public static isTokenExpired(): boolean {
@@ -25,7 +24,7 @@ export class Security {
 
   public static setUser(user: User) {
     const data = JSON.stringify(user);
-    localStorage.setItem('wrconexao', this.b64EncodeUnicode(data));
+    localStorage.setItem('data', this.b64EncodeUnicode(data));
   }
 
   public static setPass(pass: User) {
@@ -44,11 +43,11 @@ export class Security {
 
 
   public static setToken(token: string) {
-    localStorage.setItem('wrconexaotoken', token);
+    localStorage.setItem('token', token);
   }
 
   public static getUser(): User {
-    const data = localStorage.getItem('wrconexao');
+    const data = localStorage.getItem('data');
     if (data) {
       return JSON.parse(this.b64DecodeUnicode(data));
     } else {
@@ -57,7 +56,7 @@ export class Security {
   }
 
   public static getToken(): string {
-    const data = localStorage.getItem('wrconexaotoken');
+    const data = localStorage.getItem('token');
     if (data) {
       return data;
     } else {
@@ -73,8 +72,8 @@ export class Security {
   }
 
   public static clear() {
-    localStorage.removeItem('wrconexao');
-    localStorage.removeItem('wrconexaotoken');
+    localStorage.removeItem('data');
+    localStorage.removeItem('token');
   }
 
   public static clearPass() {
