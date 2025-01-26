@@ -3,7 +3,7 @@ import { LoginPageComponent } from './pages/account/login-page/login-page.compon
 import { NgModule } from '@angular/core';
 import { FramePageComponent } from './pages/master/frame-page';
 import { ProductsPageComponent } from './pages/store/products-page/products-page.component';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../../core/guards/auth.service';
 import { BoxPageComponent } from './pages/store/box-page/box-page.component';
 import { SalesPageComponent } from './pages/store/sales-page/sales-page.component';
 import { BudgetPageComponent } from './pages/store/budget-page/budget-page.component';
@@ -13,6 +13,7 @@ import { ExitsPageComponent } from './pages/billing/exits-page/exits-page.compon
 import { NewUserPageComponent } from './pages/account/new-user-page/new-user-page.component';
 import { UsersPageComponent } from './pages/account/users-page/users-page.component';
 import { CompanyInfoPageComponent } from './company-info-page/company-info-page.component';
+import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
 
 export const routes: Routes = [
 {
@@ -83,6 +84,11 @@ export const routes: Routes = [
   children: [
     { path: '', component: CompanyInfoPageComponent, canActivate: [AuthService] },
   ]
+},
+
+{
+  path: '**',
+  component: PageNotFoundComponent,
 },
 ];
 
