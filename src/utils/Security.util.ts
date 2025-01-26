@@ -27,21 +27,6 @@ export class Security {
     localStorage.setItem('data', this.b64EncodeUnicode(data));
   }
 
-  public static setPass(pass: User) {
-    const data = JSON.stringify(pass);
-    sessionStorage.setItem('user',this.b64EncodeUnicode(data));
-  }
-
-  public static getPass(): User {
-    const data = sessionStorage.getItem('user');
-    if (data) {
-      return JSON.parse(this.b64DecodeUnicode(data));
-    } else {
-      return null as any;
-    }
-  }
-
-
   public static setToken(token: string) {
     localStorage.setItem('token', token);
   }
@@ -75,6 +60,21 @@ export class Security {
     localStorage.removeItem('data');
     localStorage.removeItem('token');
   }
+
+    public static setPass(pass: User) {
+    const data = JSON.stringify(pass);
+    sessionStorage.setItem('user',this.b64EncodeUnicode(data));
+  }
+
+  public static getPass(): User {
+    const data = sessionStorage.getItem('user');
+    if (data) {
+      return JSON.parse(this.b64DecodeUnicode(data));
+    } else {
+      return null as any;
+    }
+  }
+
 
   public static clearPass() {
     sessionStorage.removeItem('user');
