@@ -105,7 +105,7 @@
 <div class="col-12 p-0 ">
   <div class="card px-4 pt-4">
     <div class="p-fluid p-formgrid grid p-0">
-      <div class="col-12 md:col-5">
+      <div class="col-12 md:col-5 payment-width">
         <span class="text-lg">Forma de Pagamento</span>
         <div class="payment-options mt-2">
           <div *ngFor="let paymentOption of formPaymentOptions" class="payment-option"
@@ -119,14 +119,22 @@
 
 
       <!-- Desconto -->
-      <div class="col-12 md:col-1">
-        <span class="text-lg">Desconto</span>
-        <p-inputNumber [(ngModel)]="generalDiscount" (onInput)="updateGeneralDiscount(generalDiscount)" mode="decimal"
-          prefix="%" styleClass="w-full mt-2">
-        </p-inputNumber>
+
+      <div class="col-12 md:col-2">
+        <span class="text-lg mr-2">Desconto</span>
+        <div class="flex align-items-center gap-2 mt-2">
+          <p-toggleButton [(ngModel)]="checked" onLabel="'%'" offLabel="R$">
+          </p-toggleButton>
+          <p-inputNumber [(ngModel)]="generalDiscount" (onInput)="updateGeneralDiscount(generalDiscount)" mode="decimal"
+            [prefix]="checked ? '%' : 'R$'" styleClass="small-input">
+          </p-inputNumber>
+        </div>
       </div>
 
-      <div class="col-2 mr-1 space"></div>
+
+      <div class="space">
+
+      </div>
 
       <!-- Subtotal -->
       <div class="col md:col-1">
@@ -165,10 +173,25 @@
           [outlined]="true" [disabled]="loading" [loading]="loading">
         </p-button>
       </div>
-
       <div class="col-12 md:col-2 text-center md:text-left btn2">
-        <p-splitButton class="pdf" label="Salvar" icon="pi pi-save" [model]="items"></p-splitButton>
+        <!-- <p-splitButton class="pdf" label="Salvar" icon="pi pi-save" [model]="items"></p-splitButton> -->
+        <p-button class="button" icon="pi pi-print" iconPos="right" label="Imprimir"
+          (click)="saveBoxAsPdf()"></p-button>
       </div>
+      <div class="col-12 md:col-2 text-center md:text-left btn2">
+        <!-- <p-splitButton class="pdf" label="Salvar" icon="pi pi-save" [model]="items"></p-splitButton> -->
+        <p-button class="button" icon="pi pi-print" iconPos="right" label="Imprimir"
+          (click)="printReceipt()"></p-button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<p-divider>Orçamentos</p-divider>
+<div class="col-12 p-0 ">
+  <div class="card px-4 pt-4">
+    <div class="p-fluid p-formgrid grid p-0">
       <div class="col-12 md:col-3 text-center md:text-left">
         <p-autoComplete [(ngModel)]="customerName" [suggestions]="filteredCustomers"
           (completeMethod)="filterCustomer($event)" [dropdown]="true" placeholder="Nome do Cliente"></p-autoComplete>
@@ -180,6 +203,9 @@
     </div>
   </div>
 </div>
+
+
+
 <p-toast></p-toast>
 <p-sidebar [(visible)]="sidebarVisible" position="right" [baseZIndex]="10000">
   <h3>Detalhes do Produto</h3>
