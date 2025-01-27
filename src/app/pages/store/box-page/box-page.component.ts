@@ -53,6 +53,7 @@ export class BoxPageComponent {
   ) {
   }
 
+  checked: boolean = false;
   async ngOnInit() {
     this.user = Security.getUser();
     this.boxService.items$.subscribe(items => {
@@ -67,11 +68,7 @@ export class BoxPageComponent {
       this.searchQuery = query;
       this.search();
     });
-    this.listBudget();
-    this.items = [
-      { label: 'Salvar PDF', icon: 'pi pi-file-pdf', command: () => this.saveBoxAsPdf() },
-      { label: 'Imprimir cupom', icon: 'pi pi-ticket', command: () => this.printReceipt() }
-    ];
+   // this.listBudget();
     this.loadCustomerNames();
   }
 
@@ -291,6 +288,10 @@ export class BoxPageComponent {
                     summary: 'Erro',
                     detail: 'Falha ao finalizar a venda: ' + (err.message || 'Erro desconhecido.')
                 });
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao finalizar a venda.' });
+      console.error('Erro ao criar venda:', err);
+      console.error('Erro ao criar venda:', validItems);
+
             }
         });
 
@@ -300,7 +301,7 @@ export class BoxPageComponent {
 
 private createOrderObject(validItems: any[]): any {
     return {
-        customer: this.user.name,
+        customer: this.user._id,
         sale: {
             items: validItems.map(item => ({
                 quantity: item.quantity,
@@ -383,6 +384,8 @@ async createBudget() {
     await this.boxService.clearBox();
     this.customerName = ''; // Limpa o nome do cliente
     this.grandTotal = 0;
+    //await this.listBudget();
+    await this.loadCustomerNames();
   } catch (err: any) {
     console.error(err);
     this.messageService.add({ severity: 'error', summary: 'Erro', detail: err.message });
@@ -393,16 +396,16 @@ async clearBox() {
   await this.boxService.clearBox();
 }
 
-listBudget() {
-  this.service.getBudget().subscribe(
-    (data: Budget[]) => {
-      this.budgets = data;
-    },
-    (error) => {
-      console.error(error);
-    }
-  );
-}
+// listBudget() {
+//   this.service.getBudget().subscribe(
+//     (data: Budget[]) => {
+//       this.budgets = data;
+//     },
+//     (error) => {
+//       console.error(error);
+//     }
+//   );
+// }
 
 getQuantityInBudget(productId: string): { quantity: number, clients: string[] } {
   let quantity = 0;
@@ -518,7 +521,7 @@ async printReceipt() {
     this.messageService.add({
       severity: 'warn',
       summary: 'Atenção',
-      detail: 'Nenhum item no caixa para imprimir como cupom fiscal.',
+      detail: 'Nenhum item no caixa para imprimir como cupom.',
     });
     return;
   }
