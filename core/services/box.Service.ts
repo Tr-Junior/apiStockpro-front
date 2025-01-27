@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-import { openDB, IDBPDatabase } from 'idb';
-import { Security } from '../../src/utils/Security.util'; // Import Security to get the user session
+import { Injectable } from "@angular/core";
+import { BehaviorSubject } from "rxjs";
+import { openDB, IDBPDatabase } from "idb";
+import { Security } from "../../src/utils/Security.util";
 
 interface BoxItem {
   _id: string;
@@ -13,118 +13,146 @@ interface BoxItem {
 }
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class BoxService {
-  private dbName = 'PDVDatabase';
-  private db!: IDBPDatabase;
-
-  // Observable para notificar alterações
+  private dbNamePrefix = "PDVDatabase_";
+  private db!: IDBPDatabase | null;
   private itemsSubject = new BehaviorSubject<BoxItem[]>([]);
   items$ = this.itemsSubject.asObservable();
 
   constructor() {
-    this.initDB();
+    this.handleUserSession();
   }
 
-  private dbInitialized = false;  // Sinalizador para verificar se o DB já foi inicializado
-
-  private async initializeDatabase() {
+  /**
+   * Gerencia a sessão do usuário:
+   * - Se não há usuário logado, apaga o banco de dados existente.
+   * - Se há um usuário logado, inicializa o banco de dados correspondente.
+   */
+  private async handleUserSession(): Promise<void> {
     const userId = Security.getSessionId();
-    const storeName = `Box_${userId}`;
 
-    // Abre ou cria o banco de dados, se necessário
-    this.db = await openDB(this.dbName, 10, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains(storeName)) {
-          db.createObjectStore(storeName, { keyPath: '_id' });
-        }
-      }
-    });
-
-    this.dbInitialized = true;
+    if (!userId) {
+      await this.deleteAllDatabases();
+      this.db = null;
+      console.log("Nenhum usuário logado. Bancos de dados apagados.");
+    } else {
+      const dbName = this.getDatabaseName(userId);
+      this.db = await this.initDB(dbName);
+    }
   }
-  private async initDB() {
-    if (this.dbInitialized) return; // Evita chamadas repetidas
 
+  /**
+   * Inicializa o banco de dados para um usuário específico.
+   */
+  private async initDB(dbName: string): Promise<IDBPDatabase> {
     try {
-      const userId = Security.getSessionId();
-      const version = parseInt(userId, 36) % 10 + 1; // A versão do banco pode ser derivada do userId ou gerada de maneira única
-
-      const storeName = `Box_${userId}`;
-
-      this.db = await openDB(this.dbName, version, {
+      const db = await openDB(dbName, 1, {
         upgrade(db) {
-          if (!db.objectStoreNames.contains(storeName)) {
-            db.createObjectStore(storeName, { keyPath: '_id' });
+          if (!db.objectStoreNames.contains("Box")) {
+            db.createObjectStore("Box", { keyPath: "_id" });
           }
-        }
+        },
       });
-
-      this.dbInitialized = true;
-      await this.updateItemsSubject(); // Carrega os itens após a inicialização
+      console.log(`Banco de dados inicializado para: ${dbName}`);
+      return db;
     } catch (error) {
-      console.error('Erro ao inicializar o banco de dados:', error);
+      console.error("Erro ao inicializar o banco de dados:", error);
+      throw error;
     }
   }
 
+  /**
+   * Obtém o nome do banco de dados baseado no ID do usuário.
+   */
+  private getDatabaseName(userId: string): string {
+    return `${this.dbNamePrefix}${userId}`;
+  }
 
+  /**
+   * Apaga todos os bancos de dados que seguem o prefixo padrão.
+   */
+  private async deleteAllDatabases(): Promise<void> {
+    const dbNames = await indexedDB.databases();
+    const databasesToDelete = dbNames
+      .map((db) => db.name)
+      .filter((name) => name && name.startsWith(this.dbNamePrefix));
 
-  private async updateItemsSubject() {
-    // Não precisa de chamada recursiva de initDB aqui
+    for (const name of databasesToDelete) {
+      if (name) {
+        await new Promise((resolve, reject) => {
+          const deleteRequest = indexedDB.deleteDatabase(name);
+          deleteRequest.onsuccess = () => resolve(true);
+          deleteRequest.onerror = (event) => reject(event);
+        });
+        console.log(`Banco de dados deletado: ${name}`);
+      }
+    }
+  }
+
+  /**
+   * Atualiza os itens no BehaviorSubject.
+   */
+  private async updateItemsSubject(): Promise<void> {
     const items = await this.getItemsDirect();
-    this.itemsSubject.next(items); // Emite a lista atualizada
+    this.itemsSubject.next(items);
   }
 
-  private async getItemsDirect(): Promise<BoxItem[]> {
-    if (!this.db) {
-      console.log('DB não inicializado ainda');
-      await this.initDB();  // Garantir que o banco foi inicializado
-    }
-
-    const userId = Security.getSessionId();
-    const storeName = `Box_${userId}`;
-    return await this.db.getAll(storeName);
-  }
-
-
-
+  /**
+   * Adiciona um item ao banco de dados.
+   */
   async addItem(item: BoxItem): Promise<void> {
-    await this.initDB();  // Inicializa o DB apenas uma vez
-    const userId = Security.getSessionId();
-    const storeName = `Box_${userId}`;
-    await this.db.put(storeName, item);
+    if (!this.db) await this.handleUserSession();
+    const tx = this.db!.transaction("Box", "readwrite");
+    await tx.objectStore("Box").put(item);
     await this.updateItemsSubject();
   }
 
-
-
+  /**
+   * Atualiza um item no banco de dados.
+   */
   async updateItem(item: BoxItem): Promise<void> {
-    await this.initDB();
-    const userId = Security.getSessionId(); // Get the user session ID
-    const storeName = `Box_${userId}`; // Create a store name based on the user ID
-    await this.db.put(storeName, item);
+    if (!this.db) await this.handleUserSession();
+    const tx = this.db!.transaction("Box", "readwrite");
+    await tx.objectStore("Box").put(item);
     await this.updateItemsSubject();
   }
 
+  /**
+   * Obtém os itens diretamente do banco de dados.
+   */
+  private async getItemsDirect(): Promise<BoxItem[]> {
+    if (!this.db) await this.handleUserSession();
+    const tx = this.db!.transaction("Box", "readonly");
+    const items = await tx.objectStore("Box").getAll();
+    return items;
+  }
+
+  /**
+   * Retorna os itens armazenados no banco de dados.
+   */
   async getItems(): Promise<BoxItem[]> {
-    await this.initDB();
-    return await this.getItemsDirect();
+    return this.getItemsDirect();
   }
 
+  /**
+   * Remove um item do banco de dados pelo ID.
+   */
   async removeItem(id: string): Promise<void> {
-    await this.initDB();
-    const userId = Security.getSessionId(); // Get the user session ID
-    const storeName = `Box_${userId}`; // Create a store name based on the user ID
-    await this.db.delete(storeName, id);
+    if (!this.db) await this.handleUserSession();
+    const tx = this.db!.transaction("Box", "readwrite");
+    await tx.objectStore("Box").delete(id);
     await this.updateItemsSubject();
   }
 
+  /**
+   * Limpa todos os itens do banco de dados.
+   */
   async clearBox(): Promise<void> {
-    await this.initDB();
-    const userId = Security.getSessionId(); // Get the user session ID
-    const storeName = `Box_${userId}`; // Create a store name based on the user ID
-    await this.db.clear(storeName);
+    if (!this.db) await this.handleUserSession();
+    const tx = this.db!.transaction("Box", "readwrite");
+    await tx.objectStore("Box").clear();
     await this.updateItemsSubject();
   }
 }
