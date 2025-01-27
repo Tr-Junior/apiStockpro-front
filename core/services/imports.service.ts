@@ -39,6 +39,9 @@ import { SidebarModule } from 'primeng/sidebar';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { DividerModule } from 'primeng/divider';
+import { ToggleButtonModule } from 'primeng/togglebutton';
+import { SelectButtonModule } from 'primeng/selectbutton';
+
 // PrimeNG Services
 import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
@@ -93,7 +96,9 @@ export class ImportsService {
     SidebarModule,
     InputIconModule,
     IconFieldModule,
-    DividerModule
+    DividerModule,
+    ToggleButtonModule,
+    SelectButtonModule
   ];
 
   static providers = [
