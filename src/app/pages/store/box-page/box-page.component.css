@@ -1,5 +1,5 @@
 .space{
-  margin-left: 8%;
+  margin-left: 21%;
 }
 .payment-options {
   display: flex;
@@ -44,6 +44,13 @@
   display: inline-block; /* Exibe o texto por padrão */
 }
 
+:host ::ng-deep .payment-width {
+  width: 36.6667%
+}
+
+:host ::ng-deep .small-input {
+  width: 80px !important;  /* Ajuste o tamanho conforme necessário */
+}
 @media screen and (max-width: 500px) {
   :host ::ng-deep  .responsive-button .p-button-label {
     display: none !important; /* Esconde o texto em telas menores */
@@ -53,5 +60,13 @@
     justify-content: center; /* Garante o alinhamento central do ícone */
     width: 100%; /* Ajusta o botão para o tamanho total, se necessário */
   }
+  :host ::ng-deep .payment-width {
+    width: auto;
+  }
+
+  .space{
+    margin-left: 0%;
+  }
+
 }
 
