@@ -24,25 +24,25 @@ export class BoxPageComponent {
   public subtotal: number = 0;
   public grandTotal: number = 0;
   public products: Product[] = [];
-  currentPage: number = 1; // Inicialize com 1 ou conforme a lógica do seu componente
-  totalPages: number = 0;
+  public currentPage: number = 1; // Inicialize com 1 ou conforme a lógica do seu componente
+  public totalPages: number = 0;
   public searchQuery: string = '';
   public selectedPayment?: string;
   public generalDiscount: number = 0; // Desconto aplicado
   public loading = false;
-  searchQueryChanged = new Subject<string>();
+  public searchQueryChanged = new Subject<string>();
   public customerName: string = '';  // Adicionado
   public filteredCustomers: string[] = [];
   public customerNames: string[] = [];
   public budgets: Budget[] = [];
-  items!: MenuItem[];
+  public items!: MenuItem[];
   public sidebarVisible: boolean = false; // Controle de visibilidade da barra lateral
   public selectedProduct: Product | null = null; // Produto selecionado
   public availableStock: number = 0;
   public user!: User;
   public editedPrice: number | null = null; // Valor editado do item
-  total: number = 0; // Valor recebido
-  totalTroco: number = 0; // Valor do troco
+  public total: number = 0; // Valor recebido
+  public totalTroco: number = 0; // Valor do troco
 
   constructor(
     private boxService: BoxService,
@@ -68,7 +68,6 @@ export class BoxPageComponent {
       this.searchQuery = query;
       this.search();
     });
-   // this.listBudget();
     this.loadCustomerNames();
   }
 
@@ -396,16 +395,6 @@ async clearBox() {
   await this.boxService.clearBox();
 }
 
-// listBudget() {
-//   this.service.getBudget().subscribe(
-//     (data: Budget[]) => {
-//       this.budgets = data;
-//     },
-//     (error) => {
-//       console.error(error);
-//     }
-//   );
-// }
 
 getQuantityInBudget(productId: string): { quantity: number, clients: string[] } {
   let quantity = 0;
