@@ -5,7 +5,7 @@
         <div class="flex align-items-center font-bold border-round">
           <span class="p-input-icon-left ml-auto">
             <i class="pi pi-search"></i>
-            <input class="text" pInputText type="text" [(ngModel)]="searchQuery" (ngModelChange)="search()"
+            <input class="text" pInputText type="text" [(ngModel)]="searchQuery" (ngModelChange)="search(1, true)"
               placeholder="Pesquisar produtos..." />
           </span>
           <p-button icon="pi pi-times" styleClass="p-button-danger p-button-text" (onClick)="clearSearch()"
@@ -13,8 +13,8 @@
         </div>
         <p-button icon="pi pi-trash" label="Limpar caixa"
           styleClass="responsive-button p-button-rounded p-button-danger p-button-text" (click)="clearBox()"></p-button>
-
       </div>
+
       <p-table *ngIf="products.length > 0" class="p-0" [value]="products" styleClass="p-datatable-striped">
         <ng-template pTemplate="header">
           <tr>
@@ -32,7 +32,8 @@
             <td style="text-align: center">
               <div [ngClass]="{
                 'outofstock': (product.quantity - getQuantityInBudget(product._id).quantity) === 0,
-                'lowstock': (product.quantity - getQuantityInBudget(product._id).quantity) > 0 && (product.quantity - getQuantityInBudget(product._id).quantity) <= 10,
+                'lowstock': (product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
+                (product.quantity - getQuantityInBudget(product._id).quantity) <= 10,
                 'instock': (product.quantity - getQuantityInBudget(product._id).quantity) > 10}">
                 <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) > 0">
                   {{ product.quantity - getQuantityInBudget(product._id).quantity }}
@@ -44,7 +45,6 @@
                     (product.quantity - getQuantityInBudget(product._id).quantity) <= product.min_quantity"
                   class="pi pi-exclamation-triangle information"></i>
               </div>
-
             </td>
             <td style="text-align: center">{{ product.price | currency:'BRL':'symbol':'1.2-2'}}</td>
             <td style="text-align: center">
@@ -54,7 +54,19 @@
           </tr>
         </ng-template>
       </p-table>
+
+      <!-- Botão "Carregar Mais" -->
+      <div class="flex justify-center my-3" *ngIf="currentPage < totalPages && !loading">
+        <p-button label="Carregar Mais" icon="pi pi-refresh" styleClass="p-button-outlined"
+          (click)="loadMore()"></p-button>
+      </div>
+
+      <!-- Loader -->
+      <div *ngIf="loading" class="text-center">
+        <i class="pi pi-spinner pi-spin" style="font-size: 2em;"></i>
+      </div>
     </div>
+
 
     <div *ngIf="boxItems.length > 0" class="card p-4">
       <p-table [value]="boxItems" styleClass="p-datatable-striped">
