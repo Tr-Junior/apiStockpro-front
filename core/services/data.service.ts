@@ -32,8 +32,8 @@ export class DataService {
 
   }
 
-   searchProduct(data: any): Observable<Product[]> {
-   return this.http.post<Product[]>(`${this.API}/products/search`, data, { headers: this.composeHeaders() });
+  searchProduct(data: any): Observable<any> {
+    return this.http.post<any>(`${this.API}/products/search`, data, { headers: this.composeHeaders() });
   }
 
   getProductById(id: any): Observable<any> {
