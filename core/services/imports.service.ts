@@ -41,12 +41,14 @@ import { InputIconModule } from 'primeng/inputicon';
 import { DividerModule } from 'primeng/divider';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 // PrimeNG Services
 import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
 import { CurrencyMaskModule } from 'ng2-currency-mask';
 import { PasswordModule } from 'primeng/password';
+import { ScrollerModule } from 'primeng/scroller';
 
 // Registro da localidade brasileira
 registerLocaleData(localePt, 'pt-BR');
@@ -98,7 +100,9 @@ export class ImportsService {
     IconFieldModule,
     DividerModule,
     ToggleButtonModule,
-    SelectButtonModule
+    SelectButtonModule,
+    ProgressSpinnerModule,
+    ScrollerModule
   ];
 
   static providers = [
