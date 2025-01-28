@@ -71,6 +71,54 @@ export class BoxPageComponent {
     this.loadCustomerNames();
   }
 
+  search(page: number = 1): void {
+    const trimmedQuery = (this.searchQuery || '').trim();
+    if (!trimmedQuery) {
+        this.products = [];
+        this.totalPages = 0;
+        this.currentPage = 1;
+        return;
+    }
+
+    this.loading = true; // Ativa o loader
+    const searchData = { title: trimmedQuery, page };
+
+    this.service.searchProduct(searchData).subscribe({
+        next: (response: any) => {
+            this.products = response.products;
+            this.totalPages = response.totalPages;
+            this.currentPage = response.page;
+            this.loading = false;
+
+            if (response.products.length === 0) {
+                this.messageService.add({
+                    severity: 'info',
+                    summary: 'Nenhum Produto Encontrado',
+                    detail: 'Sua busca não retornou resultados.'
+                });
+            }
+        },
+        error: (err: any) => {
+            this.loading = false;
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Erro ao Buscar Produtos',
+                detail: 'Houve um erro ao tentar buscar os produtos. ' + (err.message || 'Tente novamente mais tarde.')
+            });
+        }
+    });
+}
+
+
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.products = [];
+  }
+
+  onPageChange(page: number): void {
+    this.search(page);
+  }
+
   async loadCart() {
     this.boxItems = await this.boxService.getItems();
     this.calculateTotals();
@@ -175,53 +223,6 @@ export class BoxPageComponent {
     this.subtotal = this.boxItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const discountValue = this.subtotal * (this.generalDiscount / 100);
     this.grandTotal = this.subtotal - discountValue;
-  }
-  search(page: number = 1): void {
-    const trimmedQuery = (this.searchQuery || '').trim();
-    if (!trimmedQuery) {
-        this.products = [];
-        this.totalPages = 0;
-        this.currentPage = 1;
-        return;
-    }
-
-    this.loading = true; // Ativa o loader
-    const searchData = { title: trimmedQuery, page };
-
-    this.service.searchProduct(searchData).subscribe({
-        next: (response: any) => {
-            this.products = response.products;
-            this.totalPages = response.totalPages;
-            this.currentPage = response.page;
-            this.loading = false;
-
-            if (response.products.length === 0) {
-                this.messageService.add({
-                    severity: 'info',
-                    summary: 'Nenhum Produto Encontrado',
-                    detail: 'Sua busca não retornou resultados.'
-                });
-            }
-        },
-        error: (err: any) => {
-            this.loading = false;
-            this.messageService.add({
-                severity: 'error',
-                summary: 'Erro ao Buscar Produtos',
-                detail: 'Houve um erro ao tentar buscar os produtos. ' + (err.message || 'Tente novamente mais tarde.')
-            });
-        }
-    });
-}
-
-
-  clearSearch(): void {
-    this.searchQuery = '';
-    this.products = [];
-  }
-
-  onPageChange(page: number): void {
-    this.search(page);
   }
 
   updateGeneralDiscount(discount: number): void {
