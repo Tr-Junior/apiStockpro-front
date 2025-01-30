@@ -43,7 +43,7 @@ export class BoxPageComponent {
   public editedPrice: number | null = null; // Valor editado do item
   public total: number = 0; // Valor recebido
   public totalTroco: number = 0; // Valor do troco
-
+  public totalRecords: number = 0;
 
   constructor(
     private boxService: BoxService,
@@ -72,6 +72,26 @@ export class BoxPageComponent {
     this.loadCustomerNames();
   }
 
+  getScrollHeight(): string {
+    const itemHeight = 46; // altura do item (virtual scroll)
+    const totalItems = this.products.length;
+    const maxHeight = 400; // altura máxima (caso a lista seja muito longa)
+    const minHeight = 100; // altura mínima para o scroll (caso a lista seja pequena)
+
+    // A altura será o número de itens multiplicado pela altura do item
+    let calculatedHeight = totalItems * itemHeight;
+
+    // Ajuste a altura mínima e máxima
+    if (calculatedHeight < minHeight) {
+      calculatedHeight = minHeight;
+    } else if (calculatedHeight > maxHeight) {
+      calculatedHeight = maxHeight;
+    }
+
+    return `${calculatedHeight}px`;
+  }
+
+
   search(page: number = 1, reset: boolean = false): void {
     const trimmedQuery = (this.searchQuery || '').trim();
     if (!trimmedQuery) {
@@ -80,6 +100,7 @@ export class BoxPageComponent {
     }
 
     if (reset) {
+      // Resetar os produtos apenas quando necessário
       this.products = [];
       this.currentPage = 1;
     }
@@ -88,18 +109,12 @@ export class BoxPageComponent {
 
     this.service.searchProduct({ title: trimmedQuery, page, limit: 25 }).subscribe({
       next: (response: any) => {
-        this.products = [...this.products, ...response.products]; // Append new products
-        this.totalPages = response.totalPages;
-        this.currentPage = response.page;
+        // Adiciona novos produtos sem sobrescrever os antigos
+        this.products = reset ? response.products : [...this.products, ...response.products];
+        this.totalRecords = response.totalRecords;
+        this.totalPages = Math.ceil(response.totalRecords / 25);
+        this.currentPage = page;
         this.loading = false;
-
-        if (response.products.length === 0 && reset) {
-          this.messageService.add({
-            severity: 'info',
-            summary: 'Nenhum Produto Encontrado',
-            detail: 'Sua busca não retornou resultados.'
-          });
-        }
       },
       error: (err: any) => {
         this.loading = false;
@@ -112,11 +127,17 @@ export class BoxPageComponent {
     });
   }
 
+
   loadMore(): void {
     if (this.currentPage < this.totalPages) {
-      this.search(this.currentPage + 1);
+      const nextPage = this.currentPage + 1;
+      console.log(`Carregando página ${nextPage}`); // Debug
+      // Não resetar a pesquisa, apenas carregar mais dados
+      this.search(nextPage, false);
     }
   }
+
+
 
   clearSearch(): void {
     this.searchQuery = '';
