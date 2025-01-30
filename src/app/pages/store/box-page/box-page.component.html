@@ -15,56 +15,64 @@
           styleClass="responsive-button p-button-rounded p-button-danger p-button-text" (click)="clearBox()"></p-button>
       </div>
 
-      <p-table *ngIf="products.length > 0" class="p-0" [value]="products" styleClass="p-datatable-striped">
-        <ng-template pTemplate="header">
-          <tr>
-            <th style="text-align: center">Produto</th>
-            <th style="text-align: center">Estoque</th>
-            <th style="text-align: center">Valor</th>
-            <th style="text-align: center">Ação</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-product>
-          <tr>
-            <td style="text-align: center; cursor: pointer;" (click)="addToBox(product)">
-              {{ product.title }}
-            </td>
-            <td style="text-align: center">
-              <div [ngClass]="{
-                'outofstock': (product.quantity - getQuantityInBudget(product._id).quantity) === 0,
-                'lowstock': (product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
-                (product.quantity - getQuantityInBudget(product._id).quantity) <= 10,
-                'instock': (product.quantity - getQuantityInBudget(product._id).quantity) > 10}">
-                <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) > 0">
-                  {{ product.quantity - getQuantityInBudget(product._id).quantity }}
-                </span>
-                <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) === 0" class="badge">
-                  Fora de Estoque
-                </span>
-                <i pTooltip="Produto abaixo do estoque minimo" tooltipPosition="top" *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
-                    (product.quantity - getQuantityInBudget(product._id).quantity) <= product.min_quantity"
-                  class="pi pi-exclamation-triangle information"></i>
-              </div>
-            </td>
-            <td style="text-align: center">{{ product.price | currency:'BRL':'symbol':'1.2-2'}}</td>
-            <td style="text-align: center">
-              <p-button icon="pi pi-cart-plus" styleClass="p-button-rounded p-button-success p-button-outlined"
-                (click)="addToBox(product)"></p-button>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
+      <!-- Tabela com scroll limitado -->
+      <div class="table-container">
+        <p-table [value]="products" [scrollable]="true" [scrollHeight]="getScrollHeight()" [rows]="25"
+          [virtualScroll]="true" [virtualScrollItemSize]="46" [totalRecords]="totalRecords" *ngIf="products.length > 0"
+          class="p-0" styleClass="p-datatable-striped">
 
-      <!-- Botão "Carregar Mais" -->
-      <div class="flex justify-center my-3" *ngIf="currentPage < totalPages && !loading">
-        <p-button label="Carregar Mais" icon="pi pi-refresh" styleClass="p-button-outlined"
-          (click)="loadMore()"></p-button>
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Produto</th>
+              <th style="text-align: center">Estoque</th>
+              <th style="text-align: center">Valor</th>
+              <th style="text-align: center">Ação</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-product>
+            <tr>
+              <td style="text-align: center; cursor: pointer;" (click)="addToBox(product)">
+                {{ product.title }}
+              </td>
+              <td style="text-align: center">
+                <div [ngClass]="{
+          'outofstock': (product.quantity - getQuantityInBudget(product._id).quantity) === 0,
+          'lowstock': (product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
+          (product.quantity - getQuantityInBudget(product._id).quantity) <= 10,
+          'instock': (product.quantity - getQuantityInBudget(product._id).quantity) > 10}">
+                  <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) > 0">
+                    {{ product.quantity - getQuantityInBudget(product._id).quantity }}
+                  </span>
+                  <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) === 0" class="badge">
+                    Fora de Estoque
+                  </span>
+                  <i pTooltip="Produto abaixo do estoque mínimo" tooltipPosition="top" *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
+             (product.quantity - getQuantityInBudget(product._id).quantity) <= product.min_quantity"
+                    class="pi pi-exclamation-triangle information"></i>
+                </div>
+              </td>
+              <td style="text-align: center">{{ product.price | currency:'BRL':'symbol':'1.2-2'}}</td>
+              <td style="text-align: center">
+                <p-button icon="pi pi-cart-plus" styleClass="p-button-rounded p-button-success p-button-outlined"
+                  (click)="addToBox(product)"></p-button>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+
       </div>
 
       <!-- Loader -->
       <div *ngIf="loading" class="text-center">
         <i class="pi pi-spinner pi-spin" style="font-size: 2em;"></i>
       </div>
+
+      <!-- Botão "Carregar mais" -->
+      <div class="text-center mt-3" *ngIf="products.length > 0 && currentPage < totalPages">
+        <p-button label="Carregar mais" icon="pi pi-refresh" (click)="loadMore()" [disabled]="loading"></p-button>
+      </div>
+
     </div>
 
 
