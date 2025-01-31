@@ -1,8 +1,12 @@
-<!-- app.component.html -->
-<div class="p-d-flex p-jc-center p-ai-center" style="min-height: 100vh;">
-  <p-card class="p-shadow-2 max-width: 400px; text-align: center;">
-    <h1 style="font-size: 80px; color: #ff4d4d;">404</h1>
-    <p>Desculpe, a página que você está procurando não foi encontrada.</p>
-    <p-button label="Voltar para a página inicial" icon="pi pi-home" routerLink="/" class="p-mt-3"></p-button>
+<div class="flex align-items-center justify-content-center min-h-screen surface-100">
+  <p-card class="p-4 shadow-3 text-center" styleClass="max-width: 400px;">
+    <ng-template pTemplate="content">
+      <div class="mb-3">
+        <h1 class="text-8xl font-bold text-red-500 mb-2 animate-bounce">404</h1>
+        <p class="text-lg text-600">Oops! A página que você procura não existe.</p>
+      </div>
+      <p-button label="Voltar para o Início" icon="pi pi-home" class="p-button-rounded p-button-primary mt-3"
+        routerLink="/"></p-button>
+    </ng-template>
   </p-card>
 </div>
