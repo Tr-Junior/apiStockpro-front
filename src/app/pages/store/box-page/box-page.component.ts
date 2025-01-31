@@ -24,26 +24,27 @@ export class BoxPageComponent {
   public subtotal: number = 0;
   public grandTotal: number = 0;
   public products: Product[] = [];
-  public currentPage: number = 1; // Inicialize com 1 ou conforme a lógica do seu componente
+  public currentPage: number = 1;
   public totalPages: number = 0;
   public searchQuery: string = '';
   public selectedPayment?: string;
-  public generalDiscount: number = 0; // Desconto aplicado
+  public generalDiscount: number = 0;
   public loading = false;
   public searchQueryChanged = new Subject<string>();
-  public customerName: string = '';  // Adicionado
+  public customerName: string = '';
   public filteredCustomers: string[] = [];
   public customerNames: string[] = [];
   public budgets: Budget[] = [];
   public items!: MenuItem[];
-  public sidebarVisible: boolean = false; // Controle de visibilidade da barra lateral
-  public selectedProduct: Product | null = null; // Produto selecionado
+  public sidebarVisible: boolean = false;
+  public selectedProduct: Product | null = null;
   public availableStock: number = 0;
   public user!: User;
-  public editedPrice: number | null = null; // Valor editado do item
-  public total: number = 0; // Valor recebido
-  public totalTroco: number = 0; // Valor do troco
+  public editedPrice: number | null = null;
+  public total: number = 0;
+  public totalTroco: number = 0;
   public totalRecords: number = 0;
+  public checked: boolean = false;
 
   constructor(
     private boxService: BoxService,
@@ -54,7 +55,7 @@ export class BoxPageComponent {
   ) {
   }
 
-  checked: boolean = false;
+
   async ngOnInit() {
     this.user = Security.getUser();
     this.boxService.items$.subscribe(items => {
@@ -63,8 +64,8 @@ export class BoxPageComponent {
 
     await this.loadCart();
     this.searchQueryChanged.pipe(
-      debounceTime(300), // Aguarda 300ms após o último evento
-      distinctUntilChanged() // Ignora valores iguais consecutivos
+      debounceTime(300),
+      distinctUntilChanged()
     ).subscribe(query => {
       this.searchQuery = query;
       this.search();
@@ -73,15 +74,13 @@ export class BoxPageComponent {
   }
 
   getScrollHeight(): string {
-    const itemHeight = 46; // altura do item (virtual scroll)
+    const itemHeight = 46;
     const totalItems = this.products.length;
-    const maxHeight = 400; // altura máxima (caso a lista seja muito longa)
-    const minHeight = 100; // altura mínima para o scroll (caso a lista seja pequena)
+    const maxHeight = 400;
+    const minHeight = 100;
 
-    // A altura será o número de itens multiplicado pela altura do item
     let calculatedHeight = totalItems * itemHeight;
 
-    // Ajuste a altura mínima e máxima
     if (calculatedHeight < minHeight) {
       calculatedHeight = minHeight;
     } else if (calculatedHeight > maxHeight) {
@@ -100,7 +99,6 @@ export class BoxPageComponent {
     }
 
     if (reset) {
-      // Resetar os produtos apenas quando necessário
       this.products = [];
       this.currentPage = 1;
     }
@@ -109,8 +107,12 @@ export class BoxPageComponent {
 
     this.service.searchProduct({ title: trimmedQuery, page, limit: 25 }).subscribe({
       next: (response: any) => {
-        // Adiciona novos produtos sem sobrescrever os antigos
-        this.products = reset ? response.products : [...this.products, ...response.products];
+        if (reset) {
+          this.products = response.products;
+        } else {
+          this.products.push(...response.products);
+        }
+
         this.totalRecords = response.totalRecords;
         this.totalPages = Math.ceil(response.totalRecords / 25);
         this.currentPage = page;
@@ -127,15 +129,33 @@ export class BoxPageComponent {
     });
   }
 
-
-  loadMore(): void {
-    if (this.currentPage < this.totalPages) {
-      const nextPage = this.currentPage + 1;
-      console.log(`Carregando página ${nextPage}`); // Debug
-      // Não resetar a pesquisa, apenas carregar mais dados
-      this.search(nextPage, false);
+  loadDataLazy(event: any): void {
+    if (this.loading || this.currentPage >= this.totalPages) {
+      return;
     }
+
+    this.loading = true;
+    const nextPage = this.currentPage + 1;
+
+    this.service.searchProduct({ title: this.searchQuery.trim(), page: nextPage, limit: 25 }).subscribe({
+      next: (response: any) => {
+        this.products.push(...response.products);
+        this.totalRecords = response.totalRecords;
+        this.totalPages = Math.ceil(response.totalRecords / 25);
+        this.currentPage = nextPage;
+        this.loading = false;
+      },
+      error: (err: any) => {
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro ao Buscar Produtos',
+          detail: 'Houve um erro ao tentar buscar os produtos. ' + (err.message || 'Tente novamente mais tarde.')
+        });
+      }
+    });
   }
+
 
 
 
