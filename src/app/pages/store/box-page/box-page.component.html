@@ -18,8 +18,8 @@
       <!-- Tabela com scroll limitado -->
       <div class="table-container">
         <p-table [value]="products" [scrollable]="true" [scrollHeight]="getScrollHeight()" [rows]="25"
-          [virtualScroll]="true" [virtualScrollItemSize]="46" [totalRecords]="totalRecords" *ngIf="products.length > 0"
-          class="p-0" styleClass="p-datatable-striped">
+          [virtualScroll]="true" [virtualScrollItemSize]="46" [lazy]="true" [totalRecords]="totalRecords"
+          (onLazyLoad)="loadDataLazy($event)" *ngIf="products.length > 0" class="p-0" styleClass="p-datatable-striped">
 
           <ng-template pTemplate="header">
             <tr>
@@ -67,12 +67,6 @@
       <div *ngIf="loading" class="text-center">
         <i class="pi pi-spinner pi-spin" style="font-size: 2em;"></i>
       </div>
-
-      <!-- Botão "Carregar mais" -->
-      <div class="text-center mt-3" *ngIf="products.length > 0 && currentPage < totalPages">
-        <p-button label="Carregar mais" icon="pi pi-refresh" (click)="loadMore()" [disabled]="loading"></p-button>
-      </div>
-
     </div>
 
 
