@@ -3,6 +3,8 @@ import { NgModule } from '@angular/core';
 import { FramePageComponent } from './pages/master/frame-page';
 import { AuthService } from '../../core/guards/auth.service';
 import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
+import { LoginRedirectGuard } from '../../core/guards/loginRedirectGuard.service';
+import { LoginModalComponent } from './pages/account/login-sales/login-sales.component';
 
 export const routes: Routes = [
   {
@@ -43,16 +45,16 @@ export const routes: Routes = [
       {
         path: '',
         loadComponent: () => import('./pages/store/sales-page/sales-page.component').then(m => m.SalesPageComponent),
-        canActivate: [AuthService]
+        canActivate: [AuthService, LoginRedirectGuard]
       }
     ]
   },
   {
-    path: '',
+    path: 'budgets',
     component: FramePageComponent,
     children: [
       {
-        path: 'budgets',
+        path: '',
         loadComponent: () => import('./pages/store/budget-page/budget-page.component').then(m => m.BudgetPageComponent),
         canActivate: [AuthService]
       }
@@ -76,12 +78,12 @@ export const routes: Routes = [
       {
         path: 'exits',
         loadComponent: () => import('./pages/billing/exits-page/exits-page.component').then(m => m.ExitsPageComponent),
-        canActivate: [AuthService]
+        canActivate: [AuthService, LoginRedirectGuard]
       },
       {
         path: 'details',
         loadComponent: () => import('./pages/billing/costs-page/costs-page.component').then(m => m.CostsPageComponent),
-        canActivate: [AuthService]
+        canActivate: [AuthService, LoginRedirectGuard]
       }
     ]
   },
@@ -119,8 +121,17 @@ export const routes: Routes = [
   {
     path: '**',
     redirectTo: '404'
+  },
+  {
+    path: 'login-guard',
+    component: FramePageComponent,
+    children: [
+      { path: '', component: LoginModalComponent },
+      { path: 'login-entrance-exits', component: LoginModalComponent }
+    ]
   }
 ];
+
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
