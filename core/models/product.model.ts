@@ -11,3 +11,13 @@ export class Product {
     public supplier: Supplier
   ) { }
 }
+
+export class ProductResponse {
+  constructor(
+    public data: Product[],
+    public currentPage: number,
+    public perPage: string,
+    public totalItems: number,
+    public totalPages: number | null
+  ) { }
+}
