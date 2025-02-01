@@ -2,7 +2,7 @@ import { Component, Input, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { DataService } from '../../../../../core/services/data.service';
-import { Product } from '../../../../../core/models/product.model';
+import { Product, ProductResponse } from '../../../../../core/models/product.model';
 import { Budget } from '../../../../../core/models/budget.model';
 import { Supplier } from '../../../../../core/models/supplier-model';
 import { debounceTime, distinctUntilChanged, Observable, Subject } from 'rxjs';
@@ -34,9 +34,11 @@ export class ProductsPageComponent {
   public totalPages: number = 0;
   public searchQueryChanged = new Subject<string>();
   public isLoading: boolean = true;
-  public page: number = 1; // Controla a página atual para busca ou paginação
   public allProductsLoaded: boolean = false; // Indica se todos os produtos foram carregados
-
+  public page: number = 1; // Controla a página atual para busca ou paginação
+  public total: number = 0 // Total de valores na requisição
+  public offset: number = 0 // Índice de inicio da paginação
+  public limit: number = 100 // Quantidade de itens por página
 
   constructor(
     private service: DataService,
@@ -80,13 +82,27 @@ export class ProductsPageComponent {
   }
 
 
+  pageChange(event: any) {
+    if (this.limit != event.rows) {
+      this.page = 1
+      this.offset = 0
+    } else {
+      this.page = (event.first / event.rows) + 1
+      this.offset = event.first
+    }
+    this.limit = event.rows
+    this.listProd()
+  }
+
   listProd() {
     this.isLoading = true; // Inicia o carregamento
-    this.service.getProducts().subscribe(
-      (data: Product[]) => {
-        this.product = data;
+    this.service.getProducts({ page: this.page, limit: this.limit }).subscribe(
+      (data: ProductResponse) => {
+        this.product = data.data;
+        this.total = data.totalItems;
         this.filteredProducts = [...this.product]; // Inicializa com todos os produtos
         this.isLoading = false; // Finaliza o carregamento
+
       },
       (error) => {
         console.error('Erro ao carregar produtos:', error);
