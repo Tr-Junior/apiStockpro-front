@@ -156,15 +156,10 @@ export class BoxPageComponent {
     });
   }
 
-
-
-
   clearSearch(): void {
     this.searchQuery = '';
     this.products = [];
   }
-
-
 
   async loadCart() {
     this.boxItems = await this.boxService.getItems();
