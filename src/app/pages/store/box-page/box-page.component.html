@@ -137,10 +137,8 @@
       <div class="col-12 md:col-2">
         <span class="text-lg mr-2">Desconto</span>
         <div class="flex align-items-center gap-2 mt-2">
-          <p-toggleButton [(ngModel)]="checked" onLabel="'%'" offLabel="R$">
-          </p-toggleButton>
           <p-inputNumber [(ngModel)]="generalDiscount" (onInput)="updateGeneralDiscount(generalDiscount)" mode="decimal"
-            [prefix]="checked ? '%' : 'R$'" styleClass="small-input">
+            prefix="%" styleClass="small-input">
           </p-inputNumber>
         </div>
       </div>
