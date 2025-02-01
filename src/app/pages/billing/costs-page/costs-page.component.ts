@@ -150,17 +150,24 @@ export class CostsPageComponent {
     this.listEntrances();
   }
 
-  listProd() {
-    this
-      .service
-      .getProducts()
-      .subscribe(
-        (data: any) => {
-          this.busy = false;
-          this.product = data;
-          this.totalPurchaseValue = this.calculateTotalPurchaseValue(this.product);
-        })
+  listProd(page: number = 1, limit: number = 3000) {
+    this.busy = true;
+
+    const params = { page: page.toString(), limit: limit.toString() };
+
+    this.service.getProducts(params).subscribe(
+      (data: any) => {
+        this.busy = false;
+        this.product = data.data; // Ajuste se a resposta do backend tiver um campo "data"
+        this.totalPurchaseValue = this.calculateTotalPurchaseValue(this.product);
+      },
+      (error) => {
+        console.error('Erro ao carregar produtos:', error);
+        this.busy = false;
+      }
+    );
   }
+
 
   calculateTotalPurchaseValue(products: Product[]): number {
     let totalValue = 0;
