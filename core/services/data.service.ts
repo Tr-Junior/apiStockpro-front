@@ -1,6 +1,6 @@
-import { HttpClient, HttpHeaders, HttpClientModule } from "@angular/common/http";
+import { HttpClient, HttpHeaders, HttpClientModule, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { Product } from "../models/product.model";
+import { Product, ProductResponse } from "../models/product.model";
 import { Observable } from "rxjs";
 import { environment } from "../../src/environments/environment.development";
 import { Security } from "../../src/utils/Security.util";
@@ -39,8 +39,11 @@ export class DataService {
   getProductById(id: any): Observable<any> {
     return this.http.get(`${this.API}/products/getById/` + id, { headers: this.composeHeaders() });
   }
-  getProducts() {
-    return this.http.get<Product[]>(`${this.API}/products`, { headers: this.composeHeaders() });
+  getProducts(params: any) {
+    return this.http.get<ProductResponse>(`${this.API}/products`, {
+      headers: this.composeHeaders(),
+      params: new HttpParams({ fromObject: params })
+    });
   }
   createProduct(data: any) {
     return this.http.post(`${this.API}/products`, data, { headers: this.composeHeaders() });
