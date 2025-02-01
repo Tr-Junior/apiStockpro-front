@@ -45,6 +45,7 @@ export class DataService {
       params: new HttpParams({ fromObject: params })
     });
   }
+
   createProduct(data: any) {
     return this.http.post(`${this.API}/products`, data, { headers: this.composeHeaders() });
   }
