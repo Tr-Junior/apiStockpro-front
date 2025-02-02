@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 import { Budget } from '../../../../../core/models/budget.model';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { DataService } from '../../../../../core/services/data.service';
-import { BoxService } from '../../../../../core/services/box.Service';
-import { ImportsService } from '../../../../../core/services/imports.service';
+import { DataService } from '../../../../../core/api/data.service';
+import { BoxService } from '../../../../../core/api/box.Service';
+import { ImportsService } from '../../../../../core/api/imports.service';
 import { PdfService } from '../../../../common/printPdf.service';
 
 @Component({

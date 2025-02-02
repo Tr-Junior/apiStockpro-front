@@ -1,12 +1,12 @@
 import { Component, Input, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { DataService } from '../../../../../core/services/data.service';
+import { DataService } from '../../../../../core/api/data.service';
 import { Product, ProductResponse } from '../../../../../core/models/product.model';
 import { Budget } from '../../../../../core/models/budget.model';
 import { Supplier } from '../../../../../core/models/supplier-model';
 import { debounceTime, distinctUntilChanged, Observable, Subject } from 'rxjs';
-import { ImportsService } from '../../../../../core/services/imports.service';
+import { ImportsService } from '../../../../../core/api/imports.service';
 import * as XLSX from 'xlsx';
 import { ProductRegistrationPageComponent } from '../product-registration-page/product-registration-page.component';
 @Component({

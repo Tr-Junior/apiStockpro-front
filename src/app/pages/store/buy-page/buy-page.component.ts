@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { ImportsService } from '../../../../../core/services/imports.service';
-import { DataService } from '../../../../../core/services/data.service';
+import { ImportsService } from '../../../../../core/api/imports.service';
+import { DataService } from '../../../../../core/api/data.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ProductsBuy } from '../../../../../core/models/productsBuy-model';
 import { MessageService, SelectItem } from 'primeng/api';

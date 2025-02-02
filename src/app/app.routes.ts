@@ -3,8 +3,7 @@ import { NgModule } from '@angular/core';
 import { FramePageComponent } from './pages/master/frame-page';
 import { AuthService } from '../../core/guards/auth.service';
 import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
-import { LoginRedirectGuard } from '../../core/guards/loginRedirectGuard.service';
-import { LoginModalComponent } from './pages/account/login-sales/login-sales.component';
+import { LoginGuard } from '../../core/guards/loginGuard.service';
 
 export const routes: Routes = [
   {
@@ -45,7 +44,7 @@ export const routes: Routes = [
       {
         path: '',
         loadComponent: () => import('./pages/store/sales-page/sales-page.component').then(m => m.SalesPageComponent),
-        canActivate: [AuthService, LoginRedirectGuard]
+        canActivate: [AuthService, LoginGuard]
       }
     ]
   },
@@ -78,12 +77,12 @@ export const routes: Routes = [
       {
         path: 'exits',
         loadComponent: () => import('./pages/billing/exits-page/exits-page.component').then(m => m.ExitsPageComponent),
-        canActivate: [AuthService, LoginRedirectGuard]
+        canActivate: [AuthService]
       },
       {
         path: 'details',
         loadComponent: () => import('./pages/billing/costs-page/costs-page.component').then(m => m.CostsPageComponent),
-        canActivate: [AuthService, LoginRedirectGuard]
+        canActivate: [AuthService, LoginGuard]
       }
     ]
   },
@@ -114,22 +113,26 @@ export const routes: Routes = [
       }
     ]
   },
-  {
-    path: '404',
-    component: PageNotFoundComponent
-  },
-  {
-    path: '**',
-    redirectTo: '404'
-  },
+
+
   {
     path: 'login-guard',
-    component: FramePageComponent,
+     component: FramePageComponent,
     children: [
-      { path: '', component: LoginModalComponent },
-      { path: 'login-entrance-exits', component: LoginModalComponent }
+      {
+      path: '',
+      loadComponent: () => import('./pages/account/login-guard-page/login-guard-page.component').then(m => m.LoginGuardPageComponent)
+      }
     ]
-  }
+  },
+  {
+     path: '404',
+     component: PageNotFoundComponent
+   },
+   {
+     path: '**',
+     redirectTo: '404'
+   }
 ];
 
 

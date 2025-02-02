@@ -9,9 +9,9 @@ import { Security } from '../../../../utils/Security.util';
 import { User } from '../../../../../core/models/user.model';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { MenuModule } from 'primeng/menu';
-import { DataService } from '../../../../../core/services/data.service';
-import { ImportsService } from '../../../../../core/services/imports.service';
-import { BoxService } from '../../../../../core/services/box.Service';
+import { DataService } from '../../../../../core/api/data.service';
+import { ImportsService } from '../../../../../core/api/imports.service';
+import { BoxService } from '../../../../../core/api/box.Service';
 
 @Component({
     selector: 'app-navbar',
@@ -55,7 +55,7 @@ export class NavbarComponent implements OnInit {
       this.userItems = [
           { label: 'Cadastro de usuário', icon: 'pi pi-user-plus', routerLink: '/account/new-user' },
           { label: 'Alterar senha', icon: 'pi pi-key', routerLink: '/account/passwordChange' },
-          { label: 'Informações da empresa', icon: 'pi pi-key', routerLink: '/company' }
+          { label: 'Informações da empresa', icon: 'pi pi-building', routerLink: '/company' }
       ];
 
       this.updateActiveItem(this.router.url);

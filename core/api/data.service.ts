@@ -136,6 +136,10 @@ export class DataService {
     return this.http.post(`${this.API}/customers/refresh-token`, null, { headers: this.composeHeaders() });
   }
 
+  validatePassword(data: any): Observable<{ valid: boolean }> {
+    return this.http.post<{ valid: boolean }>(`${this.API}/customers/validate-password`, data, { headers: this.composeHeaders() });
+  }
+
 
   //Usuario
 

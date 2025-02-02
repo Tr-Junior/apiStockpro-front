@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { DataService } from '../../../../../core/services/data.service';
-import { ImportsService } from '../../../../../core/services/imports.service';
+import { DataService } from '../../../../../core/api/data.service';
+import { ImportsService } from '../../../../../core/api/imports.service';
 import { ConfirmationService } from 'primeng/api/confirmationservice';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
