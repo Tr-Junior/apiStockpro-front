@@ -1,17 +1,15 @@
 import { Component } from '@angular/core';
-import { DataService } from '../../../../../core/api/data.service';
-import { ImportsService } from '../../../../../core/api/imports.service';
-import { ConfirmationService } from 'primeng/api/confirmationservice';
+import { ImportsService } from '../../../../core/services/imports.service';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { User } from '../../../../../core/models/user.model';
+import { User } from '../../../../core/models/user.model';
+import { UserService } from '../../../../core/api/user/user.service';
 
 @Component({
   selector: 'app-new-user-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService],
+  providers: [ImportsService.providers],
   templateUrl: './new-user-page.component.html',
   styleUrl: './new-user-page.component.css'
 })
@@ -26,7 +24,7 @@ export class NewUserPageComponent {
 
   constructor(
     private messageService: MessageService,
-    private service: DataService,
+    private userService: UserService,
     private fb: FormBuilder
   ) {
     this.form = this.fb.group(
@@ -72,7 +70,7 @@ export class NewUserPageComponent {
     const newName = this.form.value.name;
 
     // Verificar se o usuário com o mesmo nome já existe
-    this.service.checkUsernameExists(newName).subscribe({
+    this.userService.checkUsernameExists(newName).subscribe({
       next: (exists: boolean) => {
         if (exists) {
           this.messageService.add({
@@ -91,7 +89,7 @@ export class NewUserPageComponent {
             this.form.value.roles
           );
 
-          this.service.createUser(newUser).subscribe({
+          this.userService.createUser(newUser).subscribe({
             next: (data: any) => {
               this.busy = false;
               this.messageService.add({

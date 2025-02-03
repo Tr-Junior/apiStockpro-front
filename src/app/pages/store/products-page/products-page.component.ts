@@ -1,19 +1,21 @@
 import { Component, Input, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { DataService } from '../../../../../core/api/data.service';
-import { Product, ProductResponse } from '../../../../../core/models/product.model';
-import { Budget } from '../../../../../core/models/budget.model';
-import { Supplier } from '../../../../../core/models/supplier-model';
+import { Product, ProductResponse } from '../../../../core/models/product.model';
+import { Budget } from '../../../../core/models/budget.model';
+import { Supplier } from '../../../../core/models/supplier-model';
 import { debounceTime, distinctUntilChanged, Observable, Subject } from 'rxjs';
-import { ImportsService } from '../../../../../core/api/imports.service';
+import { ImportsService } from '../../../../core/services/imports.service';
 import * as XLSX from 'xlsx';
 import { ProductRegistrationPageComponent } from '../product-registration-page/product-registration-page.component';
+import { ProductService } from '../../../../core/api/products/product.service';
+import { SupplierService } from '../../../../core/api/supplier/suplier.service';
+import { BudgetService } from '../../../../core/api/budget/budget.service';
 @Component({
   selector: 'app-products-page',
   standalone: true,
   imports: [ImportsService.imports, ProductRegistrationPageComponent],
-  providers: [ImportsService.providers, DataService],
+  providers: [ImportsService.providers],
   templateUrl: './products-page.component.html',
   styleUrl: './products-page.component.css'
 })
@@ -41,7 +43,9 @@ export class ProductsPageComponent {
   public limit: number = 100 // Quantidade de itens por página
 
   constructor(
-    private service: DataService,
+    private productService: ProductService,
+    private supplierService: SupplierService,
+    private budgetService: BudgetService,
     private messageService: MessageService,
     private fb: FormBuilder,
     private confirmationService: ConfirmationService
@@ -96,7 +100,7 @@ export class ProductsPageComponent {
 
   listProd() {
     this.isLoading = true; // Inicia o carregamento
-    this.service.getProducts({ page: this.page, limit: this.limit }).subscribe(
+    this.productService.getProducts({ page: this.page, limit: this.limit }).subscribe(
       (data: ProductResponse) => {
         this.product = data.data;
         this.total = data.totalItems;
@@ -112,7 +116,7 @@ export class ProductsPageComponent {
   }
 
   listBudget() {
-    this.service.getBudget().subscribe(
+    this.budgetService.getBudget().subscribe(
       (data: Budget[]) => {
         this.budgets = data;
       },
@@ -121,7 +125,7 @@ export class ProductsPageComponent {
   }
 
   loadSuppliers() {
-    this.service.getSupplier().subscribe(
+    this.supplierService.getSupplier().subscribe(
       (data) => {
         this.suppliers = data;
       },
@@ -197,7 +201,7 @@ export class ProductsPageComponent {
 
     const updatedProduct = { id: product._id, ...this.selectedProduct };
 
-    this.service.updateProduct(updatedProduct).subscribe({
+    this.productService.updateProduct(updatedProduct).subscribe({
       next: (data: any) => {
         this.product[index] = data.product; // Atualiza o produto na lista
         this.filteredProducts = [...this.product]; // Recarrega os produtos filtrados
@@ -240,7 +244,7 @@ export class ProductsPageComponent {
 
 
   deleteProduct(productId: string) {
-    this.service.delProd(productId).subscribe({
+    this.productService.deleteProduct(productId).subscribe({
       next: () => {
         // Remove o produto da lista local
         this.product = this.product.filter(p => p._id !== productId);
@@ -298,7 +302,7 @@ export class ProductsPageComponent {
     this.busy = true;
     const searchData = { title: this.searchQuery, page };
 
-    this.service.searchProduct(searchData).subscribe({
+    this.productService.searchProduct(searchData).subscribe({
       next: (response: any) => {
         this.product = response.products;
         this.totalPages = response.totalPages;

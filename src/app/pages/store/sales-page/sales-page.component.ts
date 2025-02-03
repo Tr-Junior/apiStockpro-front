@@ -1,16 +1,17 @@
 import { Component } from '@angular/core';
-import { Order } from '../../../../../core/models/order.models';
-import { ImportsService } from '../../../../../core/api/imports.service';
-import { DataService } from '../../../../../core/api/data.service';
+import { Order } from '../../../../core/models/order.models';
+import { ImportsService } from '../../../../core/services/imports.service';
 import { Router } from '@angular/router';
 import { PrimeNGConfig, MessageService, ConfirmationService } from 'primeng/api';
 import { Security } from '../../../../utils/Security.util';
+import { OrderService } from '../../../../core/api/order/order.service';
+import { EntrancesService } from '../../../../core/api/entrances/entrances.service';
 
 @Component({
   selector: 'app-sales-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService, MessageService], // Adicionado MessageService
+  providers: [ImportsService.providers, MessageService], // Adicionado MessageService
   templateUrl: './sales-page.component.html',
   styleUrls: ['./sales-page.component.css']
 })
@@ -23,8 +24,8 @@ export class SalesPageComponent {
 
   constructor(
     private primengConfig: PrimeNGConfig,
-    private service: DataService,
-    private router: Router,
+    private orderService: OrderService,
+    private entrancesService: EntrancesService,
     private messageService: MessageService, // Injetado MessageService
     private confirmationService: ConfirmationService
 
@@ -52,7 +53,7 @@ export class SalesPageComponent {
       }
     }
 
-    this.service.getOrderByDateRange(startDate, endDate).subscribe({
+    this.orderService.getOrderByDateRange(startDate, endDate).subscribe({
       next: (data: any) => {
         this.orders = data;
         this.calculatePaymentTotals();
@@ -135,14 +136,14 @@ export class SalesPageComponent {
 
   async delete(id: any, code: any) {
     try {
-      const data = await this.service.delOrder(id).toPromise();
+      const data = await this.orderService.delOrder(id).toPromise();
       this.messageService.add({
         severity: 'success',
         summary: 'Venda deletada',
         detail: data.message // Mostra a mensagem de sucesso para a venda deletada
       });
 
-      await this.service.delEntrancesByCode(code).toPromise();
+      await this.entrancesService.delEntrancesByCode(code).toPromise();
       this.messageService.add({
         severity: 'success',
         summary: 'Entrada deletada',

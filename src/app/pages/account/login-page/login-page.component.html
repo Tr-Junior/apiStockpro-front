@@ -1,3 +1,5 @@
+<p-toast></p-toast>
+
 <div class="surface-ground flex align-items-center justify-content-center max-h-screen max-w-screen overflow-hidden">
   <div class="flex flex-column align-items-center justify-content-center">
     <div
@@ -17,9 +19,6 @@
             [toggleMask]="true" styleClass="mb-5" inputStyleClass="w-full p-3 md:w-30rem" (keydown.enter)="submit()"
             pHotkey="enter"></p-password>
 
-          <div class="flex align-items-center justify-content-between mb-5 gap-5">
-
-          </div>
           <button key="enter" pButton pRipple label="Entrar" class="w-full p-3 text-xl" pHotkey="enter"
             (click)="submit()"></button>
         </div>

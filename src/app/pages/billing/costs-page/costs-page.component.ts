@@ -1,19 +1,21 @@
 import { Component } from '@angular/core';
-import { DataService } from '../../../../../core/api/data.service';
-import { ImportsService } from '../../../../../core/api/imports.service';
-import { Product } from '../../../../../core/models/product.model';
-import { Entrances } from '../../../../../core/models/entrances.model';
+import { ImportsService } from '../../../../core/services/imports.service';
+import { Product } from '../../../../core/models/product.model';
+import { Entrances } from '../../../../core/models/entrances.model';
 import { Router } from '@angular/router';
 import { PrimeNGConfig } from 'primeng/api';
-import { Exits } from '../../../../../core/models/exits.model';
+import { Exits } from '../../../../core/models/exits.model';
 import { Security } from '../../../../utils/Security.util';
 import { ChartPageComponent } from '../../../components/chart-page/chart-page.component';
+import { ExitsService } from '../../../../core/api/exits/exits.service';
+import { EntrancesService } from '../../../../core/api/entrances/entrances.service';
+import { ProductService } from '../../../../core/api/products/product.service';
 
 @Component({
   selector: 'app-costs-page',
   standalone: true,
   imports: [ImportsService.imports, ChartPageComponent],
-  providers: [ImportsService.providers, DataService],
+  providers: [ImportsService.providers],
   templateUrl: './costs-page.component.html',
   styleUrl: './costs-page.component.css'
 })
@@ -37,7 +39,9 @@ export class CostsPageComponent {
   product: Product[] = [];
 
   constructor(
-    private service: DataService,
+    private exitsService: ExitsService,
+    private entrancesService: EntrancesService,
+    private productService: ProductService,
     private primengConfig: PrimeNGConfig,
     private router: Router
 
@@ -69,7 +73,7 @@ export class CostsPageComponent {
   };
 
   listExits() {
-    this.service.getExits().subscribe((data: any) => {
+    this.exitsService.getExits().subscribe((data: any) => {
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth();
       const currentYear = currentDate.getFullYear();
@@ -83,7 +87,7 @@ export class CostsPageComponent {
   }
 
   listEntrances() {
-    this.service.getEntrances().subscribe((data: any) => {
+    this.entrancesService.getEntrances().subscribe((data: any) => {
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth();
       const currentYear = currentDate.getFullYear();
@@ -117,9 +121,9 @@ export class CostsPageComponent {
   }
 
   getInOutByDateRange(startDate: Date, endDate: Date) {
-    this.service.getExits().subscribe(
+    this.exitsService.getExits().subscribe(
       (exitsData: any) => {
-        this.service.getEntrances().subscribe(
+        this.entrancesService.getEntrances().subscribe(
           (entrancesData: any) => {
             const start = new Date(startDate);
             const end = new Date(endDate);
@@ -155,7 +159,7 @@ export class CostsPageComponent {
 
     const params = { page: page.toString(), limit: limit.toString() };
 
-    this.service.getProducts(params).subscribe(
+    this.productService.getProducts(params).subscribe(
       (data: any) => {
         this.busy = false;
         this.product = data.data; // Ajuste se a resposta do backend tiver um campo "data"

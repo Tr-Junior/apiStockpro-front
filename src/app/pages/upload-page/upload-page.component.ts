@@ -1,15 +1,15 @@
 import { Component } from '@angular/core';
 import { MessageService } from 'primeng/api';
-import { DataService } from '../../../../core/api/data.service';
-import { ImportsService } from '../../../../core/api/imports.service';
-import { Image } from '../../../../core/models/image.model';
+import { ImportsService } from '../../../core/services/imports.service';
+import { Image } from '../../../core/models/image.model';
 import { environment } from '../../../environments/environment.development';
+import { UploadService } from '../../../core/api/upload/upload.service';
 
 @Component({
   selector: 'app-upload-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService, MessageService],
+  providers: [ImportsService.providers, MessageService],
   templateUrl: './upload-page.component.html',
   styleUrl: './upload-page.component.css'
 })
@@ -23,7 +23,7 @@ export class UploadPageComponent {
   public imageUpload: Image[] = [];
   constructor(
     private messageService: MessageService,
-    private service: DataService
+    private uploadService: UploadService
   ) {}
 
   ngOnInit() {
@@ -56,8 +56,8 @@ export class UploadPageComponent {
     console.log('Enviando arquivos:', this.files); // Para depuração
 
     const uploadObservable = this.uploadType === 'logo'
-      ? this.service.uploadLogo(formData)
-      : this.service.uploadPdf(formData);
+      ? this.uploadService.uploadLogo(formData)
+      : this.uploadService.uploadPdf(formData);
 
     uploadObservable.subscribe({
       next: () => {
@@ -100,7 +100,7 @@ export class UploadPageComponent {
   }
 
   getImages() {
-    this.service.getImages('logo').subscribe(
+    this.uploadService.getImages('logo').subscribe(
       (data: Image) => {
         if (data && data.imageUrl) {
           this.logoImage = { filePath: data.imageUrl };
@@ -121,7 +121,7 @@ export class UploadPageComponent {
       }
     );
 
-    this.service.getImages('pdf').subscribe(
+    this.uploadService.getImages('pdf').subscribe(
       (data: Image) => {
         if (data && data.imageUrl) {
           this.pdfImage = { filePath: data.imageUrl };

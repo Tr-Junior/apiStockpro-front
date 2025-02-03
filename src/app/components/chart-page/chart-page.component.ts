@@ -1,14 +1,15 @@
 import { Component } from '@angular/core';
-import { Entrances } from '../../../../core/models/entrances.model';
-import { Exits } from '../../../../core/models/exits.model';
-import { DataService } from '../../../../core/api/data.service';
-import { ImportsService } from '../../../../core/api/imports.service';
+import { Entrances } from '../../../core/models/entrances.model';
+import { Exits } from '../../../core/models/exits.model';
+import { ImportsService } from '../../../core/services/imports.service';
+import { EntrancesService } from '../../../core/api/entrances/entrances.service';
+import { ExitsService } from '../../../core/api/exits/exits.service';
 
 @Component({
   selector: 'app-chart-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService],
+  providers: [ImportsService.providers],
   templateUrl: './chart-page.component.html',
   styleUrl: './chart-page.component.css'
 })
@@ -29,7 +30,10 @@ export class ChartPageComponent {
   public chartData: any;
   public chartOptions: any;
 
-  constructor(private service: DataService) { }
+  constructor(
+    private exitsService: ExitsService,
+    private entrancesService: EntrancesService,
+  ) { }
 
   ngOnInit() {
     this.listEntrances();
@@ -38,7 +42,7 @@ export class ChartPageComponent {
 
   listExits() {
     const currentYear = new Date().getFullYear();
-    this.service.getExits().subscribe((data: any) => {
+    this.exitsService.getExits().subscribe((data: any) => {
       this.exits = data.filter((exit: Exits) => {
         const exitDate = new Date(exit.date);
         return exitDate.getFullYear() === currentYear;
@@ -50,7 +54,7 @@ export class ChartPageComponent {
 
   listEntrances() {
     const currentYear = new Date().getFullYear();
-    this.service.getEntrances().subscribe((data: any) => {
+    this.entrancesService.getEntrances().subscribe((data: any) => {
       this.entrances = data.filter((entrance: Entrances) => {
         const entranceDate = new Date(entrance.createDate);
         return entranceDate.getFullYear() === currentYear;
@@ -71,9 +75,9 @@ export class ChartPageComponent {
   }
 
   getInOutByDateRange(startDate: string, endDate: string) {
-    this.service.getExits().subscribe(
+    this.exitsService.getExits().subscribe(
       (exitsData: any) => {
-        this.service.getEntrances().subscribe(
+        this.entrancesService.getEntrances().subscribe(
           (entrancesData: any) => {
             const start = new Date(startDate);
             const end = new Date(endDate);

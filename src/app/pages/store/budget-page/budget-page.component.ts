@@ -1,16 +1,17 @@
 import { Component } from '@angular/core';
-import { Budget } from '../../../../../core/models/budget.model';
+import { Budget } from '../../../../core/models/budget.model';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { DataService } from '../../../../../core/api/data.service';
-import { BoxService } from '../../../../../core/api/box.Service';
-import { ImportsService } from '../../../../../core/api/imports.service';
+import { BoxService } from '../../../../core/services/box.Service';
+import { ImportsService } from '../../../../core/services/imports.service';
 import { PdfService } from '../../../../common/printPdf.service';
+import { BudgetService } from '../../../../core/api/budget/budget.service';
+import { ProductService } from '../../../../core/api/products/product.service';
 
 @Component({
   selector: 'app-budget-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService],
+  providers: [ImportsService.providers],
   templateUrl: './budget-page.component.html',
   styleUrl: './budget-page.component.css'
 })
@@ -32,9 +33,10 @@ export class BudgetPageComponent {
 
   constructor(
     private messageService: MessageService,
-    private service: DataService,
+    private budgetService: BudgetService,
     private confirmationService: ConfirmationService,
     private boxService: BoxService,
+    private productService: ProductService,
     private pdfService: PdfService
   ) {}
 
@@ -55,7 +57,7 @@ export class BudgetPageComponent {
 
   listBudget() {
     this.busy = true;
-    this.service.getBudget().subscribe({
+    this.budgetService.getBudget().subscribe({
       next: (data: Budget[]) => {
         this.busy = false;
         this.budgets = data;
@@ -73,7 +75,7 @@ export class BudgetPageComponent {
 
   onRowEditSave(budget: Budget) {
     if (budget.client.trim()) {
-      this.service.updateClientName({ id: budget._id, client: budget.client }).subscribe({
+      this.budgetService.updateClientName({ id: budget._id, client: budget.client }).subscribe({
         next: () => {
           delete this.clonedBudgets[budget.number];
           this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Nome do cliente atualizado com sucesso' });
@@ -107,7 +109,7 @@ export class BudgetPageComponent {
   }
 
   removeItemFromBudget(budget: Budget, itemId: string, quantityToRemove: number) {
-    this.service.removeItemFromBudget(budget._id, itemId, quantityToRemove).subscribe({
+    this.budgetService.removeItemFromBudget(budget._id, itemId, quantityToRemove).subscribe({
       next: () => {
         const item = budget.budget.items.find(item => item._id === itemId);
         if (item && item.quantity > quantityToRemove) {
@@ -163,7 +165,7 @@ export class BudgetPageComponent {
       return;
     }
 
-    this.service.delBudget(budget._id).subscribe({
+    this.budgetService.delBudget(budget._id).subscribe({
       next: () => {
         this.budgets.splice(index, 1);
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Orçamento removido com sucesso' });
@@ -180,7 +182,7 @@ export class BudgetPageComponent {
 
     for (const item of items) {
       try {
-        const productDetails = await this.service.getProductById(item.product).toPromise();
+        const productDetails = await this.productService.getProductById(item.product).toPromise();
 
         if (!productDetails) {
           this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Produto não encontrado!' });

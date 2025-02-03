@@ -1,16 +1,16 @@
 import { Component } from '@angular/core';
-import { ImportsService } from '../../../../../core/api/imports.service';
-import { DataService } from '../../../../../core/api/data.service';
+import { ImportsService } from '../../../../core/services/imports.service';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ProductsBuy } from '../../../../../core/models/productsBuy-model';
+import { ProductsBuy } from '../../../../core/models/productsBuy-model';
 import { MessageService, SelectItem } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ProductBuyService } from '../../../../core/api/productBuy/productBuy.service';
 
 @Component({
   selector: 'app-buy-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService],
+  providers: [ImportsService.providers],
   templateUrl: './buy-page.component.html',
   styleUrl: './buy-page.component.css'
 })
@@ -23,7 +23,7 @@ export class BuyPageComponent {
   public searchQuery: string = '';
 
   constructor(
-    private service: DataService,
+    private productBuyService: ProductBuyService,
     private fb: FormBuilder,
     private messageService: MessageService // Removido ToastrService
   ) {
@@ -46,7 +46,7 @@ export class BuyPageComponent {
       title: product.title
     };
 
-    this.service.updateProductBuy(updatedProduct).subscribe(
+    this.productBuyService.updateProductBuy(updatedProduct).subscribe(
       () => {
         this.loadProducts();
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Produto atualizado com sucesso.' });
@@ -68,7 +68,7 @@ export class BuyPageComponent {
 
   loadProducts() {
     this.busy = true;
-    this.service.getProductBuy().subscribe(
+    this.productBuyService.getProductBuy().subscribe(
       (data: any) => {
         this.productsBuy = data.sort((a: any, b: any) => {
           return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
@@ -97,7 +97,7 @@ export class BuyPageComponent {
         ...this.form.value
       };
 
-      this.service.createProductBuy(formValue).subscribe({
+      this.productBuyService.createProductBuy(formValue).subscribe({
         next: (data: any) => {
           this.busy = false;
           this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: data.message });
@@ -128,7 +128,7 @@ export class BuyPageComponent {
       id: product._id
     };
 
-    this.service.updateProductBuy(updatedProduct).subscribe(
+    this.productBuyService.updateProductBuy(updatedProduct).subscribe(
       () => {
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Produto atualizado com sucesso.' });
         this.loadProducts();
@@ -141,7 +141,7 @@ export class BuyPageComponent {
   }
 
   deleteProduct(id: any) {
-    this.service.delProductBuy(id).subscribe(
+    this.productBuyService.delProductBuy(id).subscribe(
       (data: any) => {
         this.busy = false;
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: data.message });
@@ -164,7 +164,7 @@ export class BuyPageComponent {
     }
     const searchData = { title: this.searchQuery };
 
-    this.service.searchProductBuy(searchData).subscribe({
+    this.productBuyService.searchProductBuy(searchData).subscribe({
       next: (data: any) => {
         this.productsBuy = data;
       },
@@ -178,7 +178,7 @@ export class BuyPageComponent {
   deleteSelectedProducts() {
     if (this.selectedProducts && this.selectedProducts.length) {
       this.selectedProducts.forEach(product => {
-        this.service.delProductBuy(product._id).subscribe(
+        this.productBuyService.delProductBuy(product._id).subscribe(
           () => {
             this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: `Produto ${product.title} excluído com sucesso.` });
             this.loadProducts();

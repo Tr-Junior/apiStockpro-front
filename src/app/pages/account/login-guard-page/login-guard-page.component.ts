@@ -2,15 +2,15 @@ import { Component, OnDestroy } from '@angular/core';
 import { Security } from '../../../../utils/Security.util';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { DataService } from '../../../../../core/api/data.service';
-import { ImportsService } from '../../../../../core/api/imports.service';
-import { AuthService } from '../../../../../core/guards/auth.service';
+import { ImportsService } from '../../../../core/services/imports.service';
+import { AuthService } from '../../../../core/guards/auth.service';
+import { AuthenticateService } from '../../../../core/api/authenticate/authenticate.service';
 
 @Component({
   selector: 'app-login-guard-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService, MessageService],
+  providers: [ImportsService.providers, MessageService],
   templateUrl: './login-guard-page.component.html',
   styleUrl: './login-guard-page.component.css'
 })
@@ -22,7 +22,7 @@ export class LoginGuardPageComponent implements OnDestroy{
   constructor(
     private router: Router,
     private authService: AuthService,
-    private service: DataService
+    private authenticateService: AuthenticateService,
   ) {}
 
   ngOnInit() {
@@ -46,7 +46,7 @@ export class LoginGuardPageComponent implements OnDestroy{
       password: this.password
     };
 
-    this.service.validatePassword(requestData).subscribe(response => {
+    this.authenticateService.validatePassword(requestData).subscribe(response => {
       if (response.valid) {
         sessionStorage.setItem('auth-guard', 'true');
 
