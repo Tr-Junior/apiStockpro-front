@@ -3,8 +3,6 @@ import { jsPDF } from 'jspdf';
 import { BoxItem } from '../core/models/box-item.model';
 import { Budget } from '../core/models/budget.model';
 import autoTable from 'jspdf-autotable';
-import { DataService } from '../core/api/data.service';
-import { HttpClient } from '@angular/common/http';
 import { ICompany } from '../core/models/company.model';
 
 @Injectable({
