@@ -5,10 +5,10 @@ import { PasswordModule } from 'primeng/password';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { Security } from '../../../../utils/Security.util';
-import { DataService } from '../../../../../core/api/data.service';
+import { DataService } from '../../../../core/api/data.service';
 import { environment } from '../../../../environments/environment.development';
 import { HttpClientModule } from '@angular/common/http';
-import { AuthService } from '../../../../../core/guards/auth.service';
+import { AuthService } from '../../../../core/guards/auth.service';
 
 @Component({
   selector: 'app-login-page',

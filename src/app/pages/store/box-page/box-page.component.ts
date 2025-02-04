@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import { ImportsService } from '../../../../../core/api/imports.service';
-import { BoxItem} from '../../../../../core/models/box-item.model';
-import { BoxService } from '../../../../../core/api/box.Service';
-import { DataService } from '../../../../../core/api/data.service';
-import { Product } from '../../../../../core/models/product.model';
+import { ImportsService } from '../../../../core/api/imports.service';
+import { BoxItem} from '../../../../core/models/box-item.model';
+import { BoxService } from '../../../../core/api/box.Service';
+import { DataService } from '../../../../core/api/data.service';
+import { Product } from '../../../../core/models/product.model';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { MenuItem, MessageService } from 'primeng/api';
-import { Budget } from '../../../../../core/models/budget.model';
-import { User } from '../../../../../core/models/user.model';
+import { Budget } from '../../../../core/models/budget.model';
+import { User } from '../../../../core/models/user.model';
 import { Security } from '../../../../utils/Security.util';
 import { PdfService } from '../../../../common/printPdf.service';
 

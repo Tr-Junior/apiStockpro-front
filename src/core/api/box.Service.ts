@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 import { openDB, IDBPDatabase } from "idb";
-import { Security } from "../../src/utils/Security.util";
+import { Security } from "../../utils/Security.util";
 
 interface BoxItem {
   _id: string;

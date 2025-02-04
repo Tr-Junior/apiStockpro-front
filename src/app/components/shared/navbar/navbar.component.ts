@@ -6,12 +6,12 @@ import { Router, NavigationEnd } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { Security } from '../../../../utils/Security.util';
-import { User } from '../../../../../core/models/user.model';
+import { User } from '../../../../core/models/user.model';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { MenuModule } from 'primeng/menu';
-import { DataService } from '../../../../../core/api/data.service';
-import { ImportsService } from '../../../../../core/api/imports.service';
-import { BoxService } from '../../../../../core/api/box.Service';
+import { DataService } from '../../../../core/api/data.service';
+import { ImportsService } from '../../../../core/api/imports.service';
+import { BoxService } from '../../../../core/api/box.Service';
 
 @Component({
     selector: 'app-navbar',

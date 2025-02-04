@@ -1,9 +1,9 @@
 import { RouterModule, Routes } from '@angular/router';
 import { NgModule } from '@angular/core';
 import { FramePageComponent } from './pages/master/frame-page';
-import { AuthService } from '../../core/guards/auth.service';
+import { AuthService } from '../core/guards/auth.service';
 import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
-import { LoginGuard } from '../../core/guards/loginGuard.service';
+import { LoginGuard } from '../core/guards/loginGuard.service';
 
 export const routes: Routes = [
   {

@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import { User } from "../../core/models/user.model";
+import { User } from "../core/models/user.model";
 
 export class Security {
   private static sessionId: string = '';

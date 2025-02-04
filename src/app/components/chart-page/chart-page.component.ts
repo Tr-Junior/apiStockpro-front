@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { Entrances } from '../../../../core/models/entrances.model';
-import { Exits } from '../../../../core/models/exits.model';
-import { DataService } from '../../../../core/api/data.service';
-import { ImportsService } from '../../../../core/api/imports.service';
+import { Entrances } from '../../../core/models/entrances.model';
+import { Exits } from '../../../core/models/exits.model';
+import { DataService } from '../../../core/api/data.service';
+import { ImportsService } from '../../../core/api/imports.service';
 
 @Component({
   selector: 'app-chart-page',

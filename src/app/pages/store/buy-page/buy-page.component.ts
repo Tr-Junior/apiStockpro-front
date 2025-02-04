@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { ImportsService } from '../../../../../core/api/imports.service';
-import { DataService } from '../../../../../core/api/data.service';
+import { ImportsService } from '../../../../core/api/imports.service';
+import { DataService } from '../../../../core/api/data.service';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ProductsBuy } from '../../../../../core/models/productsBuy-model';
+import { ProductsBuy } from '../../../../core/models/productsBuy-model';
 import { MessageService, SelectItem } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 

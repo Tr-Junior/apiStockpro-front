@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { DataService } from '../../../../../core/api/data.service';
-import { ImportsService } from '../../../../../core/api/imports.service';
-import { Product } from '../../../../../core/models/product.model';
-import { Entrances } from '../../../../../core/models/entrances.model';
+import { DataService } from '../../../../core/api/data.service';
+import { ImportsService } from '../../../../core/api/imports.service';
+import { Product } from '../../../../core/models/product.model';
+import { Entrances } from '../../../../core/models/entrances.model';
 import { Router } from '@angular/router';
 import { PrimeNGConfig } from 'primeng/api';
-import { Exits } from '../../../../../core/models/exits.model';
+import { Exits } from '../../../../core/models/exits.model';
 import { Security } from '../../../../utils/Security.util';
 import { ChartPageComponent } from '../../../components/chart-page/chart-page.component';
 

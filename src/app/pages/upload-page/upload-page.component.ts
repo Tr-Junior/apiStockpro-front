@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
 import { MessageService } from 'primeng/api';
-import { DataService } from '../../../../core/api/data.service';
-import { ImportsService } from '../../../../core/api/imports.service';
-import { Image } from '../../../../core/models/image.model';
-import { environment } from '../../../environments/environment.development';
+import { DataService } from '../../../core/api/data.service';
+import { ImportsService } from '../../../core/api/imports.service';
+import { Image } from '../../../core/models/image.model';
 
 @Component({
   selector: 'app-upload-page',

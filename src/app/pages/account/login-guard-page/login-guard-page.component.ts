@@ -2,9 +2,9 @@ import { Component, OnDestroy } from '@angular/core';
 import { Security } from '../../../../utils/Security.util';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { DataService } from '../../../../../core/api/data.service';
-import { ImportsService } from '../../../../../core/api/imports.service';
-import { AuthService } from '../../../../../core/guards/auth.service';
+import { DataService } from '../../../../core/api/data.service';
+import { ImportsService } from '../../../../core/api/imports.service';
+import { AuthService } from '../../../../core/guards/auth.service';
 
 @Component({
   selector: 'app-login-guard-page',

@@ -2,8 +2,8 @@ import { HttpClient, HttpHeaders, HttpClientModule, HttpParams } from "@angular/
 import { Injectable } from "@angular/core";
 import { Product, ProductResponse } from "../models/product.model";
 import { Observable } from "rxjs";
-import { environment } from "../../src/environments/environment.development";
-import { Security } from "../../src/utils/Security.util";
+import { environment } from "../../environments/environment.development";
+import { Security } from "../../utils/Security.util";
 import { Exits } from "../models/exits.model";
 import { Entrances } from "../models/entrances.model";
 import { Budget } from "../models/budget.model";
