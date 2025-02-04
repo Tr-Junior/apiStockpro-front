@@ -108,7 +108,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./company-info-page/company-info-page.component').then(m => m.CompanyInfoPageComponent),
+        loadComponent: () => import('./pages/company-info-page/company-info-page.component').then(m => m.CompanyInfoPageComponent),
         canActivate: [AuthService]
       }
     ]

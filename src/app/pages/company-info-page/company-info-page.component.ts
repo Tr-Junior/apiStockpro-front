@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { DataService } from '../../../core/api/data.service';
-import { ImportsService } from '../../../core/api/imports.service';
+import { DataService } from '../../../../core/api/data.service';
+import { ImportsService } from '../../../../core/api/imports.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ICompany } from '../../../core/models/company.model';
+import { ICompany } from '../../../../core/models/company.model';
 import { Observable } from 'rxjs';
-import { UploadPageComponent } from '../pages/upload-page/upload-page.component';
+import { UploadPageComponent } from '../upload-page/upload-page.component';
 
 @Component({
   selector: 'app-company-info-page',
