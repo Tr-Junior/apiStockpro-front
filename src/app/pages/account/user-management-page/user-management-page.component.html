@@ -1,1 +1,21 @@
-<p>user-management-page works!</p>
+<div class="card">
+  <p-table [value]="user" [tableStyle]="{ 'min-width': '50rem' }">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Roles</th>
+        <th>Opções</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-user>
+      <tr>
+        <td>{{ user.name}}</td>
+        <td>{{ user.roles }}</td>
+        <td>
+          <button pButton type="button" label="Alterar" (click)="editUser(user)"></button>
+          <button pButton type="button" label="Excluir" (click)="deleteUser(user)"></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
