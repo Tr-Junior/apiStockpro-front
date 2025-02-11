@@ -78,19 +78,17 @@ export class BoxPageComponent {
   }
 
   getScrollHeight(): string {
-    const itemHeight = 46;
+    const itemHeight = 70;
     const totalItems = this.products.length;
     const maxHeight = 400;
-    const minHeight = 100;
+    const minHeight = 200;
 
     let calculatedHeight = totalItems * itemHeight;
-
     if (calculatedHeight < minHeight) {
-      calculatedHeight = minHeight;
+      calculatedHeight;
     } else if (calculatedHeight > maxHeight) {
       calculatedHeight = maxHeight;
     }
-
     return `${calculatedHeight}px`;
   }
 
