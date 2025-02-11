@@ -1,9 +1,8 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { Security } from '../../../../utils/Security.util';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ImportsService } from '../../../../core/services/imports.service';
-import { AuthService } from '../../../../core/guards/auth.service';
 import { AuthenticateService } from '../../../../core/api/authenticate/authenticate.service';
 
 @Component({
@@ -18,10 +17,9 @@ export class LoginGuardPageComponent implements OnDestroy{
   password: string = '';
   errorMessage: string = '';
   userId: string = '';
-
+  @ViewChild('passwordInput') passwordInput!: ElementRef;
   constructor(
     private router: Router,
-    private authService: AuthService,
     private authenticateService: AuthenticateService,
   ) {}
 
@@ -33,6 +31,7 @@ export class LoginGuardPageComponent implements OnDestroy{
     } else {
       this.router.navigate(['/login']);
     }
+    setTimeout(() => this.passwordInput.nativeElement.focus(), 0);
   }
 
   login() {
