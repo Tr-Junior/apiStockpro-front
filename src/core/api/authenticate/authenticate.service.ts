@@ -10,8 +10,14 @@ export class AuthenticateService extends BaseService {
    authenticate(data: any) {
      return this.http.post(`${this.API}/customers/authenticate`, data);
    }
+
+   updateAdminCredentials(newName: string, newPassword: string) {
+    return this.http.post(`${this.API}/customers/update-admin`, { newName, newPassword },{ headers: this.composeHeaders() });
+  }
+
+
    refreshToken() {
-     return this.http.post(`${this.API}/customers/refresh-token`, null, { headers: this.composeHeaders() });
+     return this.http.post(`${this.API}/customers/refresh-token`, null, );
    }
 
    validatePassword(data: any): Observable<{ valid: boolean }> {
