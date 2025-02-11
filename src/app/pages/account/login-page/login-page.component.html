@@ -1,27 +1,38 @@
 <p-toast></p-toast>
 
-<div class="surface-ground flex align-items-center justify-content-center max-h-screen max-w-screen overflow-hidden">
-  <div class="flex flex-column align-items-center justify-content-center">
-    <div
-      style="border-radius:56px; padding:0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%);">
-      <div class="w-full surface-card py-8 px-5 sm:px-8" style="border-radius:53px">
+<div class="surface-ground flex align-items-center justify-content-center p-4">
+  <div class="flex flex-column align-items-center justify-content-center w-full">
+    <div class="p-1 border-round-lg"
+      style="background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%);">
+
+      <div class="surface-card p-5 sm:p-6 border-round-xl shadow-2 max-w-sm md:max-w-lg w-full">
+
         <div class="text-center mb-5">
-          <div class="text-900 text-3xl font-medium mb-3">Bem Vindo!</div>
-          <span class="text-600 font-medium">Faça o login para continuar</span>
+          <h2 class="text-900 font-bold text-3xl">Bem-vindo!</h2>
+          <p class="text-600 text-lg">Faça o login para continuar</p>
         </div>
-        <div [formGroup]="form">
-          <label for="name" class="block text-800 text-xl font-medium mb-2">Usuário</label>
-          <input formControlName="name" id="name" type="text" placeholder="Usuário" pInputText
-            class="w-full md:w-30rem mb-5" style="padding:1rem" (keydown.enter)="submit()" pHotkey="enter">
 
-          <label for="password" class="block text-800 font-medium text-xl mb-2">Senha</label>
-          <p-password formControlName="password" id="password" [feedback]="false" placeholder="Senha"
-            [toggleMask]="true" styleClass="mb-5" inputStyleClass="w-full p-3 md:w-30rem" (keydown.enter)="submit()"
-            pHotkey="enter"></p-password>
+        <form [formGroup]="form" (submit)="submit()">
+          <!-- Usuário -->
+          <div class="mb-4">
+            <label for="name" class="block text-800 text-lg font-medium mb-2">Usuário</label>
+            <input id="name" type="text" formControlName="name" placeholder="Digite seu usuário" pInputText
+              class="w-full border-round-lg">
+          </div>
 
-          <button key="enter" pButton pRipple label="Entrar" class="w-full p-3 text-xl" pHotkey="enter"
-            (click)="submit()"></button>
-        </div>
+          <!-- Senha -->
+          <div class="mb-4">
+            <label for="password" class="block text-800 text-lg font-medium mb-2">Senha</label>
+            <p-password id="password" formControlName="password" [feedback]="false" placeholder="Digite sua senha"
+              [toggleMask]="true" inputStyleClass="w-full border-round-lg">
+            </p-password>
+          </div>
+
+          <!-- Botão de Login -->
+          <button type="submit" pButton pRipple label="Entrar" class="w-full text-lg border-round-lg" pHotkey="enter">
+          </button>
+        </form>
+
       </div>
     </div>
   </div>

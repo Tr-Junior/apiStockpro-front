@@ -1,22 +1,16 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { PasswordModule } from 'primeng/password';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonModule } from 'primeng/button';
 import { Security } from '../../../../utils/Security.util';
-import { environment } from '../../../../environments/environment.development';
-import { HttpClientModule } from '@angular/common/http';
-import { AuthService } from '../../../../core/guards/auth.service';
 import { AuthenticateService } from '../../../../core/api/authenticate/authenticate.service';
 import { MessageService } from 'primeng/api';
-import { ToastModule } from 'primeng/toast';
+import { ImportsService } from '../../../../core/services/imports.service';
 
 @Component({
   selector: 'app-login-page',
   standalone: true,
-  imports: [ReactiveFormsModule, PasswordModule, InputTextModule, ButtonModule, HttpClientModule, ToastModule],
-  providers: [AuthService, MessageService],
+  imports: [ImportsService.imports],
+  providers: [ImportsService.providers],
   templateUrl: './login-page.component.html',
   styleUrls: ['./login-page.component.css']
 })
@@ -73,9 +67,17 @@ export class LoginPageComponent {
     );
   }
 
+
   setUser(user: any, token: any) {
     Security.setSessionId(user._id);
     Security.set(user, token);
-    this.router.navigate(['/store']);
+
+    // Se o usuário for um admin inicial, redireciona para a página de primeiro login
+    if (user.firstLogin) {
+      this.router.navigate(['/first-login']);
+    } else {
+      this.router.navigate(['/store']);
+    }
   }
+
 }
