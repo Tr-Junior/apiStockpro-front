@@ -1,10 +1,10 @@
-import { Component, Input, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, Validators } from '@angular/forms';
+import { Component, Input} from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { Product, ProductResponse } from '../../../../core/models/product.model';
+import { Product} from '../../../../core/models/product.model';
 import { Budget } from '../../../../core/models/budget.model';
 import { Supplier } from '../../../../core/models/supplier-model';
-import { debounceTime, distinctUntilChanged, Observable, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { ImportsService } from '../../../../core/services/imports.service';
 import * as XLSX from 'xlsx';
 import { ProductRegistrationPageComponent } from '../product-registration-page/product-registration-page.component';
@@ -36,12 +36,14 @@ export class ProductsPageComponent {
   public totalPages: number = 0;
   public searchQueryChanged = new Subject<string>();
   public isLoading: boolean = true;
-  public allProductsLoaded: boolean = false; // Indica se todos os produtos foram carregados
-  public page: number = 1; // Controla a página atual para busca ou paginação
-  public total: number = 0 // Total de valores na requisição
-  public offset: number = 0 // Índice de inicio da paginação
-  public limit: number = 100 // Quantidade de itens por página
+  public allProductsLoaded: boolean = false;
+  public page: number = 1;
+  public total: number = 0
+  public offset: number = 0
+  public limit: number = 100
   displayDialog: boolean = false;
+  private destroy$ = new Subject<void>();
+
   constructor(
     private productService: ProductService,
     private supplierService: SupplierService,
@@ -60,19 +62,6 @@ export class ProductsPageComponent {
     });
   }
 
-  ngOnInit() {
-    this.listProd();
-    this.listBudget();
-    this.loadSuppliers();
-    this.searchQueryChanged.pipe(
-      debounceTime(300),
-      distinctUntilChanged()
-    ).subscribe(query => {
-      this.searchQuery = query;
-      this.search();
-    });
-  }
-
   showDialog() {
     this.displayDialog = true;
   }
@@ -81,11 +70,28 @@ export class ProductsPageComponent {
     this.displayDialog = false;
   }
 
+
+  ngOnInit(): void {
+    this.listProd();
+    this.searchQueryChanged.pipe(
+      debounceTime(300), // Espera 300ms antes de buscar
+      distinctUntilChanged(), // Evita chamadas duplicadas
+      takeUntil(this.destroy$) // Cancela quando o componente for destruído
+    ).subscribe(query => {
+      this.searchQuery = query;
+      this.search(1);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   listProd() {
     this.isLoading = true;
-
     this.productService.getProducts({ page: this.page, limit: this.limit }).subscribe({
-      next: (data: ProductResponse) => {
+      next: (data: any) => {
         this.product = data.data;
         this.total = data.totalItems;
         this.filteredProducts = [...this.product];
@@ -98,7 +104,6 @@ export class ProductsPageComponent {
     });
   }
 
-
   search(page: number = 1): void {
     if (!this.searchQuery.trim()) {
       this.clearSearch();
@@ -109,17 +114,14 @@ export class ProductsPageComponent {
     const searchData = { title: this.searchQuery, page, limit: this.limit };
     this.productService.searchProduct(searchData).subscribe({
       next: (response: any) => {
-
         this.filteredProducts = response.products;
         this.total = response.totalRecords;
         this.totalPages = Math.ceil(response.totalRecords / this.limit);
         this.currentPage = page;
         this.offset = (page - 1) * this.limit;
-
         this.busy = false;
       },
       error: (err: any) => {
-        console.error(`[FRONT-END] Erro na busca:`, err);
         this.messageService.add({
           severity: 'error',
           summary: 'Erro',
@@ -130,6 +132,9 @@ export class ProductsPageComponent {
     });
   }
 
+  onSearchInput(event: any) {
+    this.searchQueryChanged.next(event.target.value); // Emite o valor para o Subject
+  }
 
   pageChange(event: any) {
     this.limit = event.rows;
@@ -143,15 +148,14 @@ export class ProductsPageComponent {
     }
   }
 
-clearSearch() {
-  this.searchQuery = '';
-  this.page = 1;
-  this.offset = 0;
-  this.allProductsLoaded = false;
-  this.filteredProducts = [];
-  this.listProd();
-}
-
+  clearSearch() {
+    this.searchQuery = '';
+    this.page = 1;
+    this.offset = 0;
+    this.allProductsLoaded = false;
+    this.filteredProducts = [];
+    this.listProd();
+  }
 
   listBudget() {
     this.budgetService.getBudget().subscribe({
