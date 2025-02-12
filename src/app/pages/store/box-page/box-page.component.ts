@@ -1,8 +1,14 @@
 import { Component } from '@angular/core';
+<<<<<<< HEAD
 import { ImportsService } from '../../../../core/api/imports.service';
 import { BoxItem} from '../../../../core/models/box-item.model';
 import { BoxService } from '../../../../core/api/box.Service';
 import { DataService } from '../../../../core/api/data.service';
+=======
+import { ImportsService } from '../../../../core/services/imports.service';
+import { BoxItem} from '../../../../core/models/box-item.model';
+import { BoxService } from '../../../../core/services/box.Service';
+>>>>>>> origin/teste
 import { Product } from '../../../../core/models/product.model';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { MenuItem, MessageService } from 'primeng/api';
@@ -10,12 +16,15 @@ import { Budget } from '../../../../core/models/budget.model';
 import { User } from '../../../../core/models/user.model';
 import { Security } from '../../../../utils/Security.util';
 import { PdfService } from '../../../../common/printPdf.service';
+import { ProductService } from '../../../../core/api/products/product.service';
+import { OrderService } from '../../../../core/api/order/order.service';
+import { BudgetService } from '../../../../core/api/budget/budget.service';
 
 @Component({
   selector: 'app-box-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService],
+  providers: [ImportsService.providers],
   templateUrl: './box-page.component.html',
   styleUrl: './box-page.component.css'
 })
@@ -48,7 +57,9 @@ export class BoxPageComponent {
 
   constructor(
     private boxService: BoxService,
-    private service: DataService,
+    private productService: ProductService,
+    private orderService: OrderService,
+    private budgetService: BudgetService,
     private messageService: MessageService,
     private pdfService: PdfService
 
@@ -74,19 +85,17 @@ export class BoxPageComponent {
   }
 
   getScrollHeight(): string {
-    const itemHeight = 46;
+    const itemHeight = 70;
     const totalItems = this.products.length;
     const maxHeight = 400;
-    const minHeight = 100;
+    const minHeight = 200;
 
     let calculatedHeight = totalItems * itemHeight;
-
     if (calculatedHeight < minHeight) {
-      calculatedHeight = minHeight;
+      calculatedHeight;
     } else if (calculatedHeight > maxHeight) {
       calculatedHeight = maxHeight;
     }
-
     return `${calculatedHeight}px`;
   }
 
@@ -105,7 +114,7 @@ export class BoxPageComponent {
 
     this.loading = true;
 
-    this.service.searchProduct({ title: trimmedQuery, page, limit: 25 }).subscribe({
+    this.productService.searchProduct({ title: trimmedQuery, page, limit: 25 }).subscribe({
       next: (response: any) => {
         if (reset) {
           this.products = response.products;
@@ -137,7 +146,7 @@ export class BoxPageComponent {
     this.loading = true;
     const nextPage = this.currentPage + 1;
 
-    this.service.searchProduct({ title: this.searchQuery.trim(), page: nextPage, limit: 25 }).subscribe({
+    this.productService.searchProduct({ title: this.searchQuery.trim(), page: nextPage, limit: 25 }).subscribe({
       next: (response: any) => {
         this.products.push(...response.products);
         this.totalRecords = response.totalRecords;
@@ -214,7 +223,7 @@ export class BoxPageComponent {
         return;
     }
 
-    this.service.getProductById(item._id).subscribe({
+    this.productService.getProductById(item._id).subscribe({
         next: (product) => {
             if (!product) {
                 this.messageService.add({
@@ -314,7 +323,7 @@ export class BoxPageComponent {
 
     // Simula um atraso de 2 segundos (2000 ms) antes de finalizar a venda
     setTimeout(() => {
-        this.service.createOrder(order).subscribe({
+        this.orderService.createOrder(order).subscribe({
             next: () => {
                 this.messageService.add({
                     severity: 'success',
@@ -379,7 +388,7 @@ filterCustomer(event: any) {
 }
 
 loadCustomerNames() {
-  this.service.getBudget().subscribe({
+  this.budgetService.getBudget().subscribe({
     next: (data: Budget[]) => {
       this.customerNames = data.map(budget => budget.client);
     },
@@ -419,7 +428,7 @@ async createBudget() {
     };
 
     // Envia o orçamento ao backend
-    const data: any = await this.service.createBudget(budget).toPromise();
+    const data: any = await this.budgetService.createBudget(budget).toPromise();
     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: data.message });
 
     // Limpa o armazenamento local
@@ -465,7 +474,7 @@ openSidebar(product: Product): void {
   this.sidebarVisible = true;
 
   // Obter a quantidade real em estoque diretamente do banco
-  this.service.getProductById(product._id).subscribe({
+  this.productService.getProductById(product._id).subscribe({
       next: (productFromDb) => {
           if (!productFromDb) {
               this.messageService.add({

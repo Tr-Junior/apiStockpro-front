@@ -48,9 +48,11 @@
 
   <!-- Data Table -->
   <p-table *ngIf="!isLoading" dataKey="_id" editMode="row" [paginator]="true" [rows]="limit" [first]="offset"
-    [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} produtos"
-    [rowsPerPageOptions]="[100, 150, 200, 250, 350, 500]" [tableStyle]="{'min-width': '50rem'}" [totalRecords]="total"
+    [totalRecords]="total" [showCurrentPageReport]="true"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} produtos"
+    [rowsPerPageOptions]="[100, 150, 200, 250, 350, 500]" [tableStyle]="{'min-width': '50rem'}"
     styleClass="p-datatable-striped" [value]="filteredProducts" [lazy]="true" (onPage)="pageChange($event)">
+
     <!-- Caption with Search -->
     <ng-template pTemplate="caption">
       <div class="flex align-items-center justify-content-between gap-3">

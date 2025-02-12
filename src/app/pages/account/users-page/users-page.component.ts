@@ -1,15 +1,20 @@
 import { Component } from '@angular/core';
+<<<<<<< HEAD
 import { DataService } from '../../../../core/api/data.service';
 import { ImportsService } from '../../../../core/api/imports.service';
+=======
+import { ImportsService } from '../../../../core/services/imports.service';
+>>>>>>> origin/teste
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { Security } from '../../../../utils/Security.util';
+import { UserService } from '../../../../core/api/user/user.service';
 
 @Component({
   selector: 'app-users-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService, FormsModule, ReactiveFormsModule,],
+  providers: [ImportsService.providers, FormsModule, ReactiveFormsModule,],
   templateUrl: './users-page.component.html',
   styleUrl: './users-page.component.css'
 })
@@ -25,7 +30,7 @@ export class UsersPageComponent {
   ];
 
   constructor(
-    private service: DataService,
+    private userService: UserService,
     private fb: FormBuilder,
     private messageService: MessageService
   ) {
@@ -47,7 +52,7 @@ export class UsersPageComponent {
 
   getUserById(id: string) {
     this.busy = true;
-    this.service.getUserById(id).subscribe(
+    this.userService.getUserById(id).subscribe(
       (data: any) => {
         this.busy = false;
         this.form.controls['id'].setValue(data._id);
@@ -79,7 +84,7 @@ export class UsersPageComponent {
       pass: this.form.value.pass
     };
 
-    this.service.updatePassword(formData).subscribe(
+    this.userService.updatePassword(formData).subscribe(
       (data: any) => {
         this.busy = false;
         this.messageService.add({ severity: 'success', summary: 'Atualizado!', detail: data.message });

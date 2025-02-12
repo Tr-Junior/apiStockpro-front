@@ -1,17 +1,26 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+<<<<<<< HEAD
 import { DataService } from '../../../../core/api/data.service';
+=======
+>>>>>>> origin/teste
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { catchError, of } from 'rxjs';
 import { Product } from '../../../../core/models/product.model';
 import { Supplier } from '../../../../core/models/supplier-model';
+<<<<<<< HEAD
 import { ImportsService } from '../../../../core/api/imports.service';
+=======
+import { ImportsService } from '../../../../core/services/imports.service';
+import { ProductService } from '../../../../core/api/products/product.service';
+import { SupplierService } from '../../../../core/api/supplier/suplier.service';
+>>>>>>> origin/teste
 
 @Component({
   selector: 'app-product-registration-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService],
+  providers: [ImportsService.providers],
   templateUrl: './product-registration-page.component.html',
   styleUrl: './product-registration-page.component.css'
 })
@@ -30,7 +39,8 @@ export class ProductRegistrationPageComponent {
   public selectedSupplier: Supplier | null = null;
 
   constructor(
-    private service: DataService,
+    private productService: ProductService,
+    private supplierService: SupplierService,
     private fb: FormBuilder,
     private messageService: MessageService // Usa o MessageService agora
   ) {
@@ -73,7 +83,7 @@ export class ProductRegistrationPageComponent {
   }
 
   loadSuppliers() {
-    this.service
+    this.supplierService
       .getSupplier()
       .pipe(
         catchError((error) => {
@@ -114,7 +124,7 @@ export class ProductRegistrationPageComponent {
 
     this.busy = true;
 
-    this.service.createProduct(this.form.value).subscribe({
+    this.productService.createProduct(this.form.value).subscribe({
       next: (data: any) => {
         this.messageService.add({
           severity: 'success',

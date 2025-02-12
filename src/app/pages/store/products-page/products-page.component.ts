@@ -1,19 +1,30 @@
-import { Component, Input, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, Validators } from '@angular/forms';
+import { Component, Input} from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
+<<<<<<< HEAD
 import { DataService } from '../../../../core/api/data.service';
 import { Product, ProductResponse } from '../../../../core/models/product.model';
 import { Budget } from '../../../../core/models/budget.model';
 import { Supplier } from '../../../../core/models/supplier-model';
 import { debounceTime, distinctUntilChanged, Observable, Subject } from 'rxjs';
 import { ImportsService } from '../../../../core/api/imports.service';
+=======
+import { Product} from '../../../../core/models/product.model';
+import { Budget } from '../../../../core/models/budget.model';
+import { Supplier } from '../../../../core/models/supplier-model';
+import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
+import { ImportsService } from '../../../../core/services/imports.service';
+>>>>>>> origin/teste
 import * as XLSX from 'xlsx';
 import { ProductRegistrationPageComponent } from '../product-registration-page/product-registration-page.component';
+import { ProductService } from '../../../../core/api/products/product.service';
+import { SupplierService } from '../../../../core/api/supplier/suplier.service';
+import { BudgetService } from '../../../../core/api/budget/budget.service';
 @Component({
   selector: 'app-products-page',
   standalone: true,
   imports: [ImportsService.imports, ProductRegistrationPageComponent],
-  providers: [ImportsService.providers, DataService],
+  providers: [ImportsService.providers],
   templateUrl: './products-page.component.html',
   styleUrl: './products-page.component.css'
 })
@@ -34,14 +45,18 @@ export class ProductsPageComponent {
   public totalPages: number = 0;
   public searchQueryChanged = new Subject<string>();
   public isLoading: boolean = true;
-  public allProductsLoaded: boolean = false; // Indica se todos os produtos foram carregados
-  public page: number = 1; // Controla a página atual para busca ou paginação
-  public total: number = 0 // Total de valores na requisição
-  public offset: number = 0 // Índice de inicio da paginação
-  public limit: number = 100 // Quantidade de itens por página
+  public allProductsLoaded: boolean = false;
+  public page: number = 1;
+  public total: number = 0
+  public offset: number = 0
+  public limit: number = 100
+  displayDialog: boolean = false;
+  private destroy$ = new Subject<void>();
 
   constructor(
-    private service: DataService,
+    private productService: ProductService,
+    private supplierService: SupplierService,
+    private budgetService: BudgetService,
     private messageService: MessageService,
     private fb: FormBuilder,
     private confirmationService: ConfirmationService
@@ -56,79 +71,119 @@ export class ProductsPageComponent {
     });
   }
 
-  ngOnInit() {
-    this.listProd();
-    this.listBudget();
-    this.loadSuppliers();
-    this.searchQueryChanged.pipe(
-      debounceTime(300), // Aguarda 300ms após o último evento
-      distinctUntilChanged() // Ignora valores iguais consecutivos
-    ).subscribe(query => {
-      this.searchQuery = query;
-      this.search();
-    });
-  }
-
-  displayDialog: boolean = false;
-
-  // Exibe o modal
   showDialog() {
     this.displayDialog = true;
   }
 
-  // Opcional: Fecha o modal
   closeDialog() {
     this.displayDialog = false;
   }
 
 
-  pageChange(event: any) {
-    if (this.limit != event.rows) {
-      this.page = 1
-      this.offset = 0
-    } else {
-      this.page = (event.first / event.rows) + 1
-      this.offset = event.first
-    }
-    this.limit = event.rows
-    this.listProd()
+  ngOnInit(): void {
+    this.listProd();
+    this.searchQueryChanged.pipe(
+      debounceTime(300), // Espera 300ms antes de buscar
+      distinctUntilChanged(), // Evita chamadas duplicadas
+      takeUntil(this.destroy$) // Cancela quando o componente for destruído
+    ).subscribe(query => {
+      this.searchQuery = query;
+      this.search(1);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   listProd() {
-    this.isLoading = true; // Inicia o carregamento
-    this.service.getProducts({ page: this.page, limit: this.limit }).subscribe(
-      (data: ProductResponse) => {
+    this.isLoading = true;
+    this.productService.getProducts({ page: this.page, limit: this.limit }).subscribe({
+      next: (data: any) => {
         this.product = data.data;
         this.total = data.totalItems;
-        this.filteredProducts = [...this.product]; // Inicializa com todos os produtos
-        this.isLoading = false; // Finaliza o carregamento
-
+        this.filteredProducts = [...this.product];
+        this.isLoading = false;
       },
-      (error) => {
+      error: (error) => {
         console.error('Erro ao carregar produtos:', error);
-        this.isLoading = false; // Finaliza o carregamento mesmo em caso de erro
+        this.isLoading = false;
       }
-    );
+    });
+  }
+
+  search(page: number = 1): void {
+    if (!this.searchQuery.trim()) {
+      this.clearSearch();
+      return;
+    }
+
+    this.busy = true;
+    const searchData = { title: this.searchQuery, page, limit: this.limit };
+    this.productService.searchProduct(searchData).subscribe({
+      next: (response: any) => {
+        this.filteredProducts = response.products;
+        this.total = response.totalRecords;
+        this.totalPages = Math.ceil(response.totalRecords / this.limit);
+        this.currentPage = page;
+        this.offset = (page - 1) * this.limit;
+        this.busy = false;
+      },
+      error: (err: any) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: 'Erro ao buscar produtos: ' + err.message,
+        });
+        this.busy = false;
+      }
+    });
+  }
+
+  onSearchInput(event: any) {
+    this.searchQueryChanged.next(event.target.value); // Emite o valor para o Subject
+  }
+
+  pageChange(event: any) {
+    this.limit = event.rows;
+    this.page = Math.floor(event.first / event.rows) + 1;
+    this.offset = event.first;
+
+    if (this.searchQuery.trim()) {
+      this.search(this.page);
+    } else {
+      this.listProd();
+    }
+  }
+
+  clearSearch() {
+    this.searchQuery = '';
+    this.page = 1;
+    this.offset = 0;
+    this.allProductsLoaded = false;
+    this.filteredProducts = [];
+    this.listProd();
   }
 
   listBudget() {
-    this.service.getBudget().subscribe(
-      (data: Budget[]) => {
+    this.budgetService.getBudget().subscribe({
+     next: (data: Budget[]) => {
         this.budgets = data;
       },
-      (error) => console.error(error)
-    );
+      error: (error) => console.error(error)
+    });
   }
 
   loadSuppliers() {
-    this.service.getSupplier().subscribe(
-      (data) => {
+    this.supplierService.getSupplier().subscribe({
+    next: (data) => {
         this.suppliers = data;
       },
-      (error) => {
+    error: (error) => {
         console.error('Erro ao carregar fornecedores:', error);
       }
-    );
+    });
   }
 
 
@@ -197,7 +252,7 @@ export class ProductsPageComponent {
 
     const updatedProduct = { id: product._id, ...this.selectedProduct };
 
-    this.service.updateProduct(updatedProduct).subscribe({
+    this.productService.updateProduct(updatedProduct).subscribe({
       next: (data: any) => {
         this.product[index] = data.product; // Atualiza o produto na lista
         this.filteredProducts = [...this.product]; // Recarrega os produtos filtrados
@@ -240,7 +295,7 @@ export class ProductsPageComponent {
 
 
   deleteProduct(productId: string) {
-    this.service.delProd(productId).subscribe({
+    this.productService.deleteProduct(productId).subscribe({
       next: () => {
         // Remove o produto da lista local
         this.product = this.product.filter(p => p._id !== productId);
@@ -287,41 +342,6 @@ export class ProductsPageComponent {
         });
       }
     });
-  }
-
-  search(page: number = 1): void {
-    if (!this.searchQuery) {
-      this.listProd();
-      return;
-    }
-
-    this.busy = true;
-    const searchData = { title: this.searchQuery, page };
-
-    this.service.searchProduct(searchData).subscribe({
-      next: (response: any) => {
-        this.product = response.products;
-        this.totalPages = response.totalPages;
-        this.currentPage = response.page;
-        this.busy = false;
-      },
-      error: (err: any) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro',
-          detail: 'Erro ao buscar produtos: ' + err.message,
-        });
-        this.busy = false;
-      }
-    });
-  }
-
-  clearSearch() {
-    this.searchQuery = '';
-    this.page = 1;
-    this.allProductsLoaded = false;
-    this.product = [];
-    this.listProd();
   }
 
       exportToExcel() {

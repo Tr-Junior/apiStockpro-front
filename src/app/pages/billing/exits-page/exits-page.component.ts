@@ -3,15 +3,20 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PrimeNGConfig, MessageService, ConfirmationService } from 'primeng/api';
 import { Exits } from '../../../../core/models/exits.model';
+<<<<<<< HEAD
 import { DataService } from '../../../../core/api/data.service';
 import { ImportsService } from '../../../../core/api/imports.service';
+=======
+import { ImportsService } from '../../../../core/services/imports.service';
+>>>>>>> origin/teste
 import { Security } from '../../../../utils/Security.util';
+import { ExitsService } from '../../../../core/api/exits/exits.service';
 
 @Component({
   selector: 'app-exits-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService],
+  providers: [ImportsService.providers],
   templateUrl: './exits-page.component.html',
   styleUrl: './exits-page.component.css'
 })
@@ -39,7 +44,7 @@ export class ExitsPageComponent {
 
   constructor(
     private primengConfig: PrimeNGConfig,
-    private service: DataService,
+    private exitsService: ExitsService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private fb: FormBuilder
@@ -91,7 +96,7 @@ export class ExitsPageComponent {
 
   submit() {
     this.busy = true;
-    this.service.createExits(this.form.value).subscribe({
+    this.exitsService.createExits(this.form.value).subscribe({
       next: (data: any) => {
         this.busy = false;
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Saída cadastrada' });
@@ -117,7 +122,7 @@ export class ExitsPageComponent {
 
   getExitsByDateRange(startDate: Date, endDate: Date) {
     this.busy = true;
-    this.service.getExits().subscribe(
+    this.exitsService.getExits().subscribe(
       (data: any) => {
         const selectedDate = new Date(startDate);
         const nextDay = new Date(endDate);
@@ -145,7 +150,7 @@ export class ExitsPageComponent {
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth();
 
-    this.service.getExits().subscribe((data: any) => {
+    this.exitsService.getExits().subscribe((data: any) => {
       this.busy = false;
       this.exits = data.filter((exit: Exits) => {
         const exitDate = new Date(exit.date);
@@ -209,7 +214,7 @@ export class ExitsPageComponent {
 
   getExitsById(id: any) {
     this
-      .service
+      .exitsService
       .getExitsById(id)
       .subscribe(
         (data: any) => {
@@ -238,7 +243,7 @@ export class ExitsPageComponent {
     this.updating = false;
     const index = this.exits.findIndex(p => p._id === exits._id);
     const updatedExits = { id: exits._id, ...this.selectedExits };
-    this.service.updateExits(updatedExits).subscribe({
+    this.exitsService.updateExits(updatedExits).subscribe({
       next: (data: any) => {
         this.exits[index] = data.exits;
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Saída atualizada' });
@@ -273,7 +278,7 @@ export class ExitsPageComponent {
   }
 
   delete(id: any) {
-    this.service.delExits(id).subscribe({
+    this.exitsService.delExits(id).subscribe({
       next: (data: any) => {
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Saída deletada' });
         this.listExits();

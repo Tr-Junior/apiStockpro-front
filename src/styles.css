@@ -134,7 +134,11 @@ body {
   font-display: swap;
   font-style: normal;
   font-named-instance: "Regular";
+<<<<<<< HEAD
   src: url("./assets/fonts/Inter-roman.var.woff2?v=3.19") format("woff2");
+=======
+  src: url("./assets/fonts/Inter-roman.var.woff2") format("woff2");
+>>>>>>> origin/teste
 }
 @font-face {
   font-family: "Inter var";
@@ -142,7 +146,11 @@ body {
   font-display: swap;
   font-style: italic;
   font-named-instance: "Italic";
+<<<<<<< HEAD
   src: url("./assets/fonts/Inter-italic.var.woff2?v=3.19") format("woff2");
+=======
+  src: url("./assets/fonts/Inter-italic.var.woff2") format("woff2");
+>>>>>>> origin/teste
 }
 :root {
   --blue-50:#f5f9ff;

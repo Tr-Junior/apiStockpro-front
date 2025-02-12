@@ -9,9 +9,14 @@ import { Security } from '../../../../utils/Security.util';
 import { User } from '../../../../core/models/user.model';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { MenuModule } from 'primeng/menu';
+<<<<<<< HEAD
 import { DataService } from '../../../../core/api/data.service';
 import { ImportsService } from '../../../../core/api/imports.service';
 import { BoxService } from '../../../../core/api/box.Service';
+=======
+import { ImportsService } from '../../../../core/services/imports.service';
+import { UploadService } from '../../../../core/api/upload/upload.service';
+>>>>>>> origin/teste
 
 @Component({
     selector: 'app-navbar',
@@ -19,7 +24,7 @@ import { BoxService } from '../../../../core/api/box.Service';
     styleUrls: ['./navbar.component.css'],
     standalone: true,
     imports: [MenubarModule, CommonModule, AvatarModule, ButtonModule, OverlayPanelModule, MenuModule, ImportsService.imports],
-      providers: [ImportsService.providers, DataService, MessageService],
+      providers: [ImportsService.providers, MessageService],
 })
 export class NavbarComponent implements OnInit {
   items: MenuItem[] = [];
@@ -28,8 +33,9 @@ export class NavbarComponent implements OnInit {
   userItems: MenuItem[] = [];
   logoUrl: string = ''; // Variável para armazenar a URL da logo
 
-  constructor(private router: Router, private service: DataService,
-        private boxService: BoxService,
+  constructor(
+    private router: Router,
+    private uploadService: UploadService,
 
   ) {}
 
@@ -74,7 +80,7 @@ export class NavbarComponent implements OnInit {
   }
 
   loadCompanyLogo() {
-      this.service.getImages('logo').subscribe(
+      this.uploadService.getImages('logo').subscribe(
           (data: any) => {
               if (data && data.imageUrl) {
                   this.logoUrl = data.imageUrl; // URL da imagem recebida

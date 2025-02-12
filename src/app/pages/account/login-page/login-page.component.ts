@@ -1,33 +1,35 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { PasswordModule } from 'primeng/password';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonModule } from 'primeng/button';
 import { Security } from '../../../../utils/Security.util';
+<<<<<<< HEAD
 import { DataService } from '../../../../core/api/data.service';
 import { environment } from '../../../../environments/environment.development';
 import { HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../../../../core/guards/auth.service';
+=======
+import { AuthenticateService } from '../../../../core/api/authenticate/authenticate.service';
+import { MessageService } from 'primeng/api';
+import { ImportsService } from '../../../../core/services/imports.service';
+>>>>>>> origin/teste
 
 @Component({
   selector: 'app-login-page',
   standalone: true,
-  imports: [ReactiveFormsModule, PasswordModule, InputTextModule, ButtonModule, HttpClientModule],
-  providers: [DataService, AuthService],  // Módulos diretamente importados
+  imports: [ImportsService.imports],
+  providers: [ImportsService.providers],
   templateUrl: './login-page.component.html',
-  styleUrls: ['./login-page.component.css'] // Corrigido de 'styleUrl' para 'styleUrls'
+  styleUrls: ['./login-page.component.css']
 })
 export class LoginPageComponent {
   public form: FormGroup;
   public busy = false;
-  public mode: string = environment.mode;
 
   constructor(
     private router: Router,
-    private service: DataService,
     private fb: FormBuilder,
-    private authService: AuthService
+    private authenticateService: AuthenticateService,
+    private messageService: MessageService
   ) {
     this.form = this.fb.group({
       name: ['', Validators.required],
@@ -39,48 +41,50 @@ export class LoginPageComponent {
     const token = Security.getToken();
     if (token) {
       this.busy = true;
-      this
-        .service
-        .refreshToken()
-        .subscribe(
-          (data: any) => {
-            this.busy = false;
-            this.setUser(data.user, data.token);
-          },
-          (err) => {
-            localStorage.clear();
-            this.busy = false;
-          }
-        );
-    }
-  }
-
-  submit() {
-    if (this.form.invalid) {
-      return;
-    }
-
-    this.busy = true;
-    this
-      .service
-      .authenticate(this.form.value)
-      .subscribe(
+      this.authenticateService.refreshToken().subscribe(
         (data: any) => {
           this.busy = false;
           this.setUser(data.user, data.token);
         },
         (err) => {
-          console.log(err);
+          localStorage.clear();
           this.busy = false;
         }
       );
+    }
   }
 
-  setUser(user: any, token: any) {
-    // Após autenticar o usuário e obter o token e os dados do usuário
-    const sessionId = user._id; // ou qualquer identificador único
-    Security.setSessionId(sessionId);
-    Security.set(user, token);
-    this.router.navigate(['/store']);
+  submit() {
+    if (this.form.invalid) {
+      this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Preencha todos os campos' });
+      return;
+    }
+
+    this.busy = true;
+    this.authenticateService.authenticate(this.form.value).subscribe(
+      (data: any) => {
+        this.busy = false;
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Login efetuado com sucesso!' });
+        this.setUser(data.user, data.token);
+      },
+      (err) => {
+        this.busy = false;
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Usuário ou senha inválidos!' });
+      }
+    );
   }
+
+
+  setUser(user: any, token: any) {
+    Security.setSessionId(user._id);
+    Security.set(user, token);
+
+    // Se o usuário for um admin inicial, redireciona para a página de primeiro login
+    if (user.firstLogin) {
+      this.router.navigate(['/first-login']);
+    } else {
+      this.router.navigate(['/store']);
+    }
+  }
+
 }

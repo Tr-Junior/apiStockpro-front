@@ -1,16 +1,21 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { Security } from '../../../../utils/Security.util';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
+<<<<<<< HEAD
 import { DataService } from '../../../../core/api/data.service';
 import { ImportsService } from '../../../../core/api/imports.service';
 import { AuthService } from '../../../../core/guards/auth.service';
+=======
+import { ImportsService } from '../../../../core/services/imports.service';
+import { AuthenticateService } from '../../../../core/api/authenticate/authenticate.service';
+>>>>>>> origin/teste
 
 @Component({
   selector: 'app-login-guard-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService, MessageService],
+  providers: [ImportsService.providers, MessageService],
   templateUrl: './login-guard-page.component.html',
   styleUrl: './login-guard-page.component.css'
 })
@@ -18,11 +23,10 @@ export class LoginGuardPageComponent implements OnDestroy{
   password: string = '';
   errorMessage: string = '';
   userId: string = '';
-
+  @ViewChild('passwordInput') passwordInput!: ElementRef;
   constructor(
     private router: Router,
-    private authService: AuthService,
-    private service: DataService
+    private authenticateService: AuthenticateService,
   ) {}
 
   ngOnInit() {
@@ -33,6 +37,7 @@ export class LoginGuardPageComponent implements OnDestroy{
     } else {
       this.router.navigate(['/login']);
     }
+    setTimeout(() => this.passwordInput.nativeElement.focus(), 0);
   }
 
   login() {
@@ -46,7 +51,7 @@ export class LoginGuardPageComponent implements OnDestroy{
       password: this.password
     };
 
-    this.service.validatePassword(requestData).subscribe(response => {
+    this.authenticateService.validatePassword(requestData).subscribe(response => {
       if (response.valid) {
         sessionStorage.setItem('auth-guard', 'true');
 
