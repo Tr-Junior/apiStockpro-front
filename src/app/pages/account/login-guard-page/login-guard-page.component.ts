@@ -2,14 +2,8 @@ import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { Security } from '../../../../utils/Security.util';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-<<<<<<< HEAD
-import { DataService } from '../../../../core/api/data.service';
-import { ImportsService } from '../../../../core/api/imports.service';
-import { AuthService } from '../../../../core/guards/auth.service';
-=======
 import { ImportsService } from '../../../../core/services/imports.service';
 import { AuthenticateService } from '../../../../core/api/authenticate/authenticate.service';
->>>>>>> origin/teste
 
 @Component({
   selector: 'app-login-guard-page',

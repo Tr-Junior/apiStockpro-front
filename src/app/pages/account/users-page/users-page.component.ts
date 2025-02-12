@@ -1,10 +1,5 @@
 import { Component } from '@angular/core';
-<<<<<<< HEAD
-import { DataService } from '../../../../core/api/data.service';
-import { ImportsService } from '../../../../core/api/imports.service';
-=======
 import { ImportsService } from '../../../../core/services/imports.service';
->>>>>>> origin/teste
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { Security } from '../../../../utils/Security.util';

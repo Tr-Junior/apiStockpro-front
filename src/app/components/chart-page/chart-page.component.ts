@@ -1,14 +1,9 @@
 import { Component } from '@angular/core';
 import { Entrances } from '../../../core/models/entrances.model';
 import { Exits } from '../../../core/models/exits.model';
-<<<<<<< HEAD
-import { DataService } from '../../../core/api/data.service';
-import { ImportsService } from '../../../core/api/imports.service';
-=======
 import { ImportsService } from '../../../core/services/imports.service';
 import { EntrancesService } from '../../../core/api/entrances/entrances.service';
 import { ExitsService } from '../../../core/api/exits/exits.service';
->>>>>>> origin/teste
 
 @Component({
   selector: 'app-chart-page',

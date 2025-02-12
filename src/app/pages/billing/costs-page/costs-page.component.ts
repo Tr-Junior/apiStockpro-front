@@ -1,10 +1,5 @@
 import { Component } from '@angular/core';
-<<<<<<< HEAD
-import { DataService } from '../../../../core/api/data.service';
-import { ImportsService } from '../../../../core/api/imports.service';
-=======
 import { ImportsService } from '../../../../core/services/imports.service';
->>>>>>> origin/teste
 import { Product } from '../../../../core/models/product.model';
 import { Entrances } from '../../../../core/models/entrances.model';
 import { Router } from '@angular/router';

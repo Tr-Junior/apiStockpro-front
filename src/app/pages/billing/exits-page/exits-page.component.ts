@@ -3,12 +3,7 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PrimeNGConfig, MessageService, ConfirmationService } from 'primeng/api';
 import { Exits } from '../../../../core/models/exits.model';
-<<<<<<< HEAD
-import { DataService } from '../../../../core/api/data.service';
-import { ImportsService } from '../../../../core/api/imports.service';
-=======
 import { ImportsService } from '../../../../core/services/imports.service';
->>>>>>> origin/teste
 import { Security } from '../../../../utils/Security.util';
 import { ExitsService } from '../../../../core/api/exits/exits.service';
 

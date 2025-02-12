@@ -1,11 +1,6 @@
 import { Component } from '@angular/core';
 import { Order } from '../../../../core/models/order.models';
-<<<<<<< HEAD
-import { ImportsService } from '../../../../core/api/imports.service';
-import { DataService } from '../../../../core/api/data.service';
-=======
 import { ImportsService } from '../../../../core/services/imports.service';
->>>>>>> origin/teste
 import { Router } from '@angular/router';
 import { PrimeNGConfig, MessageService, ConfirmationService } from 'primeng/api';
 import { Security } from '../../../../utils/Security.util';

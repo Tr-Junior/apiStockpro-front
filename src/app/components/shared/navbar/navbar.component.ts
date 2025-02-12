@@ -9,14 +9,8 @@ import { Security } from '../../../../utils/Security.util';
 import { User } from '../../../../core/models/user.model';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { MenuModule } from 'primeng/menu';
-<<<<<<< HEAD
-import { DataService } from '../../../../core/api/data.service';
-import { ImportsService } from '../../../../core/api/imports.service';
-import { BoxService } from '../../../../core/api/box.Service';
-=======
 import { ImportsService } from '../../../../core/services/imports.service';
 import { UploadService } from '../../../../core/api/upload/upload.service';
->>>>>>> origin/teste
 
 @Component({
     selector: 'app-navbar',

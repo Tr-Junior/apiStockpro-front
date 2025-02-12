@@ -1,14 +1,8 @@
 import { Component } from '@angular/core';
 import { Budget } from '../../../../core/models/budget.model';
 import { ConfirmationService, MessageService } from 'primeng/api';
-<<<<<<< HEAD
-import { DataService } from '../../../../core/api/data.service';
-import { BoxService } from '../../../../core/api/box.Service';
-import { ImportsService } from '../../../../core/api/imports.service';
-=======
 import { BoxService } from '../../../../core/services/box.Service';
 import { ImportsService } from '../../../../core/services/imports.service';
->>>>>>> origin/teste
 import { PdfService } from '../../../../common/printPdf.service';
 import { BudgetService } from '../../../../core/api/budget/budget.service';
 import { ProductService } from '../../../../core/api/products/product.service';

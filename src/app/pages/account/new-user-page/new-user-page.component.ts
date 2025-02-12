@@ -1,18 +1,9 @@
 import { Component } from '@angular/core';
-<<<<<<< HEAD
-import { DataService } from '../../../../core/api/data.service';
-import { ImportsService } from '../../../../core/api/imports.service';
-import { ConfirmationService } from 'primeng/api/confirmationservice';
-=======
 import { ImportsService } from '../../../../core/services/imports.service';
->>>>>>> origin/teste
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { User } from '../../../../core/models/user.model';
-<<<<<<< HEAD
-=======
 import { UserService } from '../../../../core/api/user/user.service';
->>>>>>> origin/teste
 
 @Component({
   selector: 'app-new-user-page',

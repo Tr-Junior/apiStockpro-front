@@ -1,11 +1,6 @@
 import { Component } from '@angular/core';
 import { MessageService } from 'primeng/api';
-<<<<<<< HEAD
-import { DataService } from '../../../core/api/data.service';
-import { ImportsService } from '../../../core/api/imports.service';
-=======
 import { ImportsService } from '../../../core/services/imports.service';
->>>>>>> origin/teste
 
 @Component({
   selector: 'app-page-not-found',

@@ -1,14 +1,7 @@
 import { Component } from '@angular/core';
-<<<<<<< HEAD
-import { ImportsService } from '../../../../core/api/imports.service';
-import { BoxItem} from '../../../../core/models/box-item.model';
-import { BoxService } from '../../../../core/api/box.Service';
-import { DataService } from '../../../../core/api/data.service';
-=======
 import { ImportsService } from '../../../../core/services/imports.service';
 import { BoxItem} from '../../../../core/models/box-item.model';
 import { BoxService } from '../../../../core/services/box.Service';
->>>>>>> origin/teste
 import { Product } from '../../../../core/models/product.model';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { MenuItem, MessageService } from 'primeng/api';

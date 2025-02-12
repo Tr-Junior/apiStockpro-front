@@ -2,16 +2,9 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Security } from '../../../../utils/Security.util';
-<<<<<<< HEAD
-import { DataService } from '../../../../core/api/data.service';
-import { environment } from '../../../../environments/environment.development';
-import { HttpClientModule } from '@angular/common/http';
-import { AuthService } from '../../../../core/guards/auth.service';
-=======
 import { AuthenticateService } from '../../../../core/api/authenticate/authenticate.service';
 import { MessageService } from 'primeng/api';
 import { ImportsService } from '../../../../core/services/imports.service';
->>>>>>> origin/teste
 
 @Component({
   selector: 'app-login-page',

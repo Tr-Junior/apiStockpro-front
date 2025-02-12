@@ -5,10 +5,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ICompany } from '../../../core/models/company.model';
 import { Observable } from 'rxjs';
 import { UploadPageComponent } from '../upload-page/upload-page.component';
-<<<<<<< HEAD
-=======
 import { CompanyService } from '../../../core/api/company/company.service';
->>>>>>> origin/teste
 
 @Component({
   selector: 'app-company-info-page',

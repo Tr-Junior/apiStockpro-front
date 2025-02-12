@@ -1,20 +1,12 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-<<<<<<< HEAD
-import { DataService } from '../../../../core/api/data.service';
-=======
->>>>>>> origin/teste
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { catchError, of } from 'rxjs';
 import { Product } from '../../../../core/models/product.model';
 import { Supplier } from '../../../../core/models/supplier-model';
-<<<<<<< HEAD
-import { ImportsService } from '../../../../core/api/imports.service';
-=======
 import { ImportsService } from '../../../../core/services/imports.service';
 import { ProductService } from '../../../../core/api/products/product.service';
 import { SupplierService } from '../../../../core/api/supplier/suplier.service';
->>>>>>> origin/teste
 
 @Component({
   selector: 'app-product-registration-page',
