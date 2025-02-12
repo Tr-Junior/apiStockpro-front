@@ -8,6 +8,9 @@ import { User } from "../../models/user.model";
 })
 
 export class UserService extends BaseService{
+    getAllUsers(): Observable<User[]> {
+      return this.http.get<User[]>(`${this.API}/customers`, { headers: this.composeHeaders() });
+    }
     createUser(data: any) {
       return this.http.post(`${this.API}/customers`, data, { headers: this.composeHeaders() });
     }
@@ -19,6 +22,9 @@ export class UserService extends BaseService{
     }
     checkUsernameExists(name: string) {
       return this.http.get<boolean>(`${this.API}/customers/check-username/${name}`, { headers: this.composeHeaders() });
+    }
+    deleteUser(id: string) {
+      return this.http.delete(`${this.API}/customers/delete-user/${id}`, { headers: this.composeHeaders() });
     }
 
 }
