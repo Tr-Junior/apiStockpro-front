@@ -113,18 +113,32 @@ export const routes: Routes = [
       }
     ]
   },
-
-
   {
     path: 'login-guard',
      component: FramePageComponent,
     children: [
       {
       path: '',
-      loadComponent: () => import('./pages/account/login-guard-page/login-guard-page.component').then(m => m.LoginGuardPageComponent)
+      loadComponent: () => import('./pages/account/login-guard-page/login-guard-page.component').then(m => m.LoginGuardPageComponent),
+      canActivate: [AuthService]
       }
     ]
   },
+  {
+    path: 'first-login',
+    loadComponent: () => import('./pages/account/first-login-page/first-login-page.component').then(m => m.FirstLoginPageComponent)
+  },
+  {
+    path: 'user-management',
+     component: FramePageComponent,
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/account/user-management-page/user-management-page.component').then(m => m.UserManagementPageComponent)
+      },
+    ]
+  },
+
   {
      path: '404',
      component: PageNotFoundComponent
