@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
-import { catchError, of } from 'rxjs';
+import { catchError, from, of } from 'rxjs';
 import { Product } from '../../../../core/models/product.model';
 import { Supplier } from '../../../../core/models/supplier-model';
 import { ImportsService } from '../../../../core/services/imports.service';
@@ -39,7 +39,6 @@ export class ProductRegistrationPageComponent {
     this.form = this.fb.group({
       title: ['', Validators.compose([Validators.required])],
       quantity: ['', Validators.compose([Validators.required])],
-      min_quantity: ['', Validators.compose([Validators.required])],
       supplier: ['', Validators.compose([Validators.required])],
       purchasePrice: ['', Validators.compose([Validators.required])],
       price: ['', Validators.compose([Validators.required])],
@@ -47,13 +46,14 @@ export class ProductRegistrationPageComponent {
   }
 
   @Output() onCancel = new EventEmitter<void>();
+  @Output() productSaved = new EventEmitter<void>();
 
 
 
   onSupplierSelect(event: any) {
-    this.selectedSupplier = event.value || null; // Garante que sempre define um valor (mesmo null)
+    this.selectedSupplier = event.value || null;
     if (this.selectedSupplier) {
-      this.form.patchValue({ supplier: this.selectedSupplier._id });
+      this.form.patchValue({ supplier: this.selectedSupplier.name });
     } else {
       this.form.patchValue({ supplier: null });
     }
@@ -101,6 +101,7 @@ export class ProductRegistrationPageComponent {
   }
 
   submit() {
+    console.log(this.form)
     if (this.form.invalid) {
       this.messageService.add({
         severity: 'error',
@@ -123,6 +124,7 @@ export class ProductRegistrationPageComponent {
           summary: 'Sucesso',
           detail: data.message || 'Produto salvo com sucesso!',
         });
+        this.productSaved.emit();
         this.resetForm();
       },
       error: (err: any) => {

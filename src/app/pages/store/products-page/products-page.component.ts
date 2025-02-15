@@ -73,6 +73,7 @@ export class ProductsPageComponent {
 
   ngOnInit(): void {
     this.listProd();
+    this.loadSuppliers();
     this.searchQueryChanged.pipe(
       debounceTime(300), // Espera 300ms antes de buscar
       distinctUntilChanged(), // Evita chamadas duplicadas
@@ -232,17 +233,7 @@ export class ProductsPageComponent {
     }
 
     const index = this.product.findIndex((p) => p?._id === product._id);
-    if (index === -1) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Erro',
-        detail: 'Produto não encontrado na lista local.',
-      });
-      return;
-    }
-
     const updatedProduct = { id: product._id, ...this.selectedProduct };
-
     this.productService.updateProduct(updatedProduct).subscribe({
       next: (data: any) => {
         this.product[index] = data.product; // Atualiza o produto na lista

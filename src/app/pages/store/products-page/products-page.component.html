@@ -1,13 +1,14 @@
 <div class="card p-3">
   <p-toast></p-toast>
-  <app-product-registration-page class="hide-on-small"></app-product-registration-page>
+  <app-product-registration-page class="hide-on-small" (productSaved)="listProd()"></app-product-registration-page>
   <!-- Toolbar - Visível apenas em telas menores que 500px -->
   <p-toolbar styleClass="mb-4 gap-2 show-on-small">
     <ng-template pTemplate="left">
       <p-button severity="success" label="Novo" icon="pi pi-plus" class="mr-2" (onClick)="showDialog()">
       </p-button>
       <p-dialog header="Novo Produto" [(visible)]="displayDialog" [modal]="true" [closable]="true">
-        <app-product-registration-page (onCancel)="closeDialog()"></app-product-registration-page>
+        <app-product-registration-page (onCancel)="closeDialog()"
+          (productSaved)="listProd()"></app-product-registration-page>
       </p-dialog>
 
     </ng-template>
@@ -176,8 +177,8 @@
         <td style="text-align: center">
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <p-inputNumber [size]="6" pKeyFilter="num" inputId="currency-user" mode="currency" currency="BRL"
-                locale="pt" [(ngModel)]="selectedProduct.purchasePrice"></p-inputNumber>
+              <input pInputText size="6" id="editedPrice" [(ngModel)]="selectedProduct.purchasePrice" currencyMask
+                [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',' }" />
             </ng-template>
             <ng-template pTemplate="output">
               {{product.purchasePrice | currency: 'BRL':'symbol':'1.2-2' }}
@@ -187,8 +188,8 @@
         <td style="text-align: center">
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <p-inputNumber [size]="6" pKeyFilter="num" id="number" inputId="currency-user" mode="currency"
-                currency="BRL" locale="br" [(ngModel)]="selectedProduct.price"></p-inputNumber>
+              <input pInputText size="6" id="editedPrice" [(ngModel)]="selectedProduct.price" currencyMask
+                [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',' }" />
             </ng-template>
             <ng-template pTemplate="output">
               {{product.price | currency: 'BRL':'symbol':'1.2-2' }}
