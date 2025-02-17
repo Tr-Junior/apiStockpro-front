@@ -22,76 +22,70 @@ export class CompanyDataService {
   /**
    * Carrega os dados da empresa e imagens antes do Angular inicializar
    */
-  loadInitialData(): Promise<void> {
-    return new Promise((resolve) => {
-      this.listCompany().then(() => this.getImages()).finally(() => resolve());
-    });
+  async loadInitialData(): Promise<void> {
+    try {
+      await this.listCompany();
+      await this.getImages();
+      console.log('Dados da empresa carregados com sucesso.');
+    } catch (error) {
+      console.error('Erro ao carregar os dados da empresa:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: 'Erro ao carregar os dados iniciais'
+      });
+    }
   }
 
   /**
    * Busca os dados da empresa e salva no localStorage
    */
-  listCompany(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const savedData = localStorage.getItem('companyData');
-      if (savedData) {
-        this.company = [JSON.parse(savedData)];
-        resolve();
-      } else {
-        this.companyService.getCompany().subscribe({
-          next: (data: ICompany[]) => {
-            this.company = data;
-            if (data.length > 0) {
-              localStorage.setItem('companyData', JSON.stringify(data[0]));
-            }
-            resolve();
-          },
-          error: (err: any) => {
-            console.error('Erro ao buscar empresa:', err);
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Erro',
-              detail: 'Erro ao carregar os dados da empresa'
-            });
-            reject();
-          }
-        });
+  private async listCompany(): Promise<void> {
+    const savedData = localStorage.getItem('companyData');
+    if (savedData) {
+      this.company = [JSON.parse(savedData)];
+      return;
+    }
+
+    try {
+      const data = await this.companyService.getCompany().toPromise();
+      if (data && data.length > 0) {
+        this.company = data;
+        localStorage.setItem('companyData', JSON.stringify(data[0]));
       }
-    });
+    } catch (error) {
+      console.error('Erro ao buscar empresa:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: 'Erro ao carregar os dados da empresa'
+      });
+      throw error;
+    }
   }
 
   /**
    * Busca a logo e o PDF da empresa e salva no localStorage
    */
-  getImages(): Promise<void> {
-    return new Promise((resolve) => {
-      const savedLogo = localStorage.getItem('companyLogo');
-      if (!savedLogo) {
-        this.uploadService.getImages('logo').subscribe(
-          (data: Image) => {
-            if (data?.imageUrl) {
-              this.logoImage = { filePath: data.imageUrl };
-              localStorage.setItem('companyLogo', data.imageUrl);
-            }
-          },
-          (error) => console.error('Erro ao buscar logo:', error)
-        );
+  private async getImages(): Promise<void> {
+    try {
+      if (!localStorage.getItem('companyLogo')) {
+        const logoData = await this.uploadService.getImages('logo').toPromise();
+        if (logoData?.imageUrl) {
+          this.logoImage = { filePath: logoData.imageUrl };
+          localStorage.setItem('companyLogo', logoData.imageUrl);
+        }
       }
 
-      const savedPdf = localStorage.getItem('companyPdf');
-      if (!savedPdf) {
-        this.uploadService.getImages('pdf').subscribe(
-          (data: Image) => {
-            if (data?.imageUrl) {
-              this.pdfImage = { filePath: data.imageUrl };
-              localStorage.setItem('companyPdf', data.imageUrl);
-            }
-          },
-          (error) => console.error('Erro ao buscar PDF:', error)
-        );
+      if (!localStorage.getItem('companyPdf')) {
+        const pdfData = await this.uploadService.getImages('pdf').toPromise();
+        if (pdfData?.imageUrl) {
+          this.pdfImage = { filePath: pdfData.imageUrl };
+          localStorage.setItem('companyPdf', pdfData.imageUrl);
+        }
       }
-
-      resolve();
-    });
+    } catch (error) {
+      console.error('Erro ao buscar imagens:', error);
+    }
   }
 }

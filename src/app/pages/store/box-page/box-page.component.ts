@@ -178,11 +178,11 @@ export class BoxPageComponent {
         detail: 'Produto não encontrado no estoque.'
       });
       return;
+
     }
 
     const existingItem = this.boxItems.find(item => item._id === product._id);
-
-    if (existingItem && existingItem.quantity >= product.quantity) {
+    if (existingItem && existingItem.quantity >= product.quantity || product.quantity <= 0) {
       this.messageService.add({
         severity: 'error',
         summary: 'Quantidade Excedida',

@@ -17,7 +17,7 @@ export class AuthenticateService extends BaseService {
 
 
    refreshToken() {
-     return this.http.post(`${this.API}/customers/refresh-token`, null, );
+     return this.http.post(`${this.API}/customers/refresh-token`, null, { headers: this.composeHeaders() } );
    }
 
    validatePassword(data: any): Observable<{ valid: boolean }> {

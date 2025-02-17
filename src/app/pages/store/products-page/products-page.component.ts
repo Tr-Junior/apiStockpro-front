@@ -11,6 +11,8 @@ import { ProductRegistrationPageComponent } from '../product-registration-page/p
 import { ProductService } from '../../../../core/api/products/product.service';
 import { SupplierService } from '../../../../core/api/supplier/suplier.service';
 import { BudgetService } from '../../../../core/api/budget/budget.service';
+import { BoxItem } from '../../../../core/models/box-item.model';
+import { BoxService } from '../../../../core/services/box.Service';
 @Component({
   selector: 'app-products-page',
   standalone: true,
@@ -43,14 +45,16 @@ export class ProductsPageComponent {
   public limit: number = 100
   displayDialog: boolean = false;
   private destroy$ = new Subject<void>();
-
+  public boxItems: BoxItem[] = [];
   constructor(
     private productService: ProductService,
     private supplierService: SupplierService,
     private budgetService: BudgetService,
     private messageService: MessageService,
     private fb: FormBuilder,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private boxService: BoxService,
+
   ) {
     this.form = this.fb.group({
       title: ['', Validators.required],
@@ -132,6 +136,44 @@ export class ProductsPageComponent {
       }
     });
   }
+
+   async addToBox(data: any): Promise<void> {
+      const product = this.product.find(p => p._id === data._id);
+
+      if (!product) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Produto Não Encontrado',
+          detail: 'Produto não encontrado no estoque.'
+        });
+        return;
+
+      }
+
+      const existingItem = this.boxItems.find(item => item._id === product._id);
+      if (existingItem && existingItem.quantity >= product.quantity) {
+        if(product.quantity <= 0){
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Quantidade Excedida',
+            detail: `Não é possível adicionar mais do que ${product.quantity} unidades de ${product.title}.`
+          });
+        }
+        return;
+      }
+
+      const newItem: BoxItem = existingItem
+        ? { ...existingItem, quantity: existingItem.quantity + 1 }
+        : { _id: product._id, title: product.title, price: product.price, purchasePrice: product.purchasePrice,  quantity: 1, discount: 0  };
+
+      await this.boxService.addItem(newItem);
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Item Adicionado',
+        detail: `${product.title} foi adicionado ao carrinho.`
+      });
+    }
 
   onSearchInput(event: any) {
     this.searchQueryChanged.next(event.target.value); // Emite o valor para o Subject
