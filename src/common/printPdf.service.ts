@@ -9,12 +9,6 @@ import { ICompany } from '../core/models/company.model';
   providedIn: 'root',
 })
 export class PdfService {
-  // public logo = 'assets/image/logof2.png'; // Caminho da logo
-  // public nome = 'Conexão elétrica e hidráulica';
-  // public endereco = 'Qd 33 Conj "B" N° 01-A setor 2';
-  // public cidade =  'Águas Lindas de Goiás'
-  // public telefone = '(61) 99571-0019';
-  // public cnpj = '52.068.148/0001-61';
 
   public logo: string = '';
   public nome: string = '';
