@@ -28,7 +28,6 @@ export class PdfService {
 
     const company = this.getCompanyFromStorage();
     if (company) {
-      console.log('Empresa carregada do localStorage:', company);
       this.nome = company.name;
       this.endereco = `${company.address.backYard},${company.address.neighborhood},${company.address.addressLine} `;
       this.cidade = `${company.address.city} - ${company.address.state}`;
@@ -38,7 +37,6 @@ export class PdfService {
 
     const logoUrl = this.getCompanyPdfFromStorage();
     if (logoUrl) {
-      console.log('Logo carregada do localStorage:', logoUrl);
       this.logo = logoUrl;
     }
     }

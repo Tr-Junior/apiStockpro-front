@@ -13,7 +13,7 @@ import { ImportsService } from '../core/services/imports.service';
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit{
-  title = 'frontend';
+  //title = 'frontend';
 
   constructor(private companyDataService: CompanyDataService) {}
 

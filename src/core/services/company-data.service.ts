@@ -3,7 +3,6 @@ import { CompanyService } from '../api/company/company.service';
 import { ICompany } from '../models/company.model';
 import { UploadService } from '../api/upload/upload.service';
 import { MessageService } from 'primeng/api';
-import { Image } from '../models/image.model';
 
 @Injectable({
   providedIn: 'root'
@@ -19,16 +18,12 @@ export class CompanyDataService {
     private messageService: MessageService
   ) {}
 
-  /**
-   * Carrega os dados da empresa e imagens antes do Angular inicializar
-   */
   async loadInitialData(): Promise<void> {
     try {
       await this.listCompany();
       await this.getImages();
-      console.log('Dados da empresa carregados com sucesso.');
+      this.updateTabInfo();
     } catch (error) {
-      console.error('Erro ao carregar os dados da empresa:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Erro',
@@ -37,11 +32,9 @@ export class CompanyDataService {
     }
   }
 
-  /**
-   * Busca os dados da empresa e salva no localStorage
-   */
   private async listCompany(): Promise<void> {
     const savedData = localStorage.getItem('companyData');
+
     if (savedData) {
       this.company = [JSON.parse(savedData)];
       return;
@@ -52,9 +45,9 @@ export class CompanyDataService {
       if (data && data.length > 0) {
         this.company = data;
         localStorage.setItem('companyData', JSON.stringify(data[0]));
+        this.updateTabInfo();
       }
     } catch (error) {
-      console.error('Erro ao buscar empresa:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Erro',
@@ -63,10 +56,6 @@ export class CompanyDataService {
       throw error;
     }
   }
-
-  /**
-   * Busca a logo e o PDF da empresa e salva no localStorage
-   */
   private async getImages(): Promise<void> {
     try {
       if (!localStorage.getItem('companyLogo')) {
@@ -75,6 +64,8 @@ export class CompanyDataService {
           this.logoImage = { filePath: logoData.imageUrl };
           localStorage.setItem('companyLogo', logoData.imageUrl);
         }
+      } else {
+        this.logoImage = { filePath: localStorage.getItem('companyLogo')! };
       }
 
       if (!localStorage.getItem('companyPdf')) {
@@ -83,9 +74,44 @@ export class CompanyDataService {
           this.pdfImage = { filePath: pdfData.imageUrl };
           localStorage.setItem('companyPdf', pdfData.imageUrl);
         }
+      } else {
+        this.pdfImage = { filePath: localStorage.getItem('companyPdf')! };
       }
     } catch (error) {
       console.error('Erro ao buscar imagens:', error);
     }
+  }
+
+  /**
+   * Atualiza o título da aba e o favicon
+   */
+  private updateTabInfo(): void {
+    if (this.company.length > 0) {
+      // Adiciona um pequeno delay para garantir que o título seja atualizado corretamente
+      setTimeout(() => {
+        document.title = this.company[0]?.name || 'Minha Empresa';
+      }, 100);
+    } else {
+      console.warn('Nenhuma empresa encontrada para atualizar o título da aba.');
+    }
+
+    if (this.logoImage?.filePath) {
+      this.updateFavicon(this.logoImage.filePath);
+    }
+  }
+
+  /**
+   * Atualiza o favicon da aba com a logo da empresa
+   */
+  private updateFavicon(logoUrl: string): void {
+    let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+
+    link.href = logoUrl;
   }
 }

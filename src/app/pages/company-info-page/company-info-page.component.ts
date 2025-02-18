@@ -195,10 +195,6 @@ export class CompanyInfoPageComponent {
         detail: 'Formulário inválido. Preencha os campos obrigatórios.',
       });
     }
-
-    console.log('formulario', this.form.value);
-    console.log('formulario válido:', this.form.valid);
-    console.log('id', id);
   }
 
 
