@@ -45,19 +45,7 @@ export class CostsPageComponent {
     private primengConfig: PrimeNGConfig,
     private router: Router
 
-  ) {
-
-    this.ptBR = {
-      firstDayOfWeek: 0,
-      dayNames: ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"],
-      dayNamesShort: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
-      dayNamesMin: ["Do", "Se", "Te", "Qu", "Qu", "Se", "Sa"],
-      monthNames: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"],
-      monthNamesShort: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
-      today: 'Hoje',
-      clear: 'Limpar'
-    };
-  }
+  ) {}
 
   ngOnInit() {
     Security.clearPass();
@@ -69,7 +57,6 @@ export class CostsPageComponent {
     this.listExits();
     this.primengConfig.setTranslation(this.ptBR);
     this.listProd();
-
   };
 
   listExits() {
