@@ -103,7 +103,6 @@ export class UploadPageComponent {
       (data: Image) => {
         if (data && data.imageUrl) {
           this.logoImage = { filePath: data.imageUrl };
-          console.log('Logo carregada do banco:', this.logoImage);
           localStorage.setItem('companyLogo', data.imageUrl);
         } else {
           console.warn('Nenhuma logo encontrada');
@@ -124,7 +123,6 @@ export class UploadPageComponent {
       (data: Image) => {
         if (data && data.imageUrl) {
           this.pdfImage = { filePath: data.imageUrl };
-          console.log('PDF carregado do banco:', this.pdfImage);
           localStorage.setItem('companyPdf', data.imageUrl);
         } else {
           console.warn('Nenhuma imagem de PDF encontrada');

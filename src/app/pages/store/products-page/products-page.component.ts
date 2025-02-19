@@ -78,6 +78,7 @@ export class ProductsPageComponent {
   ngOnInit(): void {
     this.listProd();
     this.loadSuppliers();
+    this.listBudget();
     this.searchQueryChanged.pipe(
       debounceTime(300), // Espera 300ms antes de buscar
       distinctUntilChanged(), // Evita chamadas duplicadas
@@ -232,25 +233,33 @@ export class ProductsPageComponent {
     let quantity = 0;
     let clients = new Set<string>();
 
+    if (!this.budgets || this.budgets.length === 0) {
+      return { quantity: 0, clients: [] }; // Retorna 0 se os orçamentos não estiverem carregados
+    }
+
     this.budgets.forEach(budget => {
-      budget.budget.items.forEach(item => {
-        if (item.product === productId) {
-          quantity += item.quantity;
-          clients.add(budget.client);
-        }
-      });
+      if (budget.budget?.items) {
+        budget.budget.items.forEach(item => {
+          if (item.product === productId) {
+            quantity += item.quantity;
+            if (budget.client) {
+              clients.add(budget.client);
+            }
+          }
+        });
+      }
     });
 
     return { quantity, clients: Array.from(clients) };
   }
 
 
+
   onRowEditInit(product: Product) {
     const quantityInBudget = this.getQuantityInBudget(product._id).quantity;
-
     this.selectedProduct = {
       ...product,
-      quantity: product.quantity - quantityInBudget, // Quantidade restante para edição
+      quantity: Math.max(product.quantity - quantityInBudget, 0),
     };
 
     this.form.patchValue({
@@ -262,9 +271,7 @@ export class ProductsPageComponent {
     });
   }
 
-
   onRowEditSave(product: Product) {
-    // Verifica se o produto é válido
     if (!product || !product._id) {
       this.messageService.add({
         severity: 'error',
@@ -274,12 +281,22 @@ export class ProductsPageComponent {
       return;
     }
 
-    const index = this.product.findIndex((p) => p?._id === product._id);
-    const updatedProduct = { id: product._id, ...this.selectedProduct };
+    const quantityInBudget = this.getQuantityInBudget(product._id).quantity;
+
+    const editedQuantity = Math.max(this.selectedProduct.quantity, 0);
+
+
+    const updatedProduct = {
+      id: product._id,
+      ...this.selectedProduct,
+      quantity: editedQuantity + quantityInBudget,
+    };
+
     this.productService.updateProduct(updatedProduct).subscribe({
       next: (data: any) => {
-        this.product[index] = data.product; // Atualiza o produto na lista
-        this.filteredProducts = [...this.product]; // Recarrega os produtos filtrados
+        const index = this.product.findIndex((p) => p?._id === product._id);
+        this.product[index] = data.product;
+        this.filteredProducts = [...this.product];
 
         this.messageService.add({
           severity: 'success',
@@ -288,9 +305,9 @@ export class ProductsPageComponent {
         });
 
         if (this.searchQuery) {
-          this.search(); // Aplica a pesquisa
+          this.search();
         } else {
-          this.listProd(); // Atualiza a lista completa
+          this.listProd();
           this.loadSuppliers();
         }
       },
@@ -309,11 +326,10 @@ export class ProductsPageComponent {
     const index = this.product.findIndex((p) => p._id === product._id);
     this.product[index] = this.selectedProduct;
 
-    // Atualiza o filtro de pesquisa
     if (this.searchQuery) {
-      this.search; // Aplica a pesquisa novamente
+      this.search;
     } else {
-      this.listProd(); // Atualiza a lista completa
+      this.listProd();
     }
   }
 
@@ -321,19 +337,19 @@ export class ProductsPageComponent {
   deleteProduct(productId: string) {
     this.productService.deleteProduct(productId).subscribe({
       next: () => {
-        // Remove o produto da lista local
+
         this.product = this.product.filter(p => p._id !== productId);
-        this.filteredProducts = [...this.product]; // Atualiza os produtos filtrados
+        this.filteredProducts = [...this.product];
         this.messageService.add({
           severity: 'success',
           summary: 'Sucesso',
           detail: 'Produto excluído com sucesso',
         });
-        // Reaplica o filtro de pesquisa após a exclusão
+
         if (this.searchQuery) {
-          this.search; // Aplica a pesquisa novamente
+          this.search;
         } else {
-          this.listProd(); // Atualiza a lista completa
+          this.listProd();
         }
       },
       error: (err: any) => {

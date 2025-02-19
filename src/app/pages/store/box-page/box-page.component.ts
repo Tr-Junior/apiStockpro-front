@@ -119,6 +119,7 @@ export class BoxPageComponent {
         this.totalPages = Math.ceil(response.totalRecords / 25);
         this.currentPage = page;
         this.loading = false;
+        this.listBudget();
       },
       error: (err: any) => {
         this.loading = false;
@@ -325,6 +326,7 @@ export class BoxPageComponent {
                 });
                 this.clearCart();
                 this.selectedPayment = undefined;
+                this.clearSearch();
             },
             error: err => {
                 this.messageService.add({
@@ -373,6 +375,15 @@ calcTroco() {
   if (this.totalTroco < 0) {
     this.totalTroco = 0;
   }
+}
+
+listBudget() {
+  this.budgetService.getBudget().subscribe({
+   next: (data: Budget[]) => {
+      this.budgets = data;
+    },
+    error: (error) => console.error(error)
+  });
 }
 
 filterCustomer(event: any) {

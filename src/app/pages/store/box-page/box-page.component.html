@@ -37,19 +37,20 @@
               </td>
               <td style="text-align: center">
                 <div [ngClass]="{
-          'outofstock': (product.quantity - getQuantityInBudget(product._id).quantity) === 0,
-          'lowstock': (product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
-          (product.quantity - getQuantityInBudget(product._id).quantity) <= 10,
-          'instock': (product.quantity - getQuantityInBudget(product._id).quantity) > 10}">
+                  'outofstock': (product.quantity - getQuantityInBudget(product._id).quantity) === 0,
+                  'lowstock': (product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
+                  (product.quantity - getQuantityInBudget(product._id).quantity) <= 10,
+                  'instock': (product.quantity - getQuantityInBudget(product._id).quantity) > 10}">
                   <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) > 0">
                     {{ product.quantity - getQuantityInBudget(product._id).quantity }}
                   </span>
                   <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) === 0" class="badge">
                     Fora de Estoque
                   </span>
-                  <i pTooltip="Produto abaixo do estoque mínimo" tooltipPosition="top" *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
-             (product.quantity - getQuantityInBudget(product._id).quantity) <= product.min_quantity"
-                    class="pi pi-exclamation-triangle information"></i>
+                  <i pTooltip="Produto abaixo do estoque mínimo" tooltipPosition="top"
+                    *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) <= (product.min_quantity)"
+                    class="pi pi-exclamation-triangle information">
+                  </i>
                 </div>
               </td>
               <td style="text-align: center">{{ product.price | currency:'BRL':'symbol':'1.2-2'}}</td>

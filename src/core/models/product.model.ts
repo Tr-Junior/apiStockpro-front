@@ -6,6 +6,7 @@ export class Product {
     public codigo: string,
     public title: string,
     public quantity: number,
+    public min_quatity: number,
     public purchasePrice: number,
     public price: number,
     public supplier: Supplier

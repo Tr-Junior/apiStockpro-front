@@ -52,10 +52,7 @@ export class CompanyInfoPageComponent {
     this.companyService.getCompany().subscribe({
       next: (data: ICompany[]) => {
         this.busy = false;
-        this.company = data; // Atualiza o array de empresas
-        console.log('Dados recebidos:', data);
-
-
+        this.company = data;
         if (this.company.length > 0) {
           const id = this.company[0]._id; // Garante que o array não está vazio
           this.listCompanyById(id);
@@ -81,7 +78,6 @@ export class CompanyInfoPageComponent {
     this.companyService.getCompanyId(id).subscribe({
       next: (data: ICompany) => {
         this.busy = false;
-        console.log('Dados recebidosID:', data);
 
         this.form.patchValue({
           id: data._id,
@@ -177,6 +173,7 @@ export class CompanyInfoPageComponent {
               summary: 'Sucesso',
               detail: 'Empresa criada com sucesso',
             });
+            this.listCompany();
             this.form.reset(); // Limpa o formulário após criação
           },
           error: (err: any) => {
