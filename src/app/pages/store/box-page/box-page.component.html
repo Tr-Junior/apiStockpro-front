@@ -38,9 +38,7 @@
               <td style="text-align: center">
                 <div [ngClass]="{
                   'outofstock': (product.quantity - getQuantityInBudget(product._id).quantity) === 0,
-                  'lowstock': (product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
-                  (product.quantity - getQuantityInBudget(product._id).quantity) <= 10,
-                  'instock': (product.quantity - getQuantityInBudget(product._id).quantity) > 10}">
+                  'instock': (product.quantity - getQuantityInBudget(product._id).quantity) >= 1}">
                   <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) > 0">
                     {{ product.quantity - getQuantityInBudget(product._id).quantity }}
                   </span>
@@ -48,8 +46,8 @@
                     Fora de Estoque
                   </span>
                   <i pTooltip="Produto abaixo do estoque mínimo" tooltipPosition="top"
-                    *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) <= (product.min_quantity)"
-                    class="pi pi-exclamation-triangle information">
+                    *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) <= product.min_quantity"
+                    class="pi pi-exclamation-triangle information info text-xl ">
                   </i>
                 </div>
               </td>

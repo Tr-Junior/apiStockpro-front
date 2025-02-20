@@ -134,8 +134,8 @@
                 [ngClass]="{
                   'outofstock': (product.quantity - getQuantityInBudget(product._id).quantity) === 0,
                   'lowstock': ((product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
-                              (product.quantity - getQuantityInBudget(product._id).quantity) <= (product.min_stock)),
-                  'instock': (product.quantity - getQuantityInBudget(product._id).quantity) > 10
+                              (product.quantity - getQuantityInBudget(product._id).quantity) <= product.min_quantity),
+                  'instock': ((product.quantity - getQuantityInBudget(product._id).quantity) >= 1)
                 }">
                 <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) > 0">
                   {{ product.quantity - getQuantityInBudget(product._id).quantity }}
@@ -148,6 +148,8 @@
             </ng-template>
           </p-cellEditor>
         </td>
+
+
         <td style="text-align: center">
           <p-cellEditor>
             <ng-template pTemplate="input">
