@@ -33,7 +33,6 @@ export class UsersPageComponent {
       id: [{ value: '', disabled: true }],
       name: [{ value: '', disabled: true }],
       password: ['', Validators.required],
-      pass: ['', Validators.required],
       confirmarSenha: ['', Validators.required],
     }, { validators: this.passwordMatchValidator });
   }
