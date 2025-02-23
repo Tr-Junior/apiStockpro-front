@@ -139,8 +139,7 @@ export class ProductsPageComponent {
   }
 
    async addToBox(data: any): Promise<void> {
-      const product = this.product.find(p => p._id === data._id);
-
+    const product = this.filteredProducts.find(p => p._id === data._id);
       if (!product) {
         this.messageService.add({
           severity: 'error',

@@ -259,10 +259,6 @@ export class BoxPageComponent {
     await this.loadCart();
   }
 
-  async clearCart(): Promise<void> {
-    await this.boxService.clearBox();
-    await this.loadCart();
-  }
 
   calculateTotals(): void {
     this.subtotal = this.boxItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -324,7 +320,7 @@ export class BoxPageComponent {
                     summary: 'Venda Finalizada',
                     detail: 'Pedido realizado com sucesso!'
                 });
-                this.clearCart();
+                this.clearBox();
                 this.selectedPayment = undefined;
                 this.clearSearch();
             },
@@ -335,9 +331,6 @@ export class BoxPageComponent {
                     detail: 'Falha ao finalizar a venda: ' + (err.message || 'Erro desconhecido.')
                 });
                 this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao finalizar a venda.' });
-      console.error('Erro ao criar venda:', err);
-      console.error('Erro ao criar venda:', validItems);
-
             }
         });
 
@@ -439,6 +432,8 @@ async createBudget() {
     await this.boxService.clearBox();
     this.customerName = ''; // Limpa o nome do cliente
     this.grandTotal = 0;
+    this.subtotal = 0;
+    this.totalTroco = 0;
     //await this.listBudget();
     await this.loadCustomerNames();
   } catch (err: any) {
@@ -449,6 +444,10 @@ async createBudget() {
 
 async clearBox() {
   await this.boxService.clearBox();
+    await this.loadCart();
+    this.grandTotal = 0;
+    this.subtotal = 0;
+    this.totalTroco = 0;
 }
 
 
