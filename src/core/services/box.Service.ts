@@ -89,8 +89,12 @@ export class BoxService {
 
   async addItem(item: BoxItem): Promise<void> {
     if (!this.db) await this.handleUserSession();
+
+    // Adiciona um timestamp ao item
+    const newItem = { ...item, createdAt: Date.now() };
+
     const tx = this.db!.transaction("Box", "readwrite");
-    await tx.objectStore("Box").put(item);
+    await tx.objectStore("Box").put(newItem);
     await this.updateItemsSubject();
   }
 
@@ -105,7 +109,9 @@ export class BoxService {
     if (!this.db) await this.handleUserSession();
     const tx = this.db!.transaction("Box", "readonly");
     const items = await tx.objectStore("Box").getAll();
-    return items;
+
+    // Ordena os itens pela ordem de adição
+    return items.sort((a, b) => a.createdAt - b.createdAt);
   }
 
   async getItems(): Promise<BoxItem[]> {

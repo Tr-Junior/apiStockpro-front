@@ -233,15 +233,30 @@
         {{ availableStock }}
       </span>
     </p>
+    <p>Preço de compra: {{ selectedProduct.purchasePrice | currency:'BRL':'symbol':'1.2-2' }}</p>
+    <p>
+      lucro: {{(selectedProduct.price - selectedProduct.purchasePrice |
+      currency:'BRL':'symbol':'1.2-2')}}
+    </p>
+    <p>
+      Porcentagem de lucro: {{((selectedProduct.price - selectedProduct.purchasePrice) / selectedProduct.purchasePrice *
+      100 |
+      number:'1.2-2')}}%
+    </p>
     <div class="p-field">
       <label for="editedPrice">Preço:</label>
       <input pInputText id="editedPrice" [(ngModel)]="editedPrice" currencyMask
         [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',' }" />
     </div>
 
-    <div class="p-mt-3">
-      <button pButton label="Salvar" (click)="saveEditedPrice()"></button>
-      <button pButton label="Cancelar" (click)="closeSidebar()" class="p-button-secondary"></button>
+    <div class="mt-2 p-mt-3 flex">
+      <div class="mr-2">
+        <button pButton label="Salvar" (click)="saveEditedPrice()"></button>
+      </div>
+      <div>
+        <button pButton label="Cancelar" (click)="closeSidebar()" class="p-button-secondary"></button>
+      </div>
+
     </div>
   </div>
 </p-sidebar>

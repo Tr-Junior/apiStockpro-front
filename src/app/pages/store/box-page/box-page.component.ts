@@ -428,9 +428,8 @@ async createBudget() {
     const data: any = await this.budgetService.createBudget(budget).toPromise();
     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: data.message });
 
-    // Limpa o armazenamento local
     await this.boxService.clearBox();
-    this.customerName = ''; // Limpa o nome do cliente
+    this.customerName = '';
     this.grandTotal = 0;
     this.subtotal = 0;
     this.totalTroco = 0;
