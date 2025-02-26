@@ -235,11 +235,11 @@
     </p>
     <p>Preço de compra: {{ selectedProduct.purchasePrice | currency:'BRL':'symbol':'1.2-2' }}</p>
     <p>
-      lucro: {{(selectedProduct.price - selectedProduct.purchasePrice |
+      lucro: {{(editedPrice - selectedProduct.purchasePrice |
       currency:'BRL':'symbol':'1.2-2')}}
     </p>
     <p>
-      Porcentagem de lucro: {{((selectedProduct.price - selectedProduct.purchasePrice) / selectedProduct.purchasePrice *
+      Porcentagem de lucro: {{((editedPrice - selectedProduct.purchasePrice) / selectedProduct.purchasePrice *
       100 |
       number:'1.2-2')}}%
     </p>

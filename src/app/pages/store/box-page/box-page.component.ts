@@ -42,7 +42,7 @@ export class BoxPageComponent {
   public selectedProduct: Product | null = null;
   public availableStock: number = 0;
   public user!: User;
-  public editedPrice: number | null = null;
+  public editedPrice: number = 0;
   public total: number = 0;
   public totalTroco: number = 0;
   public totalRecords: number = 0;
@@ -537,7 +537,7 @@ saveEditedPrice(): void {
 closeSidebar(): void {
   this.sidebarVisible = false;
   this.selectedProduct = null;
-  this.editedPrice = null;
+  this.editedPrice = 0;
 }
 
 
