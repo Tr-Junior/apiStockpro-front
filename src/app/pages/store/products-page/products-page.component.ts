@@ -87,6 +87,7 @@ export class ProductsPageComponent {
       this.searchQuery = query;
       this.search(1);
     });
+
   }
 
   ngOnDestroy(): void {
@@ -314,7 +315,7 @@ export class ProductsPageComponent {
         this.messageService.add({
           severity: 'error',
           summary: 'Erro',
-          detail: err.message,
+          detail: err.error?.message || 'Erro desconhecido.',
         });
       },
     });

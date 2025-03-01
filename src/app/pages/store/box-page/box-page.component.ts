@@ -47,7 +47,7 @@ export class BoxPageComponent {
   public totalTroco: number = 0;
   public totalRecords: number = 0;
   public checked: boolean = false;
-
+  private quantityUpdateSubject = new Subject<{ newQuantity: number, item: BoxItem }>();
   constructor(
     private boxService: BoxService,
     private productService: ProductService,
@@ -74,6 +74,11 @@ export class BoxPageComponent {
       this.searchQuery = query;
       this.search();
     });
+    this.quantityUpdateSubject.pipe(
+      debounceTime(500) // Aguarda 500ms antes de salvar no banco
+  ).subscribe(({ newQuantity, item }) => {
+      this.saveQuantity(newQuantity, item);
+  });
     this.loadCustomerNames();
   }
 
@@ -212,7 +217,7 @@ export class BoxPageComponent {
         this.messageService.add({
             severity: 'warn',
             summary: 'Aviso',
-            detail: 'Quantidade zerada. verifique os itens antes de continuar.'
+            detail: 'Quantidade zerada. Verifique os itens antes de continuar.'
         });
         return;
     }
@@ -242,6 +247,8 @@ export class BoxPageComponent {
             }
 
             this.calculateTotals();
+
+            this.quantityUpdateSubject.next({ newQuantity, item });
         },
         error: (err) => {
             console.error('Erro ao buscar produto pelo ID:', err);
@@ -252,6 +259,10 @@ export class BoxPageComponent {
             });
         }
     });
+}
+
+private async saveQuantity(newQuantity: number, item: BoxItem) {
+    await this.boxService.updateItem(item);
 }
 
   async remove(data: any): Promise<void> {
@@ -428,7 +439,7 @@ async createBudget() {
     const data: any = await this.budgetService.createBudget(budget).toPromise();
     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: data.message });
 
-    await this.boxService.clearBox();
+    this.clearBox();
     this.customerName = '';
     this.grandTotal = 0;
     this.subtotal = 0;
@@ -447,6 +458,7 @@ async clearBox() {
     this.grandTotal = 0;
     this.subtotal = 0;
     this.totalTroco = 0;
+    this.total = 0;
 }
 
 

@@ -112,7 +112,6 @@ export class PdfService {
 
     // Informações do orçamento
     doc.setFontSize(12);
-    doc.text(`Cliente: ${budget.client}`, 10, 69);
 
     // Tabela de itens do orçamento
     const headers = [['Produto', 'Quantidade', 'Valor Unitário', 'Valor Total']];

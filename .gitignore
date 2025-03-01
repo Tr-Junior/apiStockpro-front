@@ -42,3 +42,4 @@ testem.log
 Thumbs.db
 logo.png
 logof2.png
+environment.production.ts
