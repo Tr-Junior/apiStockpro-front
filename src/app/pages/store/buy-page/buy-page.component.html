@@ -19,7 +19,12 @@
   <p-toolbar styleClass="mb-4 gap-2">
     <ng-template pTemplate="left">
       <button pButton pRipple [label]="'Excluir Selecionados'" icon="pi pi-trash" class="p-button-danger"
-        (click)="deleteSelectedProducts()" [disabled]="!selectedProducts || !selectedProducts.length"></button>
+        (click)="confirmDeleteSelected()" [disabled]="!selectedProducts || !selectedProducts.length">
+      </button>
+      <div class="m-2"></div>
+      <button pButton pRipple label="Gerar PDF" icon="pi pi-file-pdf" class="p-button-warning" (click)="generatePDF()"
+        [disabled]="!selectedProducts || !selectedProducts.length">
+      </button>
     </ng-template>
   </p-toolbar>
 
@@ -65,3 +70,4 @@
     </ng-template>
   </p-table>
 </div>
+<p-confirmDialog></p-confirmDialog>

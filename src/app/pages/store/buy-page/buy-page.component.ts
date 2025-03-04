@@ -2,9 +2,11 @@ import { Component } from '@angular/core';
 import { ImportsService } from '../../../../core/services/imports.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ProductsBuy } from '../../../../core/models/productsBuy-model';
-import { MessageService, SelectItem } from 'primeng/api';
+import { ConfirmationService, MessageService, SelectItem } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProductBuyService } from '../../../../core/api/productBuy/productBuy.service';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-buy-page',
@@ -25,7 +27,8 @@ export class BuyPageComponent {
   constructor(
     private productBuyService: ProductBuyService,
     private fb: FormBuilder,
-    private messageService: MessageService // Removido ToastrService
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService
   ) {
     this.form = this.fb.group({
       title: ['', Validators.compose([
@@ -175,6 +178,25 @@ export class BuyPageComponent {
     });
   }
 
+  confirmDeleteSelected() {
+    if (!this.selectedProducts || this.selectedProducts.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Nenhum produto selecionado!' });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `Tem certeza que deseja excluir os ${this.selectedProducts.length} produtos selecionados?`,
+      header: 'Confirmação',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Confirmar',
+      rejectLabel: 'Cancelar',
+      accept: () => this.deleteSelectedProducts(), // Chama a função de exclusão ao confirmar
+      reject: () => {
+        this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'A exclusão foi cancelada' });
+      }
+    });
+  }
+
   deleteSelectedProducts() {
     if (this.selectedProducts && this.selectedProducts.length) {
       this.selectedProducts.forEach(product => {
@@ -192,9 +214,39 @@ export class BuyPageComponent {
       this.selectedProducts = []; // Limpa a seleção após a exclusão
     }
   }
-
   clearSearch() {
     this.searchQuery = '';
     this.loadProducts();
+  }
+
+  generatePDF() {
+    if (!this.selectedProducts || this.selectedProducts.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Nenhum produto selecionado!' });
+      return;
+    }
+
+    const doc = new jsPDF();
+
+    // Adiciona título
+    doc.setFontSize(16);
+    doc.text('Lista de Produtos para compra', 14, 15);
+
+    // Formata os dados para a tabela
+    const tableData = this.selectedProducts.map((product, index) => [
+      index + 1,
+      product.title
+    ]);
+
+    // Corrigido: Chamada correta da função autoTable
+    autoTable(doc, {
+      startY: 25,
+      head: [['#', 'Nome do Produto']],
+      body: tableData
+    });
+
+    // Salva o PDF
+    doc.save('produtos-selecionados.pdf');
+
+    this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'PDF gerado com sucesso!' });
   }
 }

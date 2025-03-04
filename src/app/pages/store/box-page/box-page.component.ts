@@ -100,9 +100,12 @@ export class BoxPageComponent {
 
   search(page: number = 1, reset: boolean = false): void {
     const trimmedQuery = (this.searchQuery || '').trim();
+
     if (!trimmedQuery) {
-      this.clearSearch();
-      return;
+      if (reset) {
+        this.products = [];
+      }
+      return; // Não faz a requisição se estiver vazio
     }
 
     if (reset) {
@@ -124,18 +127,14 @@ export class BoxPageComponent {
         this.totalPages = Math.ceil(response.totalRecords / 25);
         this.currentPage = page;
         this.loading = false;
-        this.listBudget();
       },
       error: (err: any) => {
         this.loading = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao Buscar Produtos',
-          detail: 'Houve um erro ao tentar buscar os produtos. ' + (err.message || 'Tente novamente mais tarde.')
-        });
+        console.error('Erro de pesquisa', err);
       }
     });
   }
+
 
   loadDataLazy(event: any): void {
     if (this.loading || this.currentPage >= this.totalPages) {

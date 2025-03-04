@@ -13,14 +13,15 @@ import { AuthenticateService } from '../../../../core/api/authenticate/authentic
   templateUrl: './login-guard-page.component.html',
   styleUrl: './login-guard-page.component.css'
 })
-export class LoginGuardPageComponent implements OnDestroy{
+export class LoginGuardPageComponent implements OnDestroy {
   password: string = '';
-  errorMessage: string = '';
   userId: string = '';
   @ViewChild('passwordInput') passwordInput!: ElementRef;
+
   constructor(
     private router: Router,
     private authenticateService: AuthenticateService,
+    private messageService: MessageService // Injetando o MessageService
   ) {}
 
   ngOnInit() {
@@ -36,7 +37,7 @@ export class LoginGuardPageComponent implements OnDestroy{
 
   login() {
     if (!this.password) {
-      this.errorMessage = 'Digite sua senha!';
+      this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Digite sua senha!' });
       return;
     }
 
@@ -45,21 +46,24 @@ export class LoginGuardPageComponent implements OnDestroy{
       password: this.password
     };
 
-    this.authenticateService.validatePassword(requestData).subscribe(response => {
-      if (response.valid) {
-        sessionStorage.setItem('auth-guard', 'true');
+    this.authenticateService.validatePassword(requestData).subscribe(
+      response => {
+        if (response.valid) {
+          sessionStorage.setItem('auth-guard', 'true');
 
-        // Recupera a rota original que o usuário tentou acessar
-        const redirectUrl = sessionStorage.getItem('redirectAfterLoginGuard') || '/sales';
-        sessionStorage.removeItem('redirectAfterLoginGuard'); // Remove para evitar redirecionamento indevido
+          // Recupera a rota original que o usuário tentou acessar
+          const redirectUrl = sessionStorage.getItem('redirectAfterLoginGuard') || '/sales';
+          sessionStorage.removeItem('redirectAfterLoginGuard'); // Remove para evitar redirecionamento indevido
 
-        this.router.navigate([redirectUrl]);
-      } else {
-        this.errorMessage = 'Senha incorreta!';
+          this.router.navigate([redirectUrl]);
+        } else {
+          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Senha incorreta!' });
+        }
+      },
+      error => {
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Senha invalida!' });
       }
-    }, error => {
-      this.errorMessage = 'Erro ao validar senha!';
-    });
+    );
   }
 
   ngOnDestroy() {

@@ -129,29 +129,32 @@ export class BudgetPageComponent {
     return items.reduce((total, item) => total + item.price * item.quantity, 0);
   }
 
-  confirmDelete(budget: Budget) {
-    if (!budget) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Orçamento inválido para exclusão' });
-      return;
-    }
-
-    this.confirmationService.confirm({
-      message: `Deseja realmente excluir o orçamento de ${budget.client}?`,
-      header: 'Atenção',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        const index = this.budgets.indexOf(budget);
-        if (index !== -1) {
-          this.removeBudget(index);
-        } else {
-          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Orçamento não encontrado' });
-        }
-      },
-      reject: () => {
-        this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'A exclusão foi cancelada' });
-      }
-    });
+ confirmDelete(budget: Budget) {
+  if (!budget) {
+    this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Orçamento inválido para exclusão' });
+    return;
   }
+
+  this.confirmationService.confirm({
+    message: `Deseja realmente excluir o orçamento de ${budget.client}?`,
+    header: 'Atenção',
+    icon: 'pi pi-exclamation-triangle',
+    rejectLabel: 'Cancelar',
+    acceptLabel: 'Confirmar',
+
+    accept: () => {
+      const index = this.budgets.indexOf(budget);
+      if (index !== -1) {
+        this.removeBudget(index);
+      } else {
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Orçamento não encontrado' });
+      }
+    },
+    reject: () => {
+      this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'A exclusão foi cancelada' });
+    }
+  });
+}
 
   removeBudget(index: number) {
     if (index < 0 || index >= this.budgets.length) {

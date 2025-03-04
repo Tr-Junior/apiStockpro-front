@@ -251,6 +251,8 @@ export class ExitsPageComponent {
       message: `Deseja realmente excluir o produto: ${exits.description}?`,
       header: 'Confirmação',
       icon: 'pi pi-exclamation-triangle',
+      rejectLabel: 'Cancelar',
+    acceptLabel: 'Confirmar',
       accept: () => {
         this.delete(exits._id);
       },

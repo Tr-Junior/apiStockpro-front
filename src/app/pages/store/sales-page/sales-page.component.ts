@@ -125,6 +125,8 @@ export class SalesPageComponent {
       message: `Deseja realmente excluir a Venda: ${order.number}?`,
       header: 'Confirmação',
       icon: 'pi pi-exclamation-triangle',
+      rejectLabel: 'Cancelar',
+      acceptLabel: 'Confirmar',
       accept: () => {
         this.delete(order._id, order.number); // Chama o método delete se o usuário aceitar
       },

@@ -139,7 +139,7 @@ export class ProductsPageComponent {
     });
   }
 
-   async addToBox(data: any): Promise<void> {
+  async addToBox(data: any): Promise<void> {
     const product = this.filteredProducts.find(p => p._id === data._id);
       if (!product) {
         this.messageService.add({
@@ -362,19 +362,18 @@ export class ProductsPageComponent {
     });
   }
 
-
   confirmDelete(productId: string) {
     this.confirmationService.confirm({
       icon: 'pi pi-exclamation-triangle',
       message: 'Tem certeza de que deseja excluir este produto?',
       header: 'Confirmar Exclusão',
+      rejectLabel: 'Cancelar',
+    acceptLabel: 'Confirmar',
       accept: () => {
         // Chama a função de exclusão se o usuário confirmar
         this.deleteProduct(productId);
       },
       reject: () => {
-        // Não faz nada se o usuário cancelar
-        console.log('Exclusão cancelada');
         this.messageService.add({
           severity: 'error',
           summary: 'Erro',
@@ -383,8 +382,7 @@ export class ProductsPageComponent {
       }
     });
   }
-
-      exportToExcel() {
+  exportToExcel() {
         if (this.product.length === 0) {
           this.messageService.add({
             severity: 'warn',
@@ -456,4 +454,4 @@ export class ProductsPageComponent {
           detail: 'Arquivo Excel exportado com formatação!',
         });
       }
-    }
+  }
