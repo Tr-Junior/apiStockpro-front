@@ -177,7 +177,8 @@ export class ExitsPageComponent {
             color = 'payment-pix';
             break;
           default:
-            color = 'payment-others';
+            case 'Total':
+            color = 'payment-total';
             break;
         }
         this.paymentsMap.set(payment, { total, color });

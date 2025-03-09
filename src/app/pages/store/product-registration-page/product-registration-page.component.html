@@ -15,6 +15,16 @@
     <p-autoComplete formControlName="supplier" [suggestions]="filteredSuppliers"
       (completeMethod)="filterSuppliers($event)" (onSelect)="onSupplierSelect($event)" field="name" [dropdown]="true"
       placeholder="Selecione um fornecedor">
+
+      <ng-template let-supplier pTemplate="item">
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+          <span>{{ supplier.name }}</span>
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger"
+            (click)="deleteSupplier(supplier, $event)" size="small">
+          </button>
+        </div>
+      </ng-template>
+
     </p-autoComplete>
   </div>
   <div class="field col">
@@ -35,3 +45,5 @@
       styleClass="p-button-danger"></p-button>
   </div>
 </div>
+<p-confirmDialog></p-confirmDialog> <!-- Caixa de confirmação -->
+<p-toast></p-toast>

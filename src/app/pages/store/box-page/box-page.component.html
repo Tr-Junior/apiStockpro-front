@@ -5,7 +5,7 @@
         <div class="flex align-items-center font-bold border-round">
           <span class="p-input-icon-left ml-auto">
             <i class="pi pi-search"></i>
-            <input class="text" pInputText type="text" [(ngModel)]="searchQuery" (ngModelChange)="search(1, true)"
+            <input class="text" pInputText type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()"
               placeholder="Pesquisar produtos..." />
           </span>
           <p-button icon="pi pi-times" styleClass="p-button-danger p-button-text" (onClick)="clearSearch()"
@@ -180,18 +180,18 @@
 
       <!-- Botão Finalizar -->
       <div class="col-12 md:col-2">
-        <p-button label="Finalizar Venda" icon="pi pi-check" (click)="submitOrder()" styleClass="w-full mt-4"
-          [outlined]="true" [disabled]="loading" [loading]="loading">
+        <p-button label="Finalizar Venda" icon="pi pi-check" (click)="submitOrder()" size="large" styleClass="w-full"
+          [disabled]="loading" [loading]="loading">
         </p-button>
       </div>
       <div class="col-12 md:col-2 text-center md:text-left btn2">
         <!-- <p-splitButton class="pdf" label="Salvar" icon="pi pi-save" [model]="items"></p-splitButton> -->
-        <p-button class="button" icon="pi pi-file-pdf" iconPos="right" label="Salvar PDF"
+        <p-button class="button" severity="success" icon="pi pi-file-pdf" iconPos="right" label="Salvar PDF"
           (click)="saveBoxAsPdf()"></p-button>
       </div>
       <div class="col-12 md:col-2 text-center md:text-left btn2">
         <!-- <p-splitButton class="pdf" label="Salvar" icon="pi pi-save" [model]="items"></p-splitButton> -->
-        <p-button class="button" icon="pi pi-receipt" iconPos="right" label="Imprimir cupom"
+        <p-button class="button" severity="info" icon="pi pi-receipt" iconPos="right" label="Imprimir cupom"
           (click)="printReceipt()"></p-button>
 
       </div>

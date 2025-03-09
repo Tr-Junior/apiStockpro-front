@@ -229,6 +229,51 @@ export class ProductsPageComponent {
     );
   }
 
+  deleteSupplier(supplier: any, event: Event) {
+    event.stopPropagation(); // Evita que o clique no botão selecione o item
+
+    this.confirmationService.confirm({
+      message: `Tem certeza que deseja remover o fornecedor "${supplier.name}"?`,
+      header: 'Confirmação',
+      icon: 'pi pi-exclamation-triangle',
+      rejectLabel: 'Cancelar',
+      acceptLabel: 'Confirmar',
+      accept: () => {
+        this.supplierService.delSupplier(supplier._id).subscribe({
+          next: () => {
+            // Remove o fornecedor da lista localmente
+            this.filteredSuppliers = this.filteredSuppliers.filter(s => s._id !== supplier._id);
+
+            // Exibe mensagem de sucesso
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Sucesso',
+              detail: 'Fornecedor removido com sucesso!'
+            });
+          },
+          error: (err) => {
+            console.error("Erro ao remover fornecedor:", err);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: 'Erro ao remover fornecedor. Tente novamente.'
+            });
+          }
+        });
+      },
+      reject: () => {
+        // O usuário cancelou a ação
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Cancelado',
+          detail: 'A remoção do fornecedor foi cancelada.'
+        });
+      }
+    });
+  }
+
+
+
   getQuantityInBudget(productId: string): { quantity: number, clients: string[] } {
     let quantity = 0;
     let clients = new Set<string>();

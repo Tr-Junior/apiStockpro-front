@@ -48,6 +48,8 @@ export class BoxPageComponent {
   public totalRecords: number = 0;
   public checked: boolean = false;
   private quantityUpdateSubject = new Subject<{ newQuantity: number, item: BoxItem }>();
+  private searchSubject = new Subject<string>();
+
   constructor(
     private boxService: BoxService,
     private productService: ProductService,
@@ -65,15 +67,10 @@ export class BoxPageComponent {
     this.boxService.items$.subscribe(items => {
       this.boxItems = items;
     });
-
+  this.searchSubject.pipe(debounceTime(500)).subscribe(() => {
+    this.search(1, true);
+  });
     await this.loadCart();
-    this.searchQueryChanged.pipe(
-      debounceTime(300),
-      distinctUntilChanged()
-    ).subscribe(query => {
-      this.searchQuery = query;
-      this.search();
-    });
     this.quantityUpdateSubject.pipe(
       debounceTime(500) // Aguarda 500ms antes de salvar no banco
   ).subscribe(({ newQuantity, item }) => {
@@ -97,6 +94,10 @@ export class BoxPageComponent {
     return `${calculatedHeight}px`;
   }
 
+  onSearchChange(): void {
+    // Atualiza o valor da pesquisa e dispara o debounce
+    this.searchSubject.next(this.searchQuery);
+  }
 
   search(page: number = 1, reset: boolean = false): void {
     const trimmedQuery = (this.searchQuery || '').trim();
@@ -104,8 +105,9 @@ export class BoxPageComponent {
     if (!trimmedQuery) {
       if (reset) {
         this.products = [];
+        this.clearSearch();
       }
-      return; // Não faz a requisição se estiver vazio
+      return;
     }
 
     if (reset) {
@@ -117,12 +119,7 @@ export class BoxPageComponent {
 
     this.productService.searchProduct({ title: trimmedQuery, page, limit: 25 }).subscribe({
       next: (response: any) => {
-        if (reset) {
-          this.products = response.products;
-        } else {
-          this.products.push(...response.products);
-        }
-
+        this.products = reset ? response.products : [...this.products, ...response.products];
         this.totalRecords = response.totalRecords;
         this.totalPages = Math.ceil(response.totalRecords / 25);
         this.currentPage = page;
@@ -134,7 +131,6 @@ export class BoxPageComponent {
       }
     });
   }
-
 
   loadDataLazy(event: any): void {
     if (this.loading || this.currentPage >= this.totalPages) {
@@ -458,6 +454,7 @@ async clearBox() {
     this.subtotal = 0;
     this.totalTroco = 0;
     this.total = 0;
+    this.generalDiscount = 0;
 }
 
 

@@ -25,11 +25,13 @@ export class BudgetPageComponent {
   public budgets: Budget[] = [];
   public customerName: string = '';
   public clonedBudgets: { [s: string]: Budget } = {};
+  searchValue: string | undefined;
 
   quantityDialogVisible: boolean = false;
   selectedBudget: Budget | null = null;
   selectedItem: any = null;
   quantityToRemove: number = 1;
+  originalBudgets: Budget[] = [];
 
   constructor(
     private messageService: MessageService,
@@ -55,12 +57,25 @@ export class BudgetPageComponent {
     this.grandTotal = this.subtotal - this.generalDiscount;
   }
 
+  filterBudgets() {
+    if (!this.searchValue) {
+      this.listBudget(); // Recarrega a lista original
+      return;
+    }
+
+    const searchTerm = this.searchValue.toLowerCase();
+    this.budgets = this.budgets.filter(budget => budget.client.toLowerCase().includes(searchTerm));
+  }
+
+
+
   listBudget() {
     this.busy = true;
     this.budgetService.getBudget().subscribe({
       next: (data: Budget[]) => {
         this.busy = false;
         this.budgets = data;
+        this.originalBudgets = [...data]; // Guarda uma cópia original
       },
       error: (err: any) => {
         this.busy = false;
@@ -68,6 +83,7 @@ export class BudgetPageComponent {
       }
     });
   }
+
 
   onRowEditInit(budget: Budget) {
     this.clonedBudgets[budget.number] = { ...budget };
@@ -179,6 +195,7 @@ export class BudgetPageComponent {
       }
     });
   }
+
 
   async addBudgetToBox(budget: any) {
     const items = budget.budget.items;

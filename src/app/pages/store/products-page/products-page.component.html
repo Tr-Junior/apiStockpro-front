@@ -137,7 +137,17 @@
             <ng-template pTemplate="input">
               <p-autoComplete [appendTo]="'body'" [size]="3" [(ngModel)]="selectedProduct.supplier"
                 [suggestions]="filteredSuppliers" (completeMethod)="filterSuppliers($event)" field="name"
-                [dropdown]="true" placeholder="Selecione um fornecedor"></p-autoComplete>
+                [dropdown]="true" placeholder="Selecione um fornecedor">
+                <ng-template let-supplier pTemplate="item">
+                  <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <span>{{ supplier.name }}</span>
+                    <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger small"
+                      (click)="deleteSupplier(supplier, $event)" size="small">
+                    </button>
+                  </div>
+                </ng-template>
+              </p-autoComplete>
+
             </ng-template>
             <ng-template pTemplate="output">
               <span style="text-transform: uppercase;">

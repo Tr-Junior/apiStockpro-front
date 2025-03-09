@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { catchError, from, of } from 'rxjs';
 import { Product } from '../../../../core/models/product.model';
 import { Supplier } from '../../../../core/models/supplier-model';
@@ -34,7 +34,9 @@ export class ProductRegistrationPageComponent {
     private productService: ProductService,
     private supplierService: SupplierService,
     private fb: FormBuilder,
-    private messageService: MessageService // Usa o MessageService agora
+    private messageService: MessageService, // Usa o MessageService agora
+    private confirmationService: ConfirmationService,
+
   ) {
     this.form = this.fb.group({
       title: ['', Validators.compose([Validators.required])],
@@ -145,5 +147,49 @@ export class ProductRegistrationPageComponent {
   // Método para fechar o modal
   fecharModal() {
     this.displayModal = false;
+  }
+
+  deleteSupplier(supplier: any, event: Event) {
+    event.stopPropagation(); // Evita que o clique no botão selecione o item
+
+    this.confirmationService.confirm({
+      message: `Tem certeza que deseja remover o fornecedor "${supplier.name}"?`,
+      header: 'Confirmação',
+      icon: 'pi pi-exclamation-triangle',
+      rejectLabel: 'Cancelar',
+      acceptLabel: 'Confirmar',
+      accept: () => {
+        this.supplierService.delSupplier(supplier._id).subscribe({
+          next: () => {
+            // Remove o fornecedor da lista localmente
+            this.filteredSuppliers = this.filteredSuppliers.filter(s => s._id !== supplier._id);
+
+            // Exibe mensagem de sucesso
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Sucesso',
+              detail: 'Fornecedor removido com sucesso!'
+            });
+            this.loadSuppliers();
+          },
+          error: (err) => {
+            console.error("Erro ao remover fornecedor:", err);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: 'Erro ao remover fornecedor. Tente novamente.'
+            });
+          }
+        });
+      },
+      reject: () => {
+        // O usuário cancelou a ação
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Cancelado',
+          detail: 'A remoção do fornecedor foi cancelada.'
+        });
+      }
+    });
   }
 }

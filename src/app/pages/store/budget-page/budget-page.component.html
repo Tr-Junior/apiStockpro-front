@@ -1,9 +1,17 @@
 <div class="mt-3 card">
+  <div class="flex justify-content-start mb-2">
+    <span class="p-input-icon-left">
+      <i class="pi pi-search"></i>
+      <input type="text" pInputText placeholder="Buscar Cliente..." [(ngModel)]="searchValue"
+        (input)="filterBudgets()" />
+    </span>
+  </div>
   <p-table [value]="budgets" [paginator]="true" [rows]="100" [showCurrentPageReport]="true"
     [rowsPerPageOptions]="[100, 150, 200, 250, 350, 500]" [pSelectableRow]="true" dataKey="number" editMode="row"
     currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} Orçamentos" styleClass="p-datatable-striped"
     toggleable="false">
     <ng-template pTemplate="header">
+
       <tr class="p-0" pTableToggler>
         <th></th>
         <th pSortableColumn="client">
