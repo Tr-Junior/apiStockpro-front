@@ -30,7 +30,7 @@
         <div class="flex align-items-center gap-2">
           <p-iconField iconPosition="left">
             <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
-            <input type="text" pInputText placeholder="Pesquisar produtos..." [(ngModel)]="searchQuery"
+            <input type="text" #searchInput pInputText placeholder="Pesquisar produtos..." [(ngModel)]="searchQuery"
               (ngModelChange)="search()" />
           </p-iconField>
           <p-button icon="pi pi-times" styleClass="p-button-danger p-button-text" (onClick)="clearSearch()"

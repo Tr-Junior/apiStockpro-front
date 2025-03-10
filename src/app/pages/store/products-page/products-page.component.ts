@@ -1,4 +1,4 @@
-import { Component, Input} from '@angular/core';
+import { Component, ElementRef, Input, ViewChild} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Product} from '../../../../core/models/product.model';
@@ -21,8 +21,8 @@ import { BoxService } from '../../../../core/services/box.Service';
   templateUrl: './products-page.component.html',
   styleUrl: './products-page.component.css'
 })
-export class ProductsPageComponent {
 
+export class ProductsPageComponent {
   @Input() products!: Product;
   public form: FormGroup;
   public selectedProduct!: Product;
@@ -46,6 +46,9 @@ export class ProductsPageComponent {
   displayDialog: boolean = false;
   private destroy$ = new Subject<void>();
   public boxItems: BoxItem[] = [];
+
+  @ViewChild('searchInput') searchInput!: ElementRef;
+
   constructor(
     private productService: ProductService,
     private supplierService: SupplierService,
@@ -87,7 +90,7 @@ export class ProductsPageComponent {
       this.searchQuery = query;
       this.search(1);
     });
-
+    setTimeout(() => this.searchInput.nativeElement.focus(), 0);
   }
 
   ngOnDestroy(): void {

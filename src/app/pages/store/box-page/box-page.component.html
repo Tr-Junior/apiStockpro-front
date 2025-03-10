@@ -5,8 +5,8 @@
         <div class="flex align-items-center font-bold border-round">
           <span class="p-input-icon-left ml-auto">
             <i class="pi pi-search"></i>
-            <input class="text" pInputText type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()"
-              placeholder="Pesquisar produtos..." />
+            <input class="text" #searchInput pInputText type="text" [(ngModel)]="searchQuery"
+              (ngModelChange)="onSearchChange()" placeholder="Pesquisar produtos..." />
           </span>
           <p-button icon="pi pi-times" styleClass="p-button-danger p-button-text" (onClick)="clearSearch()"
             [disabled]="!searchQuery"></p-button>

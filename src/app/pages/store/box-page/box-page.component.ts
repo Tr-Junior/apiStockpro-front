@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { ImportsService } from '../../../../core/services/imports.service';
 import { BoxItem} from '../../../../core/models/box-item.model';
 import { BoxService } from '../../../../core/services/box.Service';
@@ -50,6 +50,8 @@ export class BoxPageComponent {
   private quantityUpdateSubject = new Subject<{ newQuantity: number, item: BoxItem }>();
   private searchSubject = new Subject<string>();
 
+    @ViewChild('searchInput') searchInput!: ElementRef;
+
   constructor(
     private boxService: BoxService,
     private productService: ProductService,
@@ -67,16 +69,17 @@ export class BoxPageComponent {
     this.boxService.items$.subscribe(items => {
       this.boxItems = items;
     });
-  this.searchSubject.pipe(debounceTime(500)).subscribe(() => {
+  this.searchSubject.pipe(debounceTime(200)).subscribe(() => {
     this.search(1, true);
   });
     await this.loadCart();
     this.quantityUpdateSubject.pipe(
-      debounceTime(500) // Aguarda 500ms antes de salvar no banco
+      debounceTime(300) // Aguarda 500ms antes de salvar no banco
   ).subscribe(({ newQuantity, item }) => {
       this.saveQuantity(newQuantity, item);
   });
     this.loadCustomerNames();
+    setTimeout(() => this.searchInput.nativeElement.focus(), 0);
   }
 
   getScrollHeight(): string {
