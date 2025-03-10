@@ -208,6 +208,7 @@ export class BoxPageComponent {
     });
 
     await this.loadCart();
+    this.calcTroco();
   }
 
   updateQuantity(newQuantity: number, item: BoxItem): void {
@@ -245,6 +246,7 @@ export class BoxPageComponent {
             }
 
             this.calculateTotals();
+            this.calcTroco();
 
             this.quantityUpdateSubject.next({ newQuantity, item });
         },
@@ -273,6 +275,7 @@ private async saveQuantity(newQuantity: number, item: BoxItem) {
     this.subtotal = this.boxItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const discountValue = this.subtotal * (this.generalDiscount / 100);
     this.grandTotal = this.subtotal - discountValue;
+    this.calcTroco();
   }
 
   updateGeneralDiscount(discount: number): void {
