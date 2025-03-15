@@ -41,7 +41,7 @@ export class ProductRegistrationPageComponent {
     this.form = this.fb.group({
       title: [null, Validators.compose([Validators.required])],
       quantity: [null, Validators.compose([Validators.required])],
-      supplier: [null, Validators.compose([Validators.required])],
+      supplier: [null],
       purchasePrice: [null, Validators.compose([Validators.required])],
       price: [null, Validators.compose([Validators.required])],
     });
@@ -58,6 +58,7 @@ export class ProductRegistrationPageComponent {
       this.form.patchValue({ supplier: null });
     }
   }
+
 
 
   ngOnInit() {
@@ -125,6 +126,7 @@ export class ProductRegistrationPageComponent {
           detail: data.message || 'Produto salvo com sucesso!',
         });
         this.productSaved.emit();
+        this.loadSuppliers
         this.resetForm();
       },
       error: (err: any) => {

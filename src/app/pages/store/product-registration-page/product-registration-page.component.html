@@ -14,7 +14,7 @@
     <span class="font-bold block mb-1">Fornecedor</span>
     <p-autoComplete formControlName="supplier" [suggestions]="filteredSuppliers"
       (completeMethod)="filterSuppliers($event)" (onSelect)="onSupplierSelect($event)" field="name" [dropdown]="true"
-      placeholder="Selecione um fornecedor">
+      [showClear]="true" placeholder="Selecione um fornecedor">
 
       <ng-template let-supplier pTemplate="item">
         <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">

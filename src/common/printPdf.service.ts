@@ -145,7 +145,6 @@ export class PdfService {
     subtotal: number,
     grandTotal: number,
     generalDiscount: number,
-    customerName: string,
     paymentMethod: string
   ): void {
     const doc = new jsPDF({

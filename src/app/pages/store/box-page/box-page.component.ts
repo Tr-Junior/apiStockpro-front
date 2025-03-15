@@ -635,7 +635,6 @@ async printReceipt() {
       this.subtotal,               // Subtotal
       this.grandTotal,             // Total com desconto
       this.generalDiscount,        // Desconto geral
-      this.customerName || '',     // Nome do cliente (ou vazio, caso não informado)
       this.selectedPayment || 'Não especificado' // Método de pagamento
     );
 
