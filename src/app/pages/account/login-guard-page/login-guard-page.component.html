@@ -3,7 +3,7 @@
     style="border-radius: 12px; background-image: radial-gradient(circle at left top, var(--primary-400), var(--primary-700))">
     <div class="inline-flex flex-column gap-2">
       <label for="password" class="text-primary-50 font-semibold">Senha</label>
-      <input pInputText id="password" #passwordInput [(ngModel)]="password"
+      <input pInputText id="password" pAutoFocus [autofocus]="true" [(ngModel)]="password"
         class="bg-white-alpha-20 border-none p-3 text-primary-50" type="password" (keydown.enter)="login()" />
     </div>
     <div class="flex align-items-center gap-2">

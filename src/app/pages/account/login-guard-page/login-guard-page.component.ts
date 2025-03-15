@@ -16,7 +16,6 @@ import { AuthenticateService } from '../../../../core/api/authenticate/authentic
 export class LoginGuardPageComponent implements OnDestroy {
   password: string = '';
   userId: string = '';
-  @ViewChild('passwordInput') passwordInput!: ElementRef;
 
   constructor(
     private router: Router,
@@ -32,7 +31,6 @@ export class LoginGuardPageComponent implements OnDestroy {
     } else {
       this.router.navigate(['/login']);
     }
-    setTimeout(() => this.passwordInput.nativeElement.focus(), 0);
   }
 
   login() {
