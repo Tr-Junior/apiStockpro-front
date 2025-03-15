@@ -23,6 +23,7 @@ export class BuyPageComponent {
   selectedProducts: any[] = [];
   metaKeySelection: boolean = false;
   public searchQuery: string = '';
+  public filteredProducts: ProductsBuy[] = []; // Produtos filtrados pela pesquisa
 
   constructor(
     private productBuyService: ProductBuyService,
@@ -72,10 +73,9 @@ export class BuyPageComponent {
   loadProducts() {
     this.busy = true;
     this.productBuyService.getProductBuy().subscribe(
-      (data: any) => {
-        this.productsBuy = data.sort((a: any, b: any) => {
-          return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
-        });
+      (data: ProductsBuy[]) => {
+        this.productsBuy = data.sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()));
+        this.filteredProducts = [...this.productsBuy]; // Inicialmente, todos os produtos são exibidos
         this.busy = false;
       },
       error => {
@@ -83,6 +83,12 @@ export class BuyPageComponent {
         this.busy = false;
       }
     );
+  }
+
+  // Método para filtrar os produtos com base na pesquisa
+  filterProducts() {
+    const query = this.searchQuery.toLowerCase();
+    this.filteredProducts = this.productsBuy.filter(product => product.title.toLowerCase().includes(query));
   }
 
   submitForm() {
@@ -158,24 +164,6 @@ export class BuyPageComponent {
 
   deselectAll(): void {
     this.selectedProducts = [];
-  }
-
-  search(): void {
-    if (!this.searchQuery) {
-      this.loadProducts();
-      return;
-    }
-    const searchData = { title: this.searchQuery };
-
-    this.productBuyService.searchProductBuy(searchData).subscribe({
-      next: (data: any) => {
-        this.productsBuy = data;
-      },
-      error: (err: any) => {
-        console.log(err);
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: err.message });
-      }
-    });
   }
 
   confirmDeleteSelected() {
