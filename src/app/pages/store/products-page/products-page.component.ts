@@ -43,11 +43,9 @@ export class ProductsPageComponent {
   public total: number = 0
   public offset: number = 0
   public limit: number = 100
-  displayDialog: boolean = false;
+  public displayDialog: boolean = false;
   private destroy$ = new Subject<void>();
   public boxItems: BoxItem[] = [];
-
-  @ViewChild('searchInput') searchInput!: ElementRef;
 
   constructor(
     private productService: ProductService,
@@ -90,7 +88,6 @@ export class ProductsPageComponent {
       this.searchQuery = query;
       this.search(1);
     });
-    setTimeout(() => this.searchInput.nativeElement.focus(), 0);
   }
 
   ngOnDestroy(): void {
@@ -144,40 +141,70 @@ export class ProductsPageComponent {
 
   async addToBox(data: any): Promise<void> {
     const product = this.filteredProducts.find(p => p._id === data._id);
-      if (!product) {
+
+    if (!product) {
         this.messageService.add({
-          severity: 'error',
-          summary: 'Produto Não Encontrado',
-          detail: 'Produto não encontrado no estoque.'
+            severity: 'error',
+            summary: 'Produto Não Encontrado',
+            detail: 'Produto não encontrado no estoque.'
         });
         return;
+    }
 
-      }
+    // Obtém a quantidade já reservada nos orçamentos
+    const { quantity: reservedQuantity, clients } = this.getQuantityInBudget(product._id);
 
-      const existingItem = this.boxItems.find(item => item._id === product._id);
-      if (existingItem && existingItem.quantity >= product.quantity) {
-        if(product.quantity <= 0){
-          this.messageService.add({
+    // Quantidade disponível real no estoque considerando os orçamentos
+    const availableStock = product.quantity - reservedQuantity;
+
+    if (availableStock <= 0) {
+        this.messageService.add({
             severity: 'error',
-            summary: 'Quantidade Excedida',
-            detail: `Não é possível adicionar mais do que ${product.quantity} unidades de ${product.title}.`
-          });
-        }
+            summary: 'Estoque Indisponível',
+            detail: `Todo o estoque de ${product.title} já está reservado para clientes: ${clients.join(', ')}.`
+        });
         return;
-      }
+    }
 
-      const newItem: BoxItem = existingItem
-        ? { ...existingItem, quantity: existingItem.quantity + 1 }
-        : { _id: product._id, title: product.title, price: product.price, purchasePrice: product.purchasePrice,  quantity: 1, discount: 0  };
+    const existingItem = this.boxItems.find(item => item._id === product._id);
 
-      await this.boxService.addItem(newItem);
+    if (existingItem) {
+        // Se o item já existir, verificar limite de estoque antes de atualizar
+        if (existingItem.quantity + 1 > availableStock) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Estoque Insuficiente',
+                detail: `Máximo permitido considerando orçamentos: ${availableStock} unidades de ${product.title}.`
+            });
+            return;
+        }
 
-      this.messageService.add({
+        // Atualiza a quantidade do item existente
+        existingItem.quantity += 1;
+        await this.boxService.updateItem(existingItem);
+    } else {
+        // Se não existir, adiciona um novo item ao carrinho
+        const newItem: BoxItem = {
+            _id: product._id,
+            title: product.title,
+            price: product.price,
+            purchasePrice: product.purchasePrice,
+            quantity: 1,
+            discount: 0
+        };
+
+        await this.boxService.addItem(newItem);
+    }
+
+    this.messageService.add({
         severity: 'success',
         summary: 'Item Adicionado',
         detail: `${product.title} foi adicionado ao carrinho.`
-      });
-    }
+    });
+    // Recarrega os itens do carrinho após a atualização
+    this.boxItems = this.boxService.getItems();
+}
+
 
   onSearchInput(event: any) {
     this.searchQueryChanged.next(event.target.value); // Emite o valor para o Subject

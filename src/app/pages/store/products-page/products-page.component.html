@@ -30,8 +30,8 @@
         <div class="flex align-items-center gap-2">
           <p-iconField iconPosition="left">
             <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
-            <input type="text" #searchInput pInputText placeholder="Pesquisar produtos..." [(ngModel)]="searchQuery"
-              (ngModelChange)="search()" />
+            <input type="text" pAutoFocus [autofocus]="true" pInputText placeholder="Pesquisar produtos..."
+              [(ngModel)]="searchQuery" (ngModelChange)="search()" />
           </p-iconField>
           <p-button icon="pi pi-times" styleClass="p-button-danger p-button-text" (onClick)="clearSearch()"
             [disabled]="!searchQuery"></p-button>
@@ -82,7 +82,7 @@
         <td style="text-align: center">
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <input pInputText type="text" [(ngModel)]="selectedProduct.title" required>
+              <input style=" width: 100%;" pInputText type="text" [(ngModel)]="selectedProduct.title" required>
             </ng-template>
             <ng-template pTemplate="output">
               {{product.title}}
@@ -93,7 +93,7 @@
           <p-cellEditor>
             <!-- Modo de Edição -->
             <ng-template pTemplate="input">
-              <input size="6" pInputText type="text" pKeyFilter="num" id="number"
+              <input size="3" pInputText type="text" pKeyFilter="num" id="number"
                 onkeypress="return event.charCode >= 48 && event.charCode <= 57" [(ngModel)]="selectedProduct.quantity"
                 required>
             </ng-template>
@@ -160,8 +160,13 @@
         <td style="text-align: center">
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <input pInputText size="6" id="editedPrice" [(ngModel)]="selectedProduct.purchasePrice" currencyMask
-                [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',' }" />
+              <p-inputGroup>
+                <p-inputGroupAddon>R$</p-inputGroupAddon>
+                <p-inputNumber size="6" id="editedPrice" [(ngModel)]="selectedProduct.purchasePrice"
+                  inputId="minmaxfraction" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="5" />
+              </p-inputGroup>
+              <!-- <input pInputText size="6" id="editedPrice" [(ngModel)]="selectedProduct.purchasePrice" currencyMask
+                [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',' }" /> -->
             </ng-template>
             <ng-template pTemplate="output">
               {{product.purchasePrice | currency: 'BRL':'symbol':'1.2-2' }}
@@ -171,8 +176,13 @@
         <td style="text-align: center">
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <input pInputText size="6" id="editedPrice" [(ngModel)]="selectedProduct.price" currencyMask
-                [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',' }" />
+              <p-inputGroup>
+                <p-inputGroupAddon>R$</p-inputGroupAddon>
+                <p-inputNumber size="6" id="editedPrice" [(ngModel)]="selectedProduct.price" inputId="minmaxfraction"
+                  mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="5" />
+              </p-inputGroup>
+              <!-- <input pInputText size="6" id="editedPrice" [(ngModel)]="selectedProduct.price" currencyMask
+                [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',' }" /> -->
             </ng-template>
             <ng-template pTemplate="output">
               {{product.price | currency: 'BRL':'symbol':'1.2-2' }}
