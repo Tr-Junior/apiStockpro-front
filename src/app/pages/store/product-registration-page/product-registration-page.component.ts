@@ -22,8 +22,8 @@ export class ProductRegistrationPageComponent {
   public product: Product[] = [];
   public form: FormGroup;
   public busy = false;
-  prodId = '';
-  name: any;
+  public prodId = '';
+  public name: any;
   public selectedProduct: Product[] = [];
   public clonedProducts: { [s: string]: Product } = {};
   public suppliers: Supplier[] = [];
@@ -39,18 +39,16 @@ export class ProductRegistrationPageComponent {
 
   ) {
     this.form = this.fb.group({
-      title: ['', Validators.compose([Validators.required])],
-      quantity: ['', Validators.compose([Validators.required])],
-      supplier: ['', Validators.compose([Validators.required])],
-      purchasePrice: ['', Validators.compose([Validators.required])],
-      price: ['', Validators.compose([Validators.required])],
+      title: [null, Validators.compose([Validators.required])],
+      quantity: [null, Validators.compose([Validators.required])],
+      supplier: [null, Validators.compose([Validators.required])],
+      purchasePrice: [null, Validators.compose([Validators.required])],
+      price: [null, Validators.compose([Validators.required])],
     });
   }
 
   @Output() onCancel = new EventEmitter<void>();
   @Output() productSaved = new EventEmitter<void>();
-
-
 
   onSupplierSelect(event: any) {
     this.selectedSupplier = event.value || null;
