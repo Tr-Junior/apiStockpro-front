@@ -1,6 +1,5 @@
 import { Injectable } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
-import { openDB, IDBPDatabase } from "idb";
 import { Security } from "../../utils/Security.util";
 
 interface BoxItem {
@@ -16,119 +15,96 @@ interface BoxItem {
   providedIn: "root",
 })
 export class BoxService {
-  private dbNamePrefix = "PDVDatabase_";
-  private db!: IDBPDatabase | null;
-  private itemsSubject = new BehaviorSubject<BoxItem[]>([]);
+  private storageKey = "Box_Items";
+  private itemsSubject = new BehaviorSubject<BoxItem[]>(this.getItemsFromStorage());
   items$ = this.itemsSubject.asObservable();
 
   constructor() {
     this.handleUserSession();
   }
 
-  private async handleUserSession(): Promise<void> {
+  /**
+   * Verifica se há um usuário logado e limpa o sessionStorage se necessário.
+   */
+  private handleUserSession(): void {
     const userId = Security.getSessionId();
-
     if (!userId) {
-      await this.deleteAllDatabases();
-      this.db = null;
-      console.log("Nenhum usuário logado. Bancos de dados apagados.");
-    } else {
-      const dbName = this.getDatabaseName(userId);
-      this.db = await this.initDB(dbName);
+      sessionStorage.removeItem(this.storageKey);
+      this.itemsSubject.next([]);
+      console.log("Nenhum usuário logado. Itens apagados do sessionStorage.");
     }
   }
 
   /**
-   * Inicializa o banco de dados para um usuário específico.
+   * Obtém os itens do sessionStorage.
    */
-  private async initDB(dbName: string): Promise<IDBPDatabase> {
-    try {
-      const db = await openDB(dbName, 1, {
-        upgrade(db) {
-          if (!db.objectStoreNames.contains("Box")) {
-            db.createObjectStore("Box", { keyPath: "_id" });
-          }
-        },
-      });
-      return db;
-    } catch (error) {
-      console.error("Erro ao inicializar o banco de dados:", error);
-      throw error;
-    }
+  private getItemsFromStorage(): BoxItem[] {
+    const storedItems = sessionStorage.getItem(this.storageKey);
+    return storedItems ? JSON.parse(storedItems) : [];
   }
 
   /**
-   * Obtém o nome do banco de dados baseado no ID do usuário.
+   * Atualiza o sessionStorage e notifica os assinantes.
    */
-  private getDatabaseName(userId: string): string {
-    return `${this.dbNamePrefix}${userId}`;
-  }
-
-  private async deleteAllDatabases(): Promise<void> {
-    const dbNames = await indexedDB.databases();
-    const databasesToDelete = dbNames
-      .map((db) => db.name)
-      .filter((name) => name && name.startsWith(this.dbNamePrefix));
-
-    for (const name of databasesToDelete) {
-      if (name) {
-        await new Promise((resolve, reject) => {
-          const deleteRequest = indexedDB.deleteDatabase(name);
-          deleteRequest.onsuccess = () => resolve(true);
-          deleteRequest.onerror = (event) => reject(event);
-        });
-        console.log(`Banco de dados deletado: ${name}`);
-      }
-    }
-  }
-
-  private async updateItemsSubject(): Promise<void> {
-    const items = await this.getItemsDirect();
+  private updateStorage(items: BoxItem[]): void {
+    sessionStorage.setItem(this.storageKey, JSON.stringify(items));
     this.itemsSubject.next(items);
   }
 
-  async addItem(item: BoxItem): Promise<void> {
-    if (!this.db) await this.handleUserSession();
+  /**
+   * Adiciona um item ao carrinho.
+   */
+  addItem(item: BoxItem): void {
+    let items = this.getItemsFromStorage();
+    const existingItem = items.find(i => i._id === item._id);
 
-    // Adiciona um timestamp ao item
-    const newItem = { ...item, createdAt: Date.now() };
+    if (existingItem) {
+      // Atualiza a quantidade sem duplicar o item
+      existingItem.quantity += 1;
+    } else {
+      items.push(item);
+    }
 
-    const tx = this.db!.transaction("Box", "readwrite");
-    await tx.objectStore("Box").put(newItem);
-    await this.updateItemsSubject();
+    this.updateStorage(items);
   }
 
-  async updateItem(item: BoxItem): Promise<void> {
-    if (!this.db) await this.handleUserSession();
-    const tx = this.db!.transaction("Box", "readwrite");
-    await tx.objectStore("Box").put(item);
-    await this.updateItemsSubject();
+
+  /**
+   * Atualiza um item no carrinho.
+   */
+  updateItem(updatedItem: BoxItem): void {
+    let items = this.getItemsFromStorage();
+    items = items.map((item) => (item._id === updatedItem._id ? { ...item, quantity: updatedItem.quantity } : item));
+    this.updateStorage(items);
+  }
+/**
+ * Atualiza um item no sessionStorage sem emitir o evento para evitar recarga da UI.
+ */
+private updateStorageSilent(items: BoxItem[]): void {
+  sessionStorage.setItem(this.storageKey, JSON.stringify(items));
+}
+
+  /**
+   * Remove um item pelo ID.
+   */
+  removeItem(id: string): void {
+    let items = this.getItemsFromStorage();
+    items = items.filter((item) => item._id !== id);
+    this.updateStorage(items);
   }
 
-  private async getItemsDirect(): Promise<BoxItem[]> {
-    if (!this.db) await this.handleUserSession();
-    const tx = this.db!.transaction("Box", "readonly");
-    const items = await tx.objectStore("Box").getAll();
-
-    // Ordena os itens pela ordem de adição
-    return items.sort((a, b) => a.createdAt - b.createdAt);
+  /**
+   * Obtém todos os itens do carrinho.
+   */
+  getItems(): BoxItem[] {
+    return this.getItemsFromStorage();
   }
 
-  async getItems(): Promise<BoxItem[]> {
-    return this.getItemsDirect();
-  }
-
-  async removeItem(id: string): Promise<void> {
-    if (!this.db) await this.handleUserSession();
-    const tx = this.db!.transaction("Box", "readwrite");
-    await tx.objectStore("Box").delete(id);
-    await this.updateItemsSubject();
-  }
-
-  async clearBox(): Promise<void> {
-    if (!this.db) await this.handleUserSession();
-    const tx = this.db!.transaction("Box", "readwrite");
-    await tx.objectStore("Box").clear();
-    await this.updateItemsSubject();
+  /**
+   * Limpa todos os itens do carrinho.
+   */
+  clearBox(): void {
+    sessionStorage.removeItem(this.storageKey);
+    this.itemsSubject.next([]);
   }
 }
