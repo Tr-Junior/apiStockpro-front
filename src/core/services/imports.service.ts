@@ -44,6 +44,9 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { AutoFocusModule } from 'primeng/autofocus';
+
+
 // PrimeNG Services
 import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
@@ -105,6 +108,7 @@ export class ImportsService {
     ProgressSpinnerModule,
     ScrollerModule,
     InputGroupModule,
+    AutoFocusModule,
     InputGroupAddonModule
   ];
 
