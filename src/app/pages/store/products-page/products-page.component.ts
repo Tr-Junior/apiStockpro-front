@@ -46,6 +46,7 @@ export class ProductsPageComponent {
   public displayDialog: boolean = false;
   private destroy$ = new Subject<void>();
   public boxItems: BoxItem[] = [];
+  public lastSelectedSupplier: Supplier | null = null;
 
   constructor(
     private productService: ProductService,
@@ -329,7 +330,6 @@ export class ProductsPageComponent {
   }
 
 
-
   onRowEditInit(product: Product) {
     const quantityInBudget = this.getQuantityInBudget(product._id).quantity;
     this.selectedProduct = {
@@ -337,10 +337,15 @@ export class ProductsPageComponent {
       quantity: Math.max(product.quantity - quantityInBudget, 0),
     };
 
+    // Se não houver um fornecedor no produto, usa o último selecionado
+    if (!this.selectedProduct.supplier && this.lastSelectedSupplier) {
+      this.selectedProduct.supplier = this.lastSelectedSupplier;
+    }
+
     this.form.patchValue({
       title: product.title,
       quantity: this.selectedProduct.quantity,
-      supplier: product.supplier,
+      supplier: this.selectedProduct.supplier,
       purchasePrice: product.purchasePrice,
       price: product.price,
     });
@@ -356,10 +361,13 @@ export class ProductsPageComponent {
       return;
     }
 
+    // Salva o último fornecedor selecionado
+    if (this.selectedProduct.supplier) {
+      this.lastSelectedSupplier = this.selectedProduct.supplier;
+    }
+
     const quantityInBudget = this.getQuantityInBudget(product._id).quantity;
-
     const editedQuantity = Math.max(this.selectedProduct.quantity, 0);
-
 
     const updatedProduct = {
       id: product._id,
