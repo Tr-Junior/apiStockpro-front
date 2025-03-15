@@ -1,9 +1,9 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ImportsService } from '../../../../core/services/imports.service';
 import { BoxItem} from '../../../../core/models/box-item.model';
 import { BoxService } from '../../../../core/services/box.Service';
 import { Product } from '../../../../core/models/product.model';
-import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { MenuItem, MessageService } from 'primeng/api';
 import { Budget } from '../../../../core/models/budget.model';
 import { User } from '../../../../core/models/user.model';
@@ -21,36 +21,36 @@ import { BudgetService } from '../../../../core/api/budget/budget.service';
   templateUrl: './box-page.component.html',
   styleUrl: './box-page.component.css'
 })
-export class BoxPageComponent {
+export class BoxPageComponent implements OnInit, OnDestroy{
   public boxItems: BoxItem[] = [];
-  public subtotal: number = 0;
-  public grandTotal: number = 0;
+  public subtotal = 0;
+  public grandTotal = 0;
   public products: Product[] = [];
-  public currentPage: number = 1;
-  public totalPages: number = 0;
-  public searchQuery: string = '';
+  public currentPage = 1;
+  public totalPages = 0;
+  public searchQuery = '';
   public selectedPayment?: string;
-  public generalDiscount: number = 0;
+  public generalDiscount = 0;
   public loading = false;
   public searchQueryChanged = new Subject<string>();
-  public customerName: string = '';
+  public customerName = '';
   public filteredCustomers: string[] = [];
   public customerNames: string[] = [];
   public budgets: Budget[] = [];
   public items!: MenuItem[];
-  public sidebarVisible: boolean = false;
+  public sidebarVisible = false;
   public selectedProduct: Product | null = null;
-  public availableStock: number = 0;
+  public availableStock = 0;
   public user!: User;
-  public editedPrice: number = 0;
-  public total: number = 0;
-  public totalTroco: number = 0;
-  public totalRecords: number = 0;
-  public checked: boolean = false;
-  private quantityUpdateSubject = new Subject<{ newQuantity: number, item: BoxItem }>();
-  private searchSubject = new Subject<string>();
+  public editedPrice = 0;
+  public total = null;
+  public totalTroco = 0;
+  public totalRecords = 0;
+  public checked = false;
 
-    @ViewChild('searchInput') searchInput!: ElementRef;
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
+
 
   constructor(
     private boxService: BoxService,
@@ -64,22 +64,25 @@ export class BoxPageComponent {
   }
 
 
-  async ngOnInit() {
+  ngOnInit(): void {
     this.user = Security.getUser();
-    this.boxService.items$.subscribe(items => {
+
+    Promise.all([this.listBudget(), this.loadCustomerNames(), this.loadCart()]);
+
+    this.boxService.items$.pipe(takeUntil(this.destroy$)).subscribe(items => {
       this.boxItems = items;
+      this.calculateTotals();
     });
-  this.searchSubject.pipe(debounceTime(200)).subscribe(() => {
-    this.search(1, true);
-  });
-    await this.loadCart();
-    this.quantityUpdateSubject.pipe(
-      debounceTime(300) // Aguarda 500ms antes de salvar no banco
-  ).subscribe(({ newQuantity, item }) => {
-      this.saveQuantity(newQuantity, item);
-  });
-    this.loadCustomerNames();
-    setTimeout(() => this.searchInput.nativeElement.focus(), 0);
+
+    this.searchSubject.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.search(1, true);
+    });
+
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   getScrollHeight(): string {
@@ -103,13 +106,9 @@ export class BoxPageComponent {
   }
 
   search(page: number = 1, reset: boolean = false): void {
-    const trimmedQuery = (this.searchQuery || '').trim();
-
+    const trimmedQuery = this.searchQuery.trim();
     if (!trimmedQuery) {
-      if (reset) {
-        this.products = [];
-        this.clearSearch();
-      }
+      if (reset) this.clearSearch();
       return;
     }
 
@@ -120,19 +119,22 @@ export class BoxPageComponent {
 
     this.loading = true;
 
-    this.productService.searchProduct({ title: trimmedQuery, page, limit: 25 }).subscribe({
-      next: (response: any) => {
-        this.products = reset ? response.products : [...this.products, ...response.products];
-        this.totalRecords = response.totalRecords;
-        this.totalPages = Math.ceil(response.totalRecords / 25);
-        this.currentPage = page;
-        this.loading = false;
-      },
-      error: (err: any) => {
-        this.loading = false;
-        console.error('Erro de pesquisa', err);
-      }
-    });
+    this.productService
+      .searchProduct({ title: trimmedQuery, page, limit: 25 })
+      .pipe(takeUntil(this.destroy$)) // Evita vazamento de memória
+      .subscribe({
+        next: ({ products, totalRecords }) => {
+          this.products = reset ? products : [...this.products, ...products];
+          this.totalRecords = totalRecords;
+          this.totalPages = Math.ceil(totalRecords / 25);
+          this.currentPage = page;
+          this.loading = false;
+        },
+        error: (err) => {
+          this.loading = false;
+          console.error('Erro de pesquisa', err);
+        },
+      });
   }
 
   loadDataLazy(event: any): void {
@@ -172,46 +174,76 @@ export class BoxPageComponent {
     this.calculateTotals();
   }
 
-  async addToBox(data: any): Promise<void> {
+ async addToBox(data: any): Promise<void> {
     const product = this.products.find(p => p._id === data._id);
 
     if (!product) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Produto Não Encontrado',
-        detail: 'Produto não encontrado no estoque.'
-      });
-      return;
+        this.messageService.add({
+            severity: 'error',
+            summary: 'Produto Não Encontrado',
+            detail: 'Produto não encontrado no estoque.'
+        });
+        return;
+    }
 
+    // Obtém a quantidade já reservada nos orçamentos
+    const { quantity: reservedQuantity, clients } = this.getQuantityInBudget(product._id);
+
+    // Quantidade disponível real no estoque considerando os orçamentos
+    const availableStock = product.quantity - reservedQuantity;
+
+    if (availableStock <= 0) {
+        this.messageService.add({
+            severity: 'error',
+            summary: 'Estoque Indisponível',
+            detail: `Todo o estoque de ${product.title} já está reservado para clientes: ${clients.join(', ')}.`
+        });
+        return;
     }
 
     const existingItem = this.boxItems.find(item => item._id === product._id);
-    if (existingItem && existingItem.quantity >= product.quantity || product.quantity <= 0) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Quantidade Excedida',
-        detail: `Não é possível adicionar mais do que ${product.quantity} unidades de ${product.title}.`
-      });
-      return;
+
+    if (existingItem) {
+        // Se o item já existe, verifica se pode adicionar mais
+        if (existingItem.quantity + 1 > availableStock) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Quantidade Excedida',
+                detail: `Não é possível adicionar mais do que ${availableStock} unidades de ${product.title}.`
+            });
+            return;
+        }
+
+        // Incrementa a quantidade e atualiza no sessionStorage
+        existingItem.quantity += 1;
+        this.boxService.updateItem(existingItem);
+    } else {
+        // Adiciona um novo item ao carrinho
+        const newItem: BoxItem = {
+            _id: product._id,
+            title: product.title,
+            price: product.price,
+            purchasePrice: product.purchasePrice,
+            quantity: 1,
+            discount: 0
+        };
+
+        await this.boxService.addItem(newItem);
     }
 
-    const newItem: BoxItem = existingItem
-      ? { ...existingItem, quantity: existingItem.quantity + 1 }
-      : { _id: product._id, title: product.title, price: product.price, purchasePrice: product.purchasePrice,  quantity: 1, discount: 0  };
-
-    await this.boxService.addItem(newItem);
-
     this.messageService.add({
-      severity: 'success',
-      summary: 'Item Adicionado',
-      detail: `${product.title} foi adicionado ao carrinho.`
+        severity: 'success',
+        summary: 'Item Adicionado',
+        detail: `${product.title} foi adicionado ao carrinho.`
     });
 
+    // Recarrega os itens do carrinho para garantir atualização
+    this.boxItems = this.boxService.getItems();
     await this.loadCart();
     this.calcTroco();
-  }
+}
 
-  updateQuantity(newQuantity: number, item: BoxItem): void {
+  updateQuantity(newQuantity: number, item: BoxItem, isFinalUpdate: boolean = false): void {
     if (newQuantity <= 0) {
         this.messageService.add({
             severity: 'warn',
@@ -232,23 +264,44 @@ export class BoxPageComponent {
                 return;
             }
 
-            const availableQuantity = product.quantity;
+            // Obtém a quantidade reservada nos orçamentos
+            const { quantity: reservedQuantity, clients } = this.getQuantityInBudget(product._id);
 
-            if (newQuantity > availableQuantity) {
+            // Estoque disponível considerando os orçamentos
+            const availableStock = product.quantity - reservedQuantity;
+
+            if (availableStock <= 0) {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Estoque Insuficiente',
+                    detail: `Todo o estoque de ${product.title} já está reservado para clientes: ${clients.join(', ')}.`
+                });
+                return;
+            }
+
+            if (newQuantity > availableStock) {
                 this.messageService.add({
                     severity: 'warn',
                     summary: 'Aviso',
-                    detail: `Quantidade disponível em estoque: ${availableQuantity}`
+                    detail: `Quantidade disponível em estoque considerando orçamentos: ${availableStock}`
                 });
-                item.quantity = availableQuantity; // Ajusta para a quantidade máxima disponível
+                item.quantity = availableStock; // Ajusta para a quantidade máxima disponível
             } else {
                 item.quantity = newQuantity; // Atualiza para o valor inserido
             }
 
+            // ✅ Atualiza apenas no sessionStorage silenciosamente
+            const items = this.boxService.getItems();
+            const updatedItems = items.map(i => i._id === item._id ? { ...i, quantity: item.quantity } : i);
+            this.boxService['updateStorageSilent'](updatedItems);
+
+            // ✅ Só emite a atualização quando o usuário finalizar a edição
+            if (isFinalUpdate) {
+                this.boxService.updateItem(item);
+            }
+
             this.calculateTotals();
             this.calcTroco();
-
-            this.quantityUpdateSubject.next({ newQuantity, item });
         },
         error: (err) => {
             console.error('Erro ao buscar produto pelo ID:', err);
@@ -261,9 +314,6 @@ export class BoxPageComponent {
     });
 }
 
-private async saveQuantity(newQuantity: number, item: BoxItem) {
-    await this.boxService.updateItem(item);
-}
 
   async remove(data: any): Promise<void> {
     await this.boxService.removeItem(data._id);
@@ -273,9 +323,12 @@ private async saveQuantity(newQuantity: number, item: BoxItem) {
 
   calculateTotals(): void {
     this.subtotal = this.boxItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const discountValue = this.subtotal * (this.generalDiscount / 100);
-    this.grandTotal = this.subtotal - discountValue;
+    this.grandTotal = this.subtotal * (1 - this.generalDiscount / 100);
     this.calcTroco();
+  }
+
+  calcTroco(): void {
+    this.totalTroco = Math.max(0, (this.total || 0) - this.grandTotal);
   }
 
   updateGeneralDiscount(discount: number): void {
@@ -346,8 +399,8 @@ private async saveQuantity(newQuantity: number, item: BoxItem) {
             }
         });
 
-        this.loading = false; // Desativa o loading após a execução
-    }, 1000); // Atraso de 2 segundos
+        this.loading = false;
+    }, 500);
 }
 
 private createOrderObject(validItems: any[]): any {
@@ -368,19 +421,6 @@ private createOrderObject(validItems: any[]): any {
     };
 }
 
-
-
-calcTroco() {
-  // Certifique-se de tratar NaN para evitar problemas ao calcular
-  const totalParsed = this.total || 0;
-  const grandTotalParsed = this.grandTotal || 0;
-  this.totalTroco = totalParsed - grandTotalParsed;
-
-  // Caso o valor recebido seja menor que o total, o troco é 0
-  if (this.totalTroco < 0) {
-    this.totalTroco = 0;
-  }
-}
 
 listBudget() {
   this.budgetService.getBudget().subscribe({
@@ -445,8 +485,8 @@ async createBudget() {
     this.grandTotal = 0;
     this.subtotal = 0;
     this.totalTroco = 0;
-    //await this.listBudget();
-    await this.loadCustomerNames();
+    this.listBudget();
+    this.loadCustomerNames();
   } catch (err: any) {
     console.error(err);
     this.messageService.add({ severity: 'error', summary: 'Erro', detail: err.message });
@@ -459,7 +499,7 @@ async clearBox() {
     this.grandTotal = 0;
     this.subtotal = 0;
     this.totalTroco = 0;
-    this.total = 0;
+    this.total = null;
     this.generalDiscount = 0;
 }
 
@@ -536,7 +576,11 @@ saveEditedPrice(): void {
     const boxItem = this.boxItems.find(item => item._id === this.selectedProduct!._id);
 
     if (boxItem) {
-      boxItem.price = this.editedPrice; // Atualiza o preço apenas para esta venda
+      boxItem.price = this.editedPrice; // Atualiza o preço no array boxItems
+
+      // Atualiza o sessionStorage
+      sessionStorage.setItem('Box_Items', JSON.stringify(this.boxItems));
+
       this.calculateTotals(); // Recalcula os totais
       this.messageService.add({
         severity: 'success',
@@ -547,6 +591,7 @@ saveEditedPrice(): void {
     this.closeSidebar();
   }
 }
+
 
 closeSidebar(): void {
   this.sidebarVisible = false;

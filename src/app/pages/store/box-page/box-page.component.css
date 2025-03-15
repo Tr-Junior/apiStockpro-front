@@ -11,6 +11,13 @@
   color:#fc9e11;
 }
 
+
+:host ::ng-deep .p-datatable tbody tr:hover {
+  background-color: #ffffff36 !important;
+  cursor: pointer;
+}
+
+
 .payment-option {
   display: flex;
   align-items: center;
