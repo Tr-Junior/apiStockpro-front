@@ -8,7 +8,7 @@
             <input class="text" pAutoFocus [autofocus]="true" pInputText type="text" [(ngModel)]="searchQuery"
               (ngModelChange)="onSearchChange()" placeholder="Pesquisar produtos..." />
           </span>
-          <p-button icon="pi pi-times" styleClass="p-button-danger p-button-text" (onClick)="clearSearch()"
+          <p-button icon="pi pi-times" styleClass="p-button-danger p-button-text" (click)="clearSearch()"
             [disabled]="!searchQuery"></p-button>
         </div>
         <p-button icon="pi pi-trash" label="Limpar caixa"
