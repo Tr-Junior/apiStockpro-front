@@ -208,8 +208,8 @@
           (completeMethod)="filterCustomer($event)" [dropdown]="true" placeholder="Nome do Cliente"></p-autoComplete>
       </div>
       <div class="col-12 md:col-2 text-center md:text-left btn2">
-        <p-button class="button" icon="pi pi-id-card" iconPos="right" label="Salvar orçamento"
-          (click)="createBudget()"></p-button>
+        <p-button class="button" icon="pi pi-id-card" iconPos="right" label="Salvar orçamento" (click)="createBudget()"
+          [disabled]="loadingBudget" [loading]="loadingBudget"></p-button>
       </div>
     </div>
   </div>

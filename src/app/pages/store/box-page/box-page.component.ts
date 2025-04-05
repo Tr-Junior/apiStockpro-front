@@ -47,7 +47,7 @@ export class BoxPageComponent implements OnInit, OnDestroy{
   public totalTroco = 0;
   public totalRecords = 0;
   public checked = false;
-
+  public loadingBudget: boolean = false;
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
@@ -74,10 +74,20 @@ export class BoxPageComponent implements OnInit, OnDestroy{
       this.calculateTotals();
     });
 
-    this.searchSubject.pipe(takeUntil(this.destroy$)).subscribe(() => {
+    // Adiciona debounce para evitar requisições excessivas
+    this.searchSubject.pipe(
+      debounceTime(200), // Aguarda 300ms sem digitação antes de pesquisar
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      const trimmedQuery = query.trim();
+
+      if (!trimmedQuery.length) {
+        this.clearSearch(); // Limpa os produtos quando o campo fica vazio
+        return;
+      }
+
       this.search(1, true);
     });
-
   }
 
   ngOnDestroy(): void {
@@ -101,72 +111,63 @@ export class BoxPageComponent implements OnInit, OnDestroy{
   }
 
   onSearchChange(): void {
-    // Atualiza o valor da pesquisa e dispara o debounce
     this.searchSubject.next(this.searchQuery);
   }
+
+
 
   search(page: number = 1, reset: boolean = false): void {
     const trimmedQuery = this.searchQuery.trim();
     if (!trimmedQuery) {
-      if (reset) this.clearSearch();
-      return;
+        if (reset) this.clearSearch();
+        return;
     }
 
     if (reset) {
-      this.products = [];
-      this.currentPage = 1;
+        this.products = [];
+        this.currentPage = 1;
     }
 
+    this.fetchProducts(trimmedQuery, page, reset);
+}
+
+loadDataLazy(event: any): void {
+    if (this.loading || this.currentPage >= this.totalPages) return;
+
+    this.fetchProducts(this.searchQuery.trim(), this.currentPage + 1, false);
+}
+
+private fetchProducts(query: string, page: number, reset: boolean): void {
     this.loading = true;
 
     this.productService
-      .searchProduct({ title: trimmedQuery, page, limit: 25 })
-      .pipe(takeUntil(this.destroy$)) // Evita vazamento de memória
-      .subscribe({
-        next: ({ products, totalRecords }) => {
-          this.products = reset ? products : [...this.products, ...products];
-          this.totalRecords = totalRecords;
-          this.totalPages = Math.ceil(totalRecords / 25);
-          this.currentPage = page;
-          this.loading = false;
-        },
-        error: (err) => {
-          this.loading = false;
-          console.error('Erro de pesquisa', err);
-        },
-      });
-  }
-
-  loadDataLazy(event: any): void {
-    if (this.loading || this.currentPage >= this.totalPages) {
-      return;
-    }
-
-    this.loading = true;
-    const nextPage = this.currentPage + 1;
-
-    this.productService.searchProduct({ title: this.searchQuery.trim(), page: nextPage, limit: 25 }).subscribe({
-      next: (response: any) => {
-        this.products.push(...response.products);
-        this.totalRecords = response.totalRecords;
-        this.totalPages = Math.ceil(response.totalRecords / 25);
-        this.currentPage = nextPage;
-        this.loading = false;
-      },
-      error: (err: any) => {
-        this.loading = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao Buscar Produtos',
-          detail: 'Houve um erro ao tentar buscar os produtos. ' + (err.message || 'Tente novamente mais tarde.')
+        .searchProduct({ title: query, page, limit: 25 })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+            next: ({ products, totalRecords }) => {
+                this.products = reset ? products : [...this.products, ...products];
+                this.totalRecords = totalRecords;
+                this.totalPages = Math.ceil(totalRecords / 25);
+                this.currentPage = page;
+            },
+            error: (err) => {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro ao Buscar Produtos',
+                    detail: `Houve um erro na busca. ${err.message || 'Tente novamente mais tarde.'}`
+                });
+                console.error('Erro de pesquisa', err);
+            },
+            complete: () => (this.loading = false),
         });
-      }
-    });
-  }
+}
+
 
   clearSearch(): void {
-    this.searchQuery = '';
-    this.products = [];
+    this.searchQuery = ''; // Limpa o campo de pesquisa
+    this.products = []; // Zera a lista de produtos
+    this.totalRecords = 0;
+    this.currentPage = 1;
   }
 
   async loadCart() {
@@ -174,145 +175,97 @@ export class BoxPageComponent implements OnInit, OnDestroy{
     this.calculateTotals();
   }
 
- async addToBox(data: any): Promise<void> {
+  async addToBox(data: any): Promise<void> {
     const product = this.products.find(p => p._id === data._id);
-
     if (!product) {
-        this.messageService.add({
-            severity: 'error',
-            summary: 'Produto Não Encontrado',
-            detail: 'Produto não encontrado no estoque.'
-        });
-        return;
+        return this.showMessage('error', 'Produto Não Encontrado', 'Produto não encontrado no estoque.');
     }
 
-    // Obtém a quantidade já reservada nos orçamentos
+    // Obtém a quantidade reservada nos orçamentos e calcula o estoque disponível
     const { quantity: reservedQuantity, clients } = this.getQuantityInBudget(product._id);
-
-    // Quantidade disponível real no estoque considerando os orçamentos
     const availableStock = product.quantity - reservedQuantity;
 
     if (availableStock <= 0) {
-        this.messageService.add({
-            severity: 'error',
-            summary: 'Estoque Indisponível',
-            detail: `Todo o estoque de ${product.title} já está reservado para clientes: ${clients.join(', ')}.`
-        });
-        return;
+        return this.showMessage('error', 'Estoque Indisponível', `Todo o estoque de ${product.title} já está reservado para clientes: ${clients.join(', ')}.`);
     }
 
     const existingItem = this.boxItems.find(item => item._id === product._id);
-
     if (existingItem) {
-        // Se o item já existe, verifica se pode adicionar mais
         if (existingItem.quantity + 1 > availableStock) {
-            this.messageService.add({
-                severity: 'error',
-                summary: 'Quantidade Excedida',
-                detail: `Não é possível adicionar mais do que ${availableStock} unidades de ${product.title}.`
-            });
-            return;
+            return this.showMessage('error', 'Quantidade Excedida', `Não é possível adicionar mais do que ${availableStock} unidades de ${product.title}.`);
         }
-
-        // Incrementa a quantidade e atualiza no sessionStorage
         existingItem.quantity += 1;
         this.boxService.updateItem(existingItem);
     } else {
-        // Adiciona um novo item ao carrinho
-        const newItem: BoxItem = {
+        await this.boxService.addItem({
             _id: product._id,
             title: product.title,
             price: product.price,
             purchasePrice: product.purchasePrice,
             quantity: 1,
             discount: 0
-        };
-
-        await this.boxService.addItem(newItem);
+        });
     }
 
-    this.messageService.add({
-        severity: 'success',
-        summary: 'Item Adicionado',
-        detail: `${product.title} foi adicionado ao carrinho.`
-    });
+    this.showMessage('success', 'Item Adicionado', `${product.title} foi adicionado ao carrinho.`);
+    this.refreshCart();
+}
 
-    // Recarrega os itens do carrinho para garantir atualização
+private refreshCart(): void {
     this.boxItems = this.boxService.getItems();
-    await this.loadCart();
     this.calcTroco();
 }
 
-  updateQuantity(newQuantity: number, item: BoxItem, isFinalUpdate: boolean = false): void {
-    if (newQuantity <= 0) {
-        this.messageService.add({
-            severity: 'warn',
-            summary: 'Aviso',
-            detail: 'Quantidade zerada. Verifique os itens antes de continuar.'
-        });
-        return;
-    }
 
-    this.productService.getProductById(item._id).subscribe({
-        next: (product) => {
-            if (!product) {
-                this.messageService.add({
-                    severity: 'error',
-                    summary: 'Erro',
-                    detail: 'Produto não encontrado no estoque'
-                });
-                return;
-            }
+updateQuantity(newQuantity: number, item: BoxItem, isFinalUpdate: boolean = false): void {
+  if (newQuantity <= 0) {
+      return this.showMessage('warn', 'Aviso', 'Quantidade zerada. Verifique os itens antes de continuar.');
+  }
 
-            // Obtém a quantidade reservada nos orçamentos
-            const { quantity: reservedQuantity, clients } = this.getQuantityInBudget(product._id);
+  this.productService.getProductById(item._id).subscribe({
+      next: (product) => {
+          if (!product) {
+              return this.showMessage('error', 'Erro', 'Produto não encontrado no estoque');
+          }
 
-            // Estoque disponível considerando os orçamentos
-            const availableStock = product.quantity - reservedQuantity;
+          const { quantity: reservedQuantity, clients } = this.getQuantityInBudget(product._id);
+          const availableStock = product.quantity - reservedQuantity;
 
-            if (availableStock <= 0) {
-                this.messageService.add({
-                    severity: 'error',
-                    summary: 'Estoque Insuficiente',
-                    detail: `Todo o estoque de ${product.title} já está reservado para clientes: ${clients.join(', ')}.`
-                });
-                return;
-            }
+          if (availableStock <= 0) {
+              return this.showMessage('error', 'Estoque Insuficiente',
+                  `Todo o estoque de ${product.title} já está reservado para clientes: ${clients.join(', ')}.`);
+          }
 
-            if (newQuantity > availableStock) {
-                this.messageService.add({
-                    severity: 'warn',
-                    summary: 'Aviso',
-                    detail: `Quantidade disponível em estoque considerando orçamentos: ${availableStock}`
-                });
-                item.quantity = availableStock; // Ajusta para a quantidade máxima disponível
-            } else {
-                item.quantity = newQuantity; // Atualiza para o valor inserido
-            }
+          item.quantity = Math.min(newQuantity, availableStock);
+          if (newQuantity > availableStock) {
+              this.showMessage('warn', 'Aviso', `Quantidade disponível em estoque considerando orçamentos: ${availableStock}`);
+          }
 
-            // ✅ Atualiza apenas no sessionStorage silenciosamente
-            const items = this.boxService.getItems();
-            const updatedItems = items.map(i => i._id === item._id ? { ...i, quantity: item.quantity } : i);
-            this.boxService['updateStorageSilent'](updatedItems);
-
-            // ✅ Só emite a atualização quando o usuário finalizar a edição
-            if (isFinalUpdate) {
-                this.boxService.updateItem(item);
-            }
-
-            this.calculateTotals();
-            this.calcTroco();
-        },
-        error: (err) => {
-            console.error('Erro ao buscar produto pelo ID:', err);
-            this.messageService.add({
-                severity: 'error',
-                summary: 'Erro',
-                detail: 'Não foi possível verificar o estoque do produto.'
-            });
-        }
-    });
+          this.updateCartItem(item, isFinalUpdate);
+      },
+      error: (err) => {
+          console.error('Erro ao buscar produto pelo ID:', err);
+          this.showMessage('error', 'Erro', 'Não foi possível verificar o estoque do produto.');
+      }
+  });
 }
+
+private showMessage(severity: string, summary: string, detail: string): void {
+  this.messageService.add({ severity, summary, detail });
+}
+
+private updateCartItem(item: BoxItem, isFinalUpdate: boolean): void {
+  const updatedItems = this.boxService.getItems().map(i => i._id === item._id ? { ...i, quantity: item.quantity } : i);
+  this.boxService['updateStorageSilent'](updatedItems);
+
+  if (isFinalUpdate) {
+      this.boxService.updateItem(item);
+  }
+
+  this.calculateTotals();
+  this.calcTroco();
+}
+
 
 
   async remove(data: any): Promise<void> {
@@ -352,56 +305,45 @@ export class BoxPageComponent implements OnInit, OnDestroy{
     { label: 'Pix', value: 'Pix', icon: 'pi pi-qrcode' }
   ];
   submitOrder(): void {
-    const validItems = this.boxItems.filter(item => item.quantity > 0);
+    if (!this.isOrderValid()) return;
 
-    if (validItems.length === 0) {
-        this.messageService.add({
-            severity: 'error',
-            summary: 'Erro',
-            detail: 'Adicione itens válidos ao caixa antes de finalizar a venda.'
-        });
-        return;
+    const order = this.createOrderObject(this.boxItems.filter(item => item.quantity > 0));
+    this.loading = true;
+
+    this.orderService.createOrder(order).subscribe({
+        next: () => this.handleOrderSuccess(),
+        error: (err) => this.handleOrderError(err),
+        complete: () => (this.loading = false)
+    });
+}
+
+private isOrderValid(): boolean {
+    if (!this.boxItems.some(item => item.quantity > 0)) {
+        this.showMessage('error', 'Erro', 'Adicione itens válidos ao caixa antes de finalizar a venda.');
+        return false;
     }
 
     if (!this.selectedPayment) {
-        this.messageService.add({
-            severity: 'error',
-            summary: 'Erro',
-            detail: 'Selecione uma forma de pagamento antes de finalizar a venda.'
-        });
-        return;
+        this.showMessage('error', 'Erro', 'Selecione uma forma de pagamento antes de finalizar a venda.');
+        return false;
     }
 
-    const order = this.createOrderObject(validItems);
-
-    this.loading = true; // Ativa o loading
-
-    // Simula um atraso de 2 segundos (2000 ms) antes de finalizar a venda
-    setTimeout(() => {
-        this.orderService.createOrder(order).subscribe({
-            next: () => {
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Venda Finalizada',
-                    detail: 'Pedido realizado com sucesso!'
-                });
-                this.clearBox();
-                this.selectedPayment = undefined;
-                this.clearSearch();
-            },
-            error: err => {
-                this.messageService.add({
-                    severity: 'error',
-                    summary: 'Erro',
-                    detail: 'Falha ao finalizar a venda: ' + (err.message || 'Erro desconhecido.')
-                });
-                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao finalizar a venda.' });
-            }
-        });
-
-        this.loading = false;
-    }, 500);
+    return true;
 }
+
+private handleOrderSuccess(): void {
+    this.showMessage('success', 'Venda Finalizada', 'Pedido realizado com sucesso!');
+    this.clearBox();
+    this.selectedPayment = undefined;
+    this.clearSearch();
+}
+
+private handleOrderError(err: any): void {
+    this.showMessage('error', 'Erro', `Falha ao finalizar a venda: ${err.message || 'Erro desconhecido.'}`);
+}
+
+
+
 
 private createOrderObject(validItems: any[]): any {
     return {
@@ -450,6 +392,8 @@ loadCustomerNames() {
 
 
 async createBudget() {
+  this.loadingBudget = true;
+
   try {
     const cartItems = await this.boxService.getItems(); // Recupera os itens do caixa
 
@@ -487,6 +431,8 @@ async createBudget() {
     this.totalTroco = 0;
     this.listBudget();
     this.loadCustomerNames();
+    this.loadingBudget = false;
+
   } catch (err: any) {
     console.error(err);
     this.messageService.add({ severity: 'error', summary: 'Erro', detail: err.message });

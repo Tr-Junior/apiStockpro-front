@@ -110,7 +110,7 @@ export class UploadPageComponent {
         if (data && data.imageUrl) {
           // Garantir que a URL seja HTTPS
           if (data.imageUrl.startsWith('http://')) {
-            data.imageUrl = data.imageUrl.replace('http://', 'https://');
+            data.imageUrl = data.imageUrl.replace('http://', 'http://');
           }
 
           this.logoImage = { filePath: data.imageUrl };
@@ -135,7 +135,7 @@ export class UploadPageComponent {
         if (data && data.imageUrl) {
           // Garantir que a URL seja HTTPS
           if (data.imageUrl.startsWith('http://')) {
-            data.imageUrl = data.imageUrl.replace('http://', 'https://');
+            data.imageUrl = data.imageUrl.replace('http://', 'http://');
           }
 
           this.pdfImage = { filePath: data.imageUrl };

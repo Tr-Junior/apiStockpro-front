@@ -197,35 +197,33 @@ export class BudgetPageComponent {
   }
 
 
-  async addBudgetToBox(budget: any) {
-    const items = budget.budget.items;
+  async addBudgetToBox(budget: any): Promise<void> {
+    const items: { product: string; quantity: number }[] = budget.budget.items;
 
     for (const item of items) {
-      try {
-        const productDetails = await this.productService.getProductById(item.product).toPromise();
+        try {
+            const productDetails = await this.productService.getProductById(item.product).toPromise();
 
-        if (!productDetails) {
-          this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Produto não encontrado!' });
-          return;
+            if (!productDetails) {
+                this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Produto não encontrado!' });
+                continue;
+            }
+
+            const boxItem = {
+                _id: productDetails._id,
+                title: productDetails.title,
+                price: productDetails.price,
+                purchasePrice: productDetails.purchasePrice,
+                quantity: item.quantity,
+                discount: 0
+            };
+
+            await this.boxService.addItem(boxItem);
+        } catch (error) {
+            console.error('Erro ao adicionar item à caixa:', error);
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao adicionar item à caixa' });
         }
-
-        const boxItem = {
-          _id: productDetails._id,
-          title: productDetails.title,
-          price: productDetails.price,
-          purchasePrice: productDetails.purchasePrice,
-          quantity: item.quantity,
-          discount: 0
-        };
-
-        await this.boxService.addItem(boxItem);
-      } catch (error) {
-        console.error('Erro ao adicionar item à caixa:', error);
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao adicionar item à caixa' });
-        return;
-      }
     }
-
     try {
       this.removeBudget(this.budgets.indexOf(budget));
       this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Orçamento adicionado à caixa!' });
@@ -235,24 +233,28 @@ export class BudgetPageComponent {
       console.error('Erro ao finalizar a adição do orçamento:', error);
       this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao processar o orçamento' });
     }
-  }
+}
 
-  generatePDF(budget: Budget): void {
-    if (!budget || !budget.budget || budget.budget.items.length === 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Atenção',
-        detail: 'Nenhum item no orçamento para salvar como PDF.',
-      });
-      return;
-    }
-
-    this.pdfService.saveBudgetAsPdf(budget);
+generatePDF(budget: Budget): void {
+  if (!budget || !budget.budget || budget.budget.items.length === 0) {
     this.messageService.add({
-      severity: 'success',
-      summary: 'PDF Gerado',
-      detail: 'O orçamento foi salvo como PDF.',
+      severity: 'warn',
+      summary: 'Atenção',
+      detail: 'Nenhum item no orçamento para salvar como PDF.',
     });
+    return;
   }
+
+  // Atualiza o total antes de gerar o PDF
+  budget.budget.total = budget.budget.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+  this.pdfService.saveBudgetAsPdf(budget);
+  this.messageService.add({
+    severity: 'success',
+    summary: 'PDF Gerado',
+    detail: 'O orçamento foi salvo como PDF.',
+  });
+}
+
 
 }

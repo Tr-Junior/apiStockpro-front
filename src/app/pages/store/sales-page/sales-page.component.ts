@@ -6,6 +6,7 @@ import { PrimeNGConfig, MessageService, ConfirmationService } from 'primeng/api'
 import { Security } from '../../../../utils/Security.util';
 import { OrderService } from '../../../../core/api/order/order.service';
 import { EntrancesService } from '../../../../core/api/entrances/entrances.service';
+import { PdfService } from '../../../../common/printPdf.service';
 
 @Component({
   selector: 'app-sales-page',
@@ -21,13 +22,17 @@ export class SalesPageComponent {
   public busy = false;
   public rangeDates?: Date[];
   public ptBR: any;
+  public selectedOrder?: Order;
+
 
   constructor(
     private primengConfig: PrimeNGConfig,
     private orderService: OrderService,
     private entrancesService: EntrancesService,
     private messageService: MessageService, // Injetado MessageService
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private pdfService: PdfService
+
 
   ) {}
 
@@ -162,6 +167,20 @@ export class SalesPageComponent {
       });
     }
   }
+
+  printSale(order: Order) {
+    if (!order || !order.sale || !order.sale.items) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Aviso',
+        detail: 'Selecione uma venda válida para imprimir.'
+      });
+      return;
+    }
+
+    this.pdfService.printSale(order);
+  }
+
 }
 
 export interface PaymentTotal {

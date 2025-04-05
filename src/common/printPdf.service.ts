@@ -4,6 +4,7 @@ import { BoxItem } from '../core/models/box-item.model';
 import { Budget } from '../core/models/budget.model';
 import autoTable from 'jspdf-autotable';
 import { ICompany } from '../core/models/company.model';
+import { Order } from '../core/models/order.models';
 
 @Injectable({
   providedIn: 'root',
@@ -47,39 +48,45 @@ export class PdfService {
       return localStorage.getItem('companyPdf');
     }
 
-  private addHeader(doc: jsPDF): void {
-    // Adiciona a logo centralizada
-    const logoWidth = 140; // Largura da logo
-    const logoX = (doc.internal.pageSize.getWidth() - logoWidth) / 2; // Posição X centralizada
-    doc.addImage(this.logo, 'PNG', logoX, 5, logoWidth, 35);
+    private addHeader(doc: jsPDF): void {
+      // Adiciona a logo centralizada
+      const logoWidth = 140; // Largura da logo
+      const logoX = (doc.internal.pageSize.getWidth() - logoWidth) / 2; // Posição X centralizada
+      doc.addImage(this.logo, 'PNG', logoX, 5, logoWidth, 35);
 
-    // Informações de empresa
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    const infoX = 10; // Posição X inicial das informações
-    doc.text(`Nome: ${this.nome}`, infoX, 45);
-    doc.text(`Endereço: ${this.endereco}`, infoX, 50);
-    doc.text(`Cidade: ${this.cidade}`, infoX, 55);
-    doc.text(`Telefone: ${this.telefone}`, infoX, 60);
-    doc.text(`CNPJ: ${this.cnpj}`, infoX, 65);
+      // Informações de empresa
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      const infoX = 10; // Posição X inicial das informações
+      doc.text(`Nome: ${this.nome}`, infoX, 50);
+      doc.text(`CNPJ: ${this.cnpj} `, infoX, 55);
+      doc.text(`Endereço: ${this.endereco}`, infoX, 60);
 
-    // Data e Hora
-    const currentDate = new Date();
-    const formattedDate = `${currentDate.toLocaleDateString()} ${currentDate.toLocaleTimeString()}`;
-    doc.text(`Data e Hora: ${formattedDate}`, infoX, 70);
+      // Telefone e CNPJ na mesma linha
+      const telefoneCnpjText = `Cidade: ${this.cidade}  |  Telefone: ${this.telefone}`;
+      doc.text(telefoneCnpjText, infoX, 65);
 
-    // Linha de separação estilizada
-    const lineY = 75; // Posição Y da linha
-    doc.setLineWidth(0.5);
-    doc.setDrawColor(0, 0, 0); // Cor preta
-    doc.line(10, lineY, doc.internal.pageSize.getWidth() - 10, lineY); // Linha de margem a margem
+      // Linha de separação estilizada
+      const lineY = 70; // Posição Y da linha
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(0, 0, 0); // Cor preta
+      doc.line(10, lineY, doc.internal.pageSize.getWidth() - 10, lineY); // Linha de margem a margem
   }
+
   private addFooter(doc: jsPDF): void {
-    doc.setFontSize(10);
-    doc.text('Agradecemos a preferência!', doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 20, {
-      align: 'center',
-    });
+      doc.setFontSize(10);
+
+      // Data e Hora no final da página
+      const currentDate = new Date();
+      const formattedDate = `${currentDate.toLocaleDateString()} ${currentDate.toLocaleTimeString()}`;
+      doc.text(`Data e Hora: ${formattedDate}`, 10, doc.internal.pageSize.getHeight() - 15);
+
+      // Mensagem centralizada no rodapé
+      doc.text('Agradecemos a preferência!', doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 10, {
+        align: 'center',
+      });
   }
+
 
   saveBoxItemsAsPdf(items: BoxItem[], subtotal: number, grandTotal: number, generalDiscount: number): void {
     const doc = new jsPDF();
@@ -96,7 +103,7 @@ export class PdfService {
     tableData.push(['-', '-', 'Total:', `R$ ${grandTotal.toFixed(2)}`]);
 
     autoTable(doc, {
-      startY: 80,
+      startY: 75,
       head: headers,
       body: tableData,
       styles: { fontSize: 10 },
@@ -110,18 +117,23 @@ export class PdfService {
     const doc = new jsPDF();
     this.addHeader(doc);
 
-    // Informações do orçamento
     doc.setFontSize(12);
 
-    // Tabela de itens do orçamento
     const headers = [['Produto', 'Quantidade', 'Valor Unitário', 'Valor Total']];
-    const tableData = budget.budget.items.map((item) => [
-      item.title,
-      item.quantity,
-      `R$ ${item.price.toFixed(2)}`,
-      `R$ ${(item.price * item.quantity).toFixed(2)}`,
-    ]);
-    tableData.push(['-', '-', 'Total:', `R$ ${budget.budget.total.toFixed(2)}`]);
+    let total = 0; // Inicializa o total
+
+    const tableData = budget.budget.items.map((item) => {
+      const itemTotal = item.price * item.quantity;
+      total += itemTotal; // Soma ao total recalculado
+      return [
+        item.title,
+        item.quantity,
+        `R$ ${item.price.toFixed(2)}`,
+        `R$ ${itemTotal.toFixed(2)}`
+      ];
+    });
+
+    tableData.push(['-', '-', 'Total:', `R$ ${total.toFixed(2)}`]);
 
     autoTable(doc, {
       startY: 80,
@@ -132,14 +144,13 @@ export class PdfService {
 
     this.addFooter(doc);
 
-    // Sanitiza o nome do cliente para ser usado como nome de arquivo
-    const sanitizedClientName = budget.client
-      .replace(/[\/\\:*?"<>|]/g, '') // Remove caracteres inválidos para nomes de arquivo
-      .trim(); // Remove espaços extras
-
+    const sanitizedClientName = budget.client.replace(/[\/\\:*?"<>|]/g, '').trim();
     const fileName = sanitizedClientName ? `orcamento_${sanitizedClientName}.pdf` : 'orcamento.pdf';
     doc.save(fileName);
   }
+
+
+
   printReceipt(
     boxItems: BoxItem[],
     subtotal: number,
@@ -222,18 +233,34 @@ doc.text(`CNPJ: ${this.cnpj}`, doc.internal.pageSize.getWidth() / 2, 46, { align
 
     // Adiciona informações de totais
     const finalY = (doc as any).autoTable.previous.finalY;
-    doc.setFontSize(8);
-    doc.text(`QTD. TOTAL DE ITENS: ${boxItems.length}`, 5, finalY + 10);
-    doc.text(`VALOR TOTAL: R$ ${subtotal.toFixed(2).replace('.', ',')}`, 5, finalY + 15);
-    if (generalDiscount > 0) {
-      doc.text(`DESCONTO: R$ ${(subtotal * (generalDiscount / 100)).toFixed(2).replace('.', ',')}`, 5, finalY + 20);
-    }
-    doc.text(`TOTAL A PAGAR: R$ ${grandTotal.toFixed(2).replace('.', ',')}`, 5, finalY + 25);
-    doc.text(`FORMA DE PAGAMENTO: ${paymentMethod}`, 5, finalY + 30);
+const pageWidth = (doc as any).internal.pageSize.width;
+const marginRight = 2; // Margem da direita
 
-    // Adiciona o rodapé
-    doc.setFontSize(8);
-    doc.text('Agradecemos a preferência!', 5, finalY + 40, { align: 'left' });
+doc.setFontSize(8);
+
+const valueAlignX = pageWidth - marginRight; // Posição X dos valores
+
+doc.text(`QTD. TOTAL DE ITENS:`, 5, finalY + 10);
+doc.text(`${boxItems.length}`, valueAlignX, finalY + 10, { align: 'right' });
+
+doc.text(`VALOR TOTAL:`, 5, finalY + 15);
+doc.text(`R$ ${subtotal.toFixed(2).replace('.', ',')}`, valueAlignX, finalY + 15, { align: 'right' });
+
+if (generalDiscount > 0) {
+  doc.text(`DESCONTO:`, 5, finalY + 20);
+  doc.text(`R$ ${(subtotal * (generalDiscount / 100)).toFixed(2).replace('.', ',')}`, valueAlignX, finalY + 20, { align: 'right' });
+}
+
+doc.text(`TOTAL A PAGAR:`, 5, finalY + 25);
+doc.text(`R$ ${grandTotal.toFixed(2).replace('.', ',')}`, valueAlignX, finalY + 25, { align: 'right' });
+
+doc.text(`FORMA DE PAGAMENTO:`, 5, finalY + 30);
+doc.text(`${paymentMethod}`, valueAlignX, finalY + 30, { align: 'right' });
+
+// Adiciona o rodapé alinhado ao centro
+doc.setFontSize(8);
+doc.text('Agradecemos a preferência!', pageWidth / 2, finalY + 40, { align: 'center' });
+
 
     // Abre a caixa de diálogo de impressão
     const pdfOutput = doc.output('blob');
@@ -245,5 +272,50 @@ doc.text(`CNPJ: ${this.cnpj}`, doc.internal.pageSize.getWidth() / 2, 46, { align
     };
   }
 
+  printSale(order: Order): void {
+    const doc = new jsPDF();
+    this.addHeader(doc);
+
+    // Cabeçalhos da tabela
+    const headers = [['Produto', 'Qtd', 'Valor Unitário', 'Total']];
+    const tableData: (string | { content: string, colSpan?: number, styles?: any })[][] = order.sale.items.map(item => [
+      item.title,
+      item.quantity.toString(),
+      `R$ ${item.price.toFixed(2)}`,
+      `R$ ${(item.quantity * item.price).toFixed(2)}`
+    ]);
+
+    // Adiciona uma linha separadora
+    tableData.push([
+      { content: '', colSpan: 4, styles: { fillColor: [200, 200, 200] } }
+    ]);
+
+    // Adiciona os dados da venda alinhados corretamente
+    tableData.push([
+      { content: `Venda Nº: ${order.number}`, colSpan: 2, styles: { halign: 'left', fontStyle: 'bold' } },
+      { content: `Forma de Pagamento: ${order.sale.formPayment}`, colSpan: 2, styles: { halign: 'right', fontStyle: 'bold' } }
+    ]);
+
+    tableData.push([
+      { content: `Total: R$ ${order.sale.total.toFixed(2)}`, colSpan: 4, styles: { halign: 'right', fontStyle: 'bold' } }
+    ]);
+
+    // Gera a tabela
+    autoTable(doc, {
+      startY: 80,
+      head: headers,
+      body: tableData,
+      styles: { fontSize: 10 },
+      columnStyles: {
+        1: { halign: 'center' },
+        2: { halign: 'right' },
+        3: { halign: 'right' }
+      }
+    });
+
+    this.addFooter(doc);
+
+    doc.save(`venda_${order.number}.pdf`);
+}
 
 }
