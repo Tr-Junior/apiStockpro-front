@@ -150,23 +150,28 @@ export class CostsPageComponent {
     this.listEntrances();
   }
 
-  listProd() {
-    this
-      .service
-      .getProducts()
-      .subscribe(
-        (data: any) => {
-          this.busy = false;
-          this.product = data;
-          this.totalPurchaseValue = this.calculateTotalPurchaseValue(this.product);
-        })
-  }
+ listProd() {
+  this.busy = true;
+  this.service
+    .getAllProducts({}) // passando um objeto vazio como argumento
+    .subscribe(
+      (data: any) => {
+        this.product = data;
+        this.totalPurchaseValue = this.calculateTotalPurchaseValue(this.product);
+      },
+      (error) => {
+        console.error('Erro ao buscar produtos:', error);
+      }
+    );
+}
 
-  calculateTotalPurchaseValue(products: Product[]): number {
-    let totalValue = 0;
-    for (const product of products) {
-      totalValue += product.purchasePrice * product.quantity;
-    }
-    return totalValue;
-  }
+
+ calculateTotalPurchaseValue(products: Product[]): number {
+  return products.reduce((total, product) => {
+    const price = Number(product.purchasePrice) || 0;
+    const qty = Number(product.quantity) || 0;
+    return total + price * qty;
+  }, 0);
+}
+
 }

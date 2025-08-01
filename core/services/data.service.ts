@@ -45,6 +45,10 @@ export class DataService {
       params: new HttpParams({ fromObject: params })
     });
   }
+  getAllProducts(params: any): Observable<Product[]> {
+    return this.http.get<Product[]>(`${this.API}/products/getAll`, {headers: this.composeHeaders() });
+  }
+
   createProduct(data: any) {
     return this.http.post(`${this.API}/products`, data, { headers: this.composeHeaders() });
   }

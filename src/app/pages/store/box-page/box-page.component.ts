@@ -4,7 +4,7 @@ import { BoxItem} from '../../../../../core/models/box-item.model';
 import { BoxService } from '../../../../../core/services/box.Service';
 import { DataService } from '../../../../../core/services/data.service';
 import { Product } from '../../../../../core/models/product.model';
-import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, of, Subject, switchMap, tap } from 'rxjs';
 import { MenuItem, MessageService } from 'primeng/api';
 import { Budget } from '../../../../../core/models/budget.model';
 import { User } from '../../../../../core/models/user.model';
@@ -45,6 +45,8 @@ export class BoxPageComponent {
   public totalTroco: number = 0;
   public totalRecords: number = 0;
   public checked: boolean = false;
+  quantityChange$ = new Subject<{ item: BoxItem; quantity: number }>();
+  private stockCache = new Map<string, number>();
 
   constructor(
     private boxService: BoxService,
@@ -71,7 +73,45 @@ export class BoxPageComponent {
       this.search();
     });
     this.loadCustomerNames();
+
+      this.quantityChange$
+    .pipe(
+      debounceTime(250),
+      // compara apenas a quantidade do mesmo item
+      distinctUntilChanged((a, b) => a.item._id === b.item._id && a.quantity === b.quantity),
+      switchMap(({ item, quantity }) =>
+        this.getAvailable$(item._id).pipe(
+          map((available) => ({ item, quantity, available }))
+        )
+      )
+    )
+    .subscribe(({ item, quantity, available }) => {
+      if (quantity <= 0) {
+        item.quantity = 1;
+        this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Quantidade mínima é 1.' });
+      } else if (quantity > available) {
+        item.quantity = available;
+        this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: `Qtd. disponível: ${available}` });
+      } else {
+        item.quantity = quantity;
+      }
+      this.calculateTotals();
+    });
   }
+
+  onQuantityChange(qty: number, item: BoxItem) {
+  // não chama API aqui; apenas emite para o Subject
+  this.quantityChange$.next({ item, quantity: Number(qty) || 0 });
+}
+
+private getAvailable$(id: string) {
+  const cached = this.stockCache.get(id);
+  if (cached != null) return of(cached);
+  return this.service.getProductById(id).pipe(
+    tap(p => this.stockCache.set(id, Number(p?.quantity) || 0)),
+    map(p => Number(p?.quantity) || 0)
+  );
+}
 
   getScrollHeight(): string {
     const itemHeight = 46;
@@ -218,6 +258,7 @@ export class BoxPageComponent {
         });
         return;
     }
+
 
     this.service.getProductById(item._id).subscribe({
         next: (product) => {

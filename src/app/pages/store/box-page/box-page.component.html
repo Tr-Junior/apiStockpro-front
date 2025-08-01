@@ -85,8 +85,8 @@
           <tr>
             <td>{{ item.title }}</td>
             <td style="text-align: center">
-              <p-inputNumber styleClass="width: 2rem" [size]="1" [(ngModel)]="item.quantity"
-                (ngModelChange)="updateQuantity($event, item)">
+              <p-inputNumber styleClass="width: 2rem" [size]="1" [min]="1" [step]="1" [useGrouping]="false"
+                [(ngModel)]="item.quantity" (ngModelChange)="onQuantityChange($event, item)">
               </p-inputNumber>
 
             </td>
