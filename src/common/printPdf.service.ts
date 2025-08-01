@@ -1,22 +1,14 @@
 import { Injectable } from '@angular/core';
 import { jsPDF } from 'jspdf';
-import { BoxItem } from '../../core/models/box-item.model';
-import { Budget } from '../../core/models/budget.model';
+import { BoxItem } from '../core/models/box-item.model';
+import { Budget } from '../core/models/budget.model';
 import autoTable from 'jspdf-autotable';
-import { DataService } from '../../core/services/data.service';
-import { HttpClient } from '@angular/common/http';
-import { ICompany } from '../../core/models/company.model';
+import { ICompany } from '../core/models/company.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PdfService {
-  // public logo = 'assets/image/logof2.png'; // Caminho da logo
-  // public nome = 'Conexão elétrica e hidráulica';
-  // public endereco = 'Qd 33 Conj "B" N° 01-A setor 2';
-  // public cidade =  'Águas Lindas de Goiás'
-  // public telefone = '(61) 99571-0019';
-  // public cnpj = '52.068.148/0001-61';
 
   public logo: string = '';
   public nome: string = '';
@@ -30,7 +22,6 @@ export class PdfService {
 
     const company = this.getCompanyFromStorage();
     if (company) {
-      console.log('Empresa carregada do localStorage:', company);
       this.nome = company.name;
       this.endereco = `${company.address.backYard},${company.address.neighborhood},${company.address.addressLine} `;
       this.cidade = `${company.address.city} - ${company.address.state}`;
@@ -40,7 +31,6 @@ export class PdfService {
 
     const logoUrl = this.getCompanyPdfFromStorage();
     if (logoUrl) {
-      console.log('Logo carregada do localStorage:', logoUrl);
       this.logo = logoUrl;
     }
     }
@@ -122,7 +112,6 @@ export class PdfService {
 
     // Informações do orçamento
     doc.setFontSize(12);
-    doc.text(`Cliente: ${budget.client}`, 10, 69);
 
     // Tabela de itens do orçamento
     const headers = [['Produto', 'Quantidade', 'Valor Unitário', 'Valor Total']];
@@ -156,7 +145,6 @@ export class PdfService {
     subtotal: number,
     grandTotal: number,
     generalDiscount: number,
-    customerName: string,
     paymentMethod: string
   ): void {
     const doc = new jsPDF({

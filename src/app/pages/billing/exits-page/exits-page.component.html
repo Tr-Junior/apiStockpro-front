@@ -72,7 +72,7 @@
           <i class="pi pi-search"></i>
           <input pInputText type="text" [(ngModel)]="searchQuery" (ngModelChange)="search()"
             placeholder="Pesquisar saídas..." />
-          <p-button icon="pi pi-times" styleClass=" p-button-danger p-button-text" (onClick)="clearSearch()"
+          <p-button icon="pi pi-times" styleClass=" p-button-danger p-button-text" (click)="clearSearch()"
             [disabled]="!searchQuery"></p-button>
         </span>
       </div>

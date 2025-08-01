@@ -1,17 +1,18 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { DataService } from '../../../../../core/services/data.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MessageService } from 'primeng/api';
-import { catchError, of } from 'rxjs';
-import { Product } from '../../../../../core/models/product.model';
-import { Supplier } from '../../../../../core/models/supplier-model';
-import { ImportsService } from '../../../../../core/services/imports.service';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { catchError, from, of } from 'rxjs';
+import { Product } from '../../../../core/models/product.model';
+import { Supplier } from '../../../../core/models/supplier-model';
+import { ImportsService } from '../../../../core/services/imports.service';
+import { ProductService } from '../../../../core/api/products/product.service';
+import { SupplierService } from '../../../../core/api/supplier/suplier.service';
 
 @Component({
   selector: 'app-product-registration-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService],
+  providers: [ImportsService.providers],
   templateUrl: './product-registration-page.component.html',
   styleUrl: './product-registration-page.component.css'
 })
@@ -21,8 +22,8 @@ export class ProductRegistrationPageComponent {
   public product: Product[] = [];
   public form: FormGroup;
   public busy = false;
-  prodId = '';
-  name: any;
+  public prodId = '';
+  public name: any;
   public selectedProduct: Product[] = [];
   public clonedProducts: { [s: string]: Product } = {};
   public suppliers: Supplier[] = [];
@@ -30,32 +31,34 @@ export class ProductRegistrationPageComponent {
   public selectedSupplier: Supplier | null = null;
 
   constructor(
-    private service: DataService,
+    private productService: ProductService,
+    private supplierService: SupplierService,
     private fb: FormBuilder,
-    private messageService: MessageService // Usa o MessageService agora
+    private messageService: MessageService, // Usa o MessageService agora
+    private confirmationService: ConfirmationService,
+
   ) {
     this.form = this.fb.group({
-      title: ['', Validators.compose([Validators.required])],
-      quantity: ['', Validators.compose([Validators.required])],
-      min_quantity: ['', Validators.compose([Validators.required])],
-      supplier: ['', Validators.compose([Validators.required])],
-      purchasePrice: ['', Validators.compose([Validators.required])],
-      price: ['', Validators.compose([Validators.required])],
+      title: [null, Validators.compose([Validators.required])],
+      quantity: [null, Validators.compose([Validators.required])],
+      supplier: [null],
+      purchasePrice: [null, Validators.compose([Validators.required])],
+      price: [null, Validators.compose([Validators.required])],
     });
   }
 
   @Output() onCancel = new EventEmitter<void>();
-
-
+  @Output() productSaved = new EventEmitter<void>();
 
   onSupplierSelect(event: any) {
-    this.selectedSupplier = event.value || null; // Garante que sempre define um valor (mesmo null)
+    this.selectedSupplier = event.value || null;
     if (this.selectedSupplier) {
-      this.form.patchValue({ supplier: this.selectedSupplier._id });
+      this.form.patchValue({ supplier: this.selectedSupplier.name });
     } else {
       this.form.patchValue({ supplier: null });
     }
   }
+
 
 
   ngOnInit() {
@@ -73,7 +76,7 @@ export class ProductRegistrationPageComponent {
   }
 
   loadSuppliers() {
-    this.service
+    this.supplierService
       .getSupplier()
       .pipe(
         catchError((error) => {
@@ -99,6 +102,7 @@ export class ProductRegistrationPageComponent {
   }
 
   submit() {
+    console.log(this.form)
     if (this.form.invalid) {
       this.messageService.add({
         severity: 'error',
@@ -114,13 +118,15 @@ export class ProductRegistrationPageComponent {
 
     this.busy = true;
 
-    this.service.createProduct(this.form.value).subscribe({
+    this.productService.createProduct(this.form.value).subscribe({
       next: (data: any) => {
         this.messageService.add({
           severity: 'success',
           summary: 'Sucesso',
           detail: data.message || 'Produto salvo com sucesso!',
         });
+        this.productSaved.emit();
+        this.loadSuppliers
         this.resetForm();
       },
       error: (err: any) => {
@@ -141,5 +147,49 @@ export class ProductRegistrationPageComponent {
   // Método para fechar o modal
   fecharModal() {
     this.displayModal = false;
+  }
+
+  deleteSupplier(supplier: any, event: Event) {
+    event.stopPropagation(); // Evita que o clique no botão selecione o item
+
+    this.confirmationService.confirm({
+      message: `Tem certeza que deseja remover o fornecedor "${supplier.name}"?`,
+      header: 'Confirmação',
+      icon: 'pi pi-exclamation-triangle',
+      rejectLabel: 'Cancelar',
+      acceptLabel: 'Confirmar',
+      accept: () => {
+        this.supplierService.delSupplier(supplier._id).subscribe({
+          next: () => {
+            // Remove o fornecedor da lista localmente
+            this.filteredSuppliers = this.filteredSuppliers.filter(s => s._id !== supplier._id);
+
+            // Exibe mensagem de sucesso
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Sucesso',
+              detail: 'Fornecedor removido com sucesso!'
+            });
+            this.loadSuppliers();
+          },
+          error: (err) => {
+            console.error("Erro ao remover fornecedor:", err);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erro',
+              detail: 'Erro ao remover fornecedor. Tente novamente.'
+            });
+          }
+        });
+      },
+      reject: () => {
+        // O usuário cancelou a ação
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Cancelado',
+          detail: 'A remoção do fornecedor foi cancelada.'
+        });
+      }
+    });
   }
 }

@@ -1,11 +1,22 @@
 .space{
-  margin-left: 21%;
+  margin-left: 21.6%;
 }
 .payment-options {
   display: flex;
   flex-wrap: wrap;
   gap: 1.2rem;
 }
+
+.info{
+  color:#fc9e11;
+}
+
+
+:host ::ng-deep .p-datatable tbody tr:hover {
+  background-color: #ffffff36 !important;
+  cursor: pointer;
+}
+
 
 .payment-option {
   display: flex;

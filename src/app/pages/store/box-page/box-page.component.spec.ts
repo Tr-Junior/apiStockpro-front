@@ -11,7 +11,7 @@ describe('BoxPageComponent', () => {
       imports: [BoxPageComponent]
     })
     .compileComponents();
-    
+
     fixture = TestBed.createComponent(BoxPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

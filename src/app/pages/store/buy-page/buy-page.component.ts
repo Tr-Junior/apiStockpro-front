@@ -1,16 +1,18 @@
 import { Component } from '@angular/core';
-import { ImportsService } from '../../../../../core/services/imports.service';
-import { DataService } from '../../../../../core/services/data.service';
+import { ImportsService } from '../../../../core/services/imports.service';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ProductsBuy } from '../../../../../core/models/productsBuy-model';
-import { MessageService, SelectItem } from 'primeng/api';
+import { ProductsBuy } from '../../../../core/models/productsBuy-model';
+import { ConfirmationService, MessageService, SelectItem } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ProductBuyService } from '../../../../core/api/productBuy/productBuy.service';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-buy-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService],
+  providers: [ImportsService.providers],
   templateUrl: './buy-page.component.html',
   styleUrl: './buy-page.component.css'
 })
@@ -21,11 +23,13 @@ export class BuyPageComponent {
   selectedProducts: any[] = [];
   metaKeySelection: boolean = false;
   public searchQuery: string = '';
+  public filteredProducts: ProductsBuy[] = []; // Produtos filtrados pela pesquisa
 
   constructor(
-    private service: DataService,
+    private productBuyService: ProductBuyService,
     private fb: FormBuilder,
-    private messageService: MessageService // Removido ToastrService
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService
   ) {
     this.form = this.fb.group({
       title: ['', Validators.compose([
@@ -46,7 +50,7 @@ export class BuyPageComponent {
       title: product.title
     };
 
-    this.service.updateProductBuy(updatedProduct).subscribe(
+    this.productBuyService.updateProductBuy(updatedProduct).subscribe(
       () => {
         this.loadProducts();
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Produto atualizado com sucesso.' });
@@ -68,11 +72,10 @@ export class BuyPageComponent {
 
   loadProducts() {
     this.busy = true;
-    this.service.getProductBuy().subscribe(
-      (data: any) => {
-        this.productsBuy = data.sort((a: any, b: any) => {
-          return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
-        });
+    this.productBuyService.getProductBuy().subscribe(
+      (data: ProductsBuy[]) => {
+        this.productsBuy = data.sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()));
+        this.filteredProducts = [...this.productsBuy]; // Inicialmente, todos os produtos são exibidos
         this.busy = false;
       },
       error => {
@@ -80,6 +83,12 @@ export class BuyPageComponent {
         this.busy = false;
       }
     );
+  }
+
+  // Método para filtrar os produtos com base na pesquisa
+  filterProducts() {
+    const query = this.searchQuery.toLowerCase();
+    this.filteredProducts = this.productsBuy.filter(product => product.title.toLowerCase().includes(query));
   }
 
   submitForm() {
@@ -97,7 +106,7 @@ export class BuyPageComponent {
         ...this.form.value
       };
 
-      this.service.createProductBuy(formValue).subscribe({
+      this.productBuyService.createProductBuy(formValue).subscribe({
         next: (data: any) => {
           this.busy = false;
           this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: data.message });
@@ -128,7 +137,7 @@ export class BuyPageComponent {
       id: product._id
     };
 
-    this.service.updateProductBuy(updatedProduct).subscribe(
+    this.productBuyService.updateProductBuy(updatedProduct).subscribe(
       () => {
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Produto atualizado com sucesso.' });
         this.loadProducts();
@@ -141,7 +150,7 @@ export class BuyPageComponent {
   }
 
   deleteProduct(id: any) {
-    this.service.delProductBuy(id).subscribe(
+    this.productBuyService.delProductBuy(id).subscribe(
       (data: any) => {
         this.busy = false;
         this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: data.message });
@@ -157,20 +166,21 @@ export class BuyPageComponent {
     this.selectedProducts = [];
   }
 
-  search(): void {
-    if (!this.searchQuery) {
-      this.loadProducts();
+  confirmDeleteSelected() {
+    if (!this.selectedProducts || this.selectedProducts.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Nenhum produto selecionado!' });
       return;
     }
-    const searchData = { title: this.searchQuery };
 
-    this.service.searchProductBuy(searchData).subscribe({
-      next: (data: any) => {
-        this.productsBuy = data;
-      },
-      error: (err: any) => {
-        console.log(err);
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: err.message });
+    this.confirmationService.confirm({
+      message: `Tem certeza que deseja excluir os ${this.selectedProducts.length} produtos selecionados?`,
+      header: 'Confirmação',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Confirmar',
+      rejectLabel: 'Cancelar',
+      accept: () => this.deleteSelectedProducts(), // Chama a função de exclusão ao confirmar
+      reject: () => {
+        this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'A exclusão foi cancelada' });
       }
     });
   }
@@ -178,7 +188,7 @@ export class BuyPageComponent {
   deleteSelectedProducts() {
     if (this.selectedProducts && this.selectedProducts.length) {
       this.selectedProducts.forEach(product => {
-        this.service.delProductBuy(product._id).subscribe(
+        this.productBuyService.delProductBuy(product._id).subscribe(
           () => {
             this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: `Produto ${product.title} excluído com sucesso.` });
             this.loadProducts();
@@ -192,9 +202,39 @@ export class BuyPageComponent {
       this.selectedProducts = []; // Limpa a seleção após a exclusão
     }
   }
-
   clearSearch() {
     this.searchQuery = '';
     this.loadProducts();
+  }
+
+  generatePDF() {
+    if (!this.selectedProducts || this.selectedProducts.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Nenhum produto selecionado!' });
+      return;
+    }
+
+    const doc = new jsPDF();
+
+    // Adiciona título
+    doc.setFontSize(16);
+    doc.text('Lista de Produtos para compra', 14, 15);
+
+    // Formata os dados para a tabela
+    const tableData = this.selectedProducts.map((product, index) => [
+      index + 1,
+      product.title
+    ]);
+
+    // Corrigido: Chamada correta da função autoTable
+    autoTable(doc, {
+      startY: 25,
+      head: [['#', 'Nome do Produto']],
+      body: tableData
+    });
+
+    // Salva o PDF
+    doc.save('produtos-selecionados.pdf');
+
+    this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'PDF gerado com sucesso!' });
   }
 }

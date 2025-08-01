@@ -7,24 +7,48 @@
 }
 .payment-cash {
   background-color: #4caf50; /* Verde */
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  transition: background-color 0.3s ease;
 }
 
 .payment-credit {
   background-color: #2196f3; /* Azul */
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  transition: background-color 0.3s ease;
 }
 
 .payment-debit {
   background-color: #ffc107; /* Amarelo */
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  transition: background-color 0.3s ease;
 }
 .payment-pix {
   background-color: #ff8b07; /* Amarelo */
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  transition: background-color 0.3s ease;
 }
 .payment-others {
   background-color: #0dbe24; /* Cinza */
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  transition: background-color 0.3s ease;
 }
-.total {
-  background-color: #ff0000;
-  color: #a33c3c;
+.payment-total {
+  background-color: #726d6d; /* Cinza claro */
+  color: #424242; /* Preto */
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  transition: background-color 0.3s ease;
 }
 .th {
   text-align: center;

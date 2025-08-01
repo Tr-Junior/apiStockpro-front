@@ -1,17 +1,17 @@
 import { Component } from '@angular/core';
-import { DataService } from '../../../core/services/data.service';
 import { ImportsService } from '../../../core/services/imports.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ICompany } from '../../../core/models/company.model';
 import { Observable } from 'rxjs';
-import { UploadPageComponent } from '../pages/upload-page/upload-page.component';
+import { UploadPageComponent } from '../upload-page/upload-page.component';
+import { CompanyService } from '../../../core/api/company/company.service';
 
 @Component({
   selector: 'app-company-info-page',
   standalone: true,
   imports: [ImportsService.imports, UploadPageComponent],
-  providers: [ImportsService.providers, DataService, MessageService],
+  providers: [ImportsService.providers, MessageService],
   templateUrl: './company-info-page.component.html',
   styleUrls: ['./company-info-page.component.css']
 })
@@ -22,7 +22,7 @@ export class CompanyInfoPageComponent {
   public busy = false;
 
   constructor(
-    private service: DataService,
+    private companyService: CompanyService,
     private messageService: MessageService,
     private fb: FormBuilder,
     private confirmationService: ConfirmationService
@@ -49,13 +49,10 @@ export class CompanyInfoPageComponent {
 
   listCompany() {
     this.busy = true;
-    this.service.getCompany().subscribe({
+    this.companyService.getCompany().subscribe({
       next: (data: ICompany[]) => {
         this.busy = false;
-        this.company = data; // Atualiza o array de empresas
-        console.log('Dados recebidos:', data);
-
-
+        this.company = data;
         if (this.company.length > 0) {
           const id = this.company[0]._id; // Garante que o array não está vazio
           this.listCompanyById(id);
@@ -78,10 +75,9 @@ export class CompanyInfoPageComponent {
 
     this.busy = true;
 
-    this.service.getCompanyId(id).subscribe({
+    this.companyService.getCompanyId(id).subscribe({
       next: (data: ICompany) => {
         this.busy = false;
-        console.log('Dados recebidosID:', data);
 
         this.form.patchValue({
           id: data._id,
@@ -111,7 +107,7 @@ export class CompanyInfoPageComponent {
   onCepBlur() {
     const cep = this.form.get('zip')?.value;
     if (cep) {
-      this.service.findCep({ cep }).subscribe({
+      this.companyService.findCep({ cep }).subscribe({
         next: (data: any) => {
           console.log(data);
           this.form.patchValue({
@@ -152,7 +148,7 @@ export class CompanyInfoPageComponent {
     if (this.form.valid) {
       if (id) {
         // Atualizar empresa existente
-        this.service.updateCompany(id, payload).subscribe({
+        this.companyService.updateCompany(id, payload).subscribe({
           next: () => {
             this.messageService.add({
               severity: 'success',
@@ -170,13 +166,14 @@ export class CompanyInfoPageComponent {
         });
       } else {
         // Criar nova empresa
-        this.service.createCompany(payload).subscribe({
+        this.companyService.createCompany(payload).subscribe({
           next: () => {
             this.messageService.add({
               severity: 'success',
               summary: 'Sucesso',
               detail: 'Empresa criada com sucesso',
             });
+            this.listCompany();
             this.form.reset(); // Limpa o formulário após criação
           },
           error: (err: any) => {
@@ -195,10 +192,6 @@ export class CompanyInfoPageComponent {
         detail: 'Formulário inválido. Preencha os campos obrigatórios.',
       });
     }
-
-    console.log('formulario', this.form.value);
-    console.log('formulario válido:', this.form.valid);
-    console.log('id', id);
   }
 
 

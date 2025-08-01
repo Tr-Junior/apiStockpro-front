@@ -5,10 +5,10 @@
         <div class="flex align-items-center font-bold border-round">
           <span class="p-input-icon-left ml-auto">
             <i class="pi pi-search"></i>
-            <input class="text" pInputText type="text" [(ngModel)]="searchQuery" (ngModelChange)="search(1, true)"
-              placeholder="Pesquisar produtos..." />
+            <input class="text" pAutoFocus [autofocus]="true" pInputText type="text" [(ngModel)]="searchQuery"
+              (ngModelChange)="onSearchChange()" placeholder="Pesquisar produtos..." />
           </span>
-          <p-button icon="pi pi-times" styleClass="p-button-danger p-button-text" (onClick)="clearSearch()"
+          <p-button icon="pi pi-times" styleClass="p-button-danger p-button-text" (click)="clearSearch()"
             [disabled]="!searchQuery"></p-button>
         </div>
         <p-button icon="pi pi-trash" label="Limpar caixa"
@@ -19,8 +19,8 @@
       <div class="table-container">
         <p-table [value]="products" [scrollable]="true" [scrollHeight]="getScrollHeight()" [rows]="25"
           [virtualScroll]="true" [virtualScrollItemSize]="46" [lazy]="true" [totalRecords]="totalRecords"
-          (onLazyLoad)="loadDataLazy($event)" *ngIf="products.length > 0" class="p-0" styleClass="p-datatable-striped">
-
+          (onLazyLoad)="loadDataLazy($event)" *ngIf="products.length > 0" class="p-0 p-datatable-hover"
+          styleClass="p-datatable-striped">
           <ng-template pTemplate="header">
             <tr>
               <th>Produto</th>
@@ -37,19 +37,18 @@
               </td>
               <td style="text-align: center">
                 <div [ngClass]="{
-          'outofstock': (product.quantity - getQuantityInBudget(product._id).quantity) === 0,
-          'lowstock': (product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
-          (product.quantity - getQuantityInBudget(product._id).quantity) <= 10,
-          'instock': (product.quantity - getQuantityInBudget(product._id).quantity) > 10}">
+                  'outofstock': (product.quantity - getQuantityInBudget(product._id).quantity) === 0,
+                  'instock': (product.quantity - getQuantityInBudget(product._id).quantity) >= 1}">
                   <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) > 0">
                     {{ product.quantity - getQuantityInBudget(product._id).quantity }}
                   </span>
                   <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) === 0" class="badge">
                     Fora de Estoque
                   </span>
-                  <i pTooltip="Produto abaixo do estoque mínimo" tooltipPosition="top" *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
-             (product.quantity - getQuantityInBudget(product._id).quantity) <= product.min_quantity"
-                    class="pi pi-exclamation-triangle information"></i>
+                  <i pTooltip="Produto abaixo do estoque mínimo" tooltipPosition="top"
+                    *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) <= product.min_quantity"
+                    class="pi pi-exclamation-triangle information info text-xl ">
+                  </i>
                 </div>
               </td>
               <td style="text-align: center">{{ product.price | currency:'BRL':'symbol':'1.2-2'}}</td>
@@ -64,9 +63,9 @@
       </div>
 
       <!-- Loader -->
-      <div *ngIf="loading" class="text-center">
+      <!-- <div *ngIf="loading" class="text-center">
         <i class="pi pi-spinner pi-spin" style="font-size: 2em;"></i>
-      </div>
+      </div> -->
     </div>
 
 
@@ -137,10 +136,8 @@
       <div class="col-12 md:col-2">
         <span class="text-lg mr-2">Desconto</span>
         <div class="flex align-items-center gap-2 mt-2">
-          <p-toggleButton [(ngModel)]="checked" onLabel="'%'" offLabel="R$">
-          </p-toggleButton>
           <p-inputNumber [(ngModel)]="generalDiscount" (onInput)="updateGeneralDiscount(generalDiscount)" mode="decimal"
-            [prefix]="checked ? '%' : 'R$'" styleClass="small-input">
+            prefix="%" styleClass="small-input">
           </p-inputNumber>
         </div>
       </div>
@@ -153,7 +150,7 @@
       <!-- Subtotal -->
       <div class="col md:col-1">
         <span class="text-lg">Subtotal:</span>
-        <div class="text-lg font-bold mt-3">{{ grandTotal | currency: 'BRL':'symbol':'1.2-2' }}</div>
+        <div class="text-lg font-bold mt-3">{{ subtotal | currency: 'BRL':'symbol':'1.2-2' }}</div>
       </div>
 
       <!-- Valor Total -->
@@ -170,7 +167,7 @@
         <span class="text-lg">Valor Recebido:</span>
         <input pInputText class="mt-2 text-l" [size]="10" id="value" inputId="integeronly" [(ngModel)]="total"
           (ngModelChange)="calcTroco()" styleClass="w-full" currencyMask
-          [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',' }">
+          [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',' }" #valueInput>
       </div>
 
       <!-- Valor do Troco -->
@@ -183,18 +180,18 @@
 
       <!-- Botão Finalizar -->
       <div class="col-12 md:col-2">
-        <p-button label="Finalizar Venda" icon="pi pi-check" (click)="submitOrder()" styleClass="w-full mt-4"
-          [outlined]="true" [disabled]="loading" [loading]="loading">
+        <p-button label="Finalizar Venda" icon="pi pi-check" (click)="submitOrder()" size="large" styleClass="w-full"
+          [disabled]="loading" [loading]="loading">
         </p-button>
       </div>
       <div class="col-12 md:col-2 text-center md:text-left btn2">
         <!-- <p-splitButton class="pdf" label="Salvar" icon="pi pi-save" [model]="items"></p-splitButton> -->
-        <p-button class="button" icon="pi pi-file-pdf" iconPos="right" label="Salvar PDF"
+        <p-button class="button" severity="success" icon="pi pi-file-pdf" iconPos="right" label="Salvar PDF"
           (click)="saveBoxAsPdf()"></p-button>
       </div>
       <div class="col-12 md:col-2 text-center md:text-left btn2">
         <!-- <p-splitButton class="pdf" label="Salvar" icon="pi pi-save" [model]="items"></p-splitButton> -->
-        <p-button class="button" icon="pi pi-receipt" iconPos="right" label="Imprimir cupom"
+        <p-button class="button" severity="info" icon="pi pi-receipt" iconPos="right" label="Imprimir cupom"
           (click)="printReceipt()"></p-button>
 
       </div>
@@ -236,15 +233,30 @@
         {{ availableStock }}
       </span>
     </p>
+    <p>Preço de compra: {{ selectedProduct.purchasePrice | currency:'BRL':'symbol':'1.2-2' }}</p>
+    <p>
+      lucro: {{(editedPrice - selectedProduct.purchasePrice |
+      currency:'BRL':'symbol':'1.2-2')}}
+    </p>
+    <p>
+      Porcentagem de lucro: {{((editedPrice - selectedProduct.purchasePrice) / selectedProduct.purchasePrice *
+      100 |
+      number:'1.2-2')}}%
+    </p>
     <div class="p-field">
       <label for="editedPrice">Preço:</label>
       <input pInputText id="editedPrice" [(ngModel)]="editedPrice" currencyMask
         [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',' }" />
     </div>
 
-    <div class="p-mt-3">
-      <button pButton label="Salvar" (click)="saveEditedPrice()"></button>
-      <button pButton label="Cancelar" (click)="closeSidebar()" class="p-button-secondary"></button>
+    <div class="mt-2 p-mt-3 flex">
+      <div class="mr-2">
+        <button pButton label="Salvar" (click)="saveEditedPrice()"></button>
+      </div>
+      <div>
+        <button pButton label="Cancelar" (click)="closeSidebar()" class="p-button-secondary"></button>
+      </div>
+
     </div>
   </div>
 </p-sidebar>

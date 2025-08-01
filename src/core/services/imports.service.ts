@@ -42,6 +42,10 @@ import { DividerModule } from 'primeng/divider';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { AutoFocusModule } from 'primeng/autofocus';
+
 
 // PrimeNG Services
 import { MessageService } from 'primeng/api';
@@ -102,7 +106,10 @@ export class ImportsService {
     ToggleButtonModule,
     SelectButtonModule,
     ProgressSpinnerModule,
-    ScrollerModule
+    ScrollerModule,
+    InputGroupModule,
+    AutoFocusModule,
+    InputGroupAddonModule
   ];
 
   static providers = [

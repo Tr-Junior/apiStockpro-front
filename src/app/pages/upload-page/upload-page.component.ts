@@ -1,15 +1,14 @@
 import { Component } from '@angular/core';
-import { MessageService } from 'primeng/api';
-import { DataService } from '../../../../core/services/data.service';
-import { ImportsService } from '../../../../core/services/imports.service';
-import { Image } from '../../../../core/models/image.model';
-import { environment } from '../../../environments/environment.development';
+import { MessageService } from 'primeng/api';;
+import { Image } from '../../../core/models/image.model';
+import { UploadService } from '../../../core/api/upload/upload.service';
+import { ImportsService } from '../../../core/services/imports.service';
 
 @Component({
   selector: 'app-upload-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService, MessageService],
+  providers: [ImportsService.providers, MessageService],
   templateUrl: './upload-page.component.html',
   styleUrl: './upload-page.component.css'
 })
@@ -21,9 +20,10 @@ export class UploadPageComponent {
   logoImage: { filePath: string } | null = null;
   pdfImage: { filePath: string } | null = null;
   public imageUpload: Image[] = [];
+
   constructor(
     private messageService: MessageService,
-    private service: DataService
+    private uploadService: UploadService
   ) {}
 
   ngOnInit() {
@@ -45,7 +45,7 @@ export class UploadPageComponent {
     this.totalSizePercent = 0;
   }
 
-  onTemplatedUpload(event?: any) {
+  onTemplatedUpload(event?: any, clearCallback?: () => void) {
     const formData = new FormData();
 
     // Adiciona cada arquivo com o nome original
@@ -56,8 +56,8 @@ export class UploadPageComponent {
     console.log('Enviando arquivos:', this.files); // Para depuração
 
     const uploadObservable = this.uploadType === 'logo'
-      ? this.service.uploadLogo(formData)
-      : this.service.uploadPdf(formData);
+      ? this.uploadService.uploadLogo(formData)
+      : this.uploadService.uploadPdf(formData);
 
     uploadObservable.subscribe({
       next: () => {
@@ -70,6 +70,11 @@ export class UploadPageComponent {
 
         // Buscar a imagem atualizada do banco de dados
         this.getImages();
+        this.clear();
+
+        if (clearCallback) {
+          clearCallback();
+        }
       },
       error: () => {
         this.messageService.add({
@@ -100,11 +105,15 @@ export class UploadPageComponent {
   }
 
   getImages() {
-    this.service.getImages('logo').subscribe(
+    this.uploadService.getImages('logo').subscribe(
       (data: Image) => {
         if (data && data.imageUrl) {
+          // Garantir que a URL seja HTTPS
+          if (data.imageUrl.startsWith('http://')) {
+            data.imageUrl = data.imageUrl.replace('http://', 'https://');
+          }
+
           this.logoImage = { filePath: data.imageUrl };
-          console.log('Logo carregada do banco:', this.logoImage);
           localStorage.setItem('companyLogo', data.imageUrl);
         } else {
           console.warn('Nenhuma logo encontrada');
@@ -121,11 +130,15 @@ export class UploadPageComponent {
       }
     );
 
-    this.service.getImages('pdf').subscribe(
+    this.uploadService.getImages('pdf').subscribe(
       (data: Image) => {
         if (data && data.imageUrl) {
+          // Garantir que a URL seja HTTPS
+          if (data.imageUrl.startsWith('http://')) {
+            data.imageUrl = data.imageUrl.replace('http://', 'https://');
+          }
+
           this.pdfImage = { filePath: data.imageUrl };
-          console.log('PDF carregado do banco:', this.pdfImage);
           localStorage.setItem('companyPdf', data.imageUrl);
         } else {
           console.warn('Nenhuma imagem de PDF encontrada');
@@ -141,5 +154,11 @@ export class UploadPageComponent {
         });
       }
     );
+  }
+
+  clear() {
+    this.files = [];
+    this.totalSize = 0;
+    this.totalSizePercent = 0;
   }
 }

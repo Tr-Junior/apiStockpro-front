@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Component } from '@angular/core';
 import { ImportsService } from '../../../../../core/services/imports.service';
 import { BoxItem} from '../../../../../core/models/box-item.model';
@@ -5,41 +6,53 @@ import { BoxService } from '../../../../../core/services/box.Service';
 import { DataService } from '../../../../../core/services/data.service';
 import { Product } from '../../../../../core/models/product.model';
 import { debounceTime, distinctUntilChanged, map, of, Subject, switchMap, tap } from 'rxjs';
+=======
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ImportsService } from '../../../../core/services/imports.service';
+import { BoxItem} from '../../../../core/models/box-item.model';
+import { BoxService } from '../../../../core/services/box.Service';
+import { Product } from '../../../../core/models/product.model';
+import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
+>>>>>>> 883ce8c43193148e9bbd1fecea49be4e121dfcd6
 import { MenuItem, MessageService } from 'primeng/api';
-import { Budget } from '../../../../../core/models/budget.model';
-import { User } from '../../../../../core/models/user.model';
+import { Budget } from '../../../../core/models/budget.model';
+import { User } from '../../../../core/models/user.model';
 import { Security } from '../../../../utils/Security.util';
 import { PdfService } from '../../../../common/printPdf.service';
+import { ProductService } from '../../../../core/api/products/product.service';
+import { OrderService } from '../../../../core/api/order/order.service';
+import { BudgetService } from '../../../../core/api/budget/budget.service';
 
 @Component({
   selector: 'app-box-page',
   standalone: true,
   imports: [ImportsService.imports],
-  providers: [ImportsService.providers, DataService],
+  providers: [ImportsService.providers],
   templateUrl: './box-page.component.html',
   styleUrl: './box-page.component.css'
 })
-export class BoxPageComponent {
+export class BoxPageComponent implements OnInit, OnDestroy{
   public boxItems: BoxItem[] = [];
-  public subtotal: number = 0;
-  public grandTotal: number = 0;
+  public subtotal = 0;
+  public grandTotal = 0;
   public products: Product[] = [];
-  public currentPage: number = 1;
-  public totalPages: number = 0;
-  public searchQuery: string = '';
+  public currentPage = 1;
+  public totalPages = 0;
+  public searchQuery = '';
   public selectedPayment?: string;
-  public generalDiscount: number = 0;
+  public generalDiscount = 0;
   public loading = false;
   public searchQueryChanged = new Subject<string>();
-  public customerName: string = '';
+  public customerName = '';
   public filteredCustomers: string[] = [];
   public customerNames: string[] = [];
   public budgets: Budget[] = [];
   public items!: MenuItem[];
-  public sidebarVisible: boolean = false;
+  public sidebarVisible = false;
   public selectedProduct: Product | null = null;
-  public availableStock: number = 0;
+  public availableStock = 0;
   public user!: User;
+<<<<<<< HEAD
   public editedPrice: number | null = null;
   public total: number = 0;
   public totalTroco: number = 0;
@@ -47,10 +60,23 @@ export class BoxPageComponent {
   public checked: boolean = false;
   quantityChange$ = new Subject<{ item: BoxItem; quantity: number }>();
   private stockCache = new Map<string, number>();
+=======
+  public editedPrice = 0;
+  public total = null;
+  public totalTroco = 0;
+  public totalRecords = 0;
+  public checked = false;
+
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
+
+>>>>>>> 883ce8c43193148e9bbd1fecea49be4e121dfcd6
 
   constructor(
     private boxService: BoxService,
-    private service: DataService,
+    private productService: ProductService,
+    private orderService: OrderService,
+    private budgetService: BudgetService,
     private messageService: MessageService,
     private pdfService: PdfService
 
@@ -58,20 +84,20 @@ export class BoxPageComponent {
   }
 
 
-  async ngOnInit() {
+  ngOnInit(): void {
     this.user = Security.getUser();
-    this.boxService.items$.subscribe(items => {
+
+    Promise.all([this.listBudget(), this.loadCustomerNames(), this.loadCart()]);
+
+    this.boxService.items$.pipe(takeUntil(this.destroy$)).subscribe(items => {
       this.boxItems = items;
+      this.calculateTotals();
     });
 
-    await this.loadCart();
-    this.searchQueryChanged.pipe(
-      debounceTime(300),
-      distinctUntilChanged()
-    ).subscribe(query => {
-      this.searchQuery = query;
-      this.search();
+    this.searchSubject.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.search(1, true);
     });
+<<<<<<< HEAD
     this.loadCustomerNames();
 
       this.quantityChange$
@@ -97,6 +123,14 @@ export class BoxPageComponent {
       }
       this.calculateTotals();
     });
+=======
+
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+>>>>>>> 883ce8c43193148e9bbd1fecea49be4e121dfcd6
   }
 
   onQuantityChange(qty: number, item: BoxItem) {
@@ -114,27 +148,29 @@ private getAvailable$(id: string) {
 }
 
   getScrollHeight(): string {
-    const itemHeight = 46;
+    const itemHeight = 70;
     const totalItems = this.products.length;
     const maxHeight = 400;
-    const minHeight = 100;
+    const minHeight = 200;
 
     let calculatedHeight = totalItems * itemHeight;
-
     if (calculatedHeight < minHeight) {
-      calculatedHeight = minHeight;
+      calculatedHeight;
     } else if (calculatedHeight > maxHeight) {
       calculatedHeight = maxHeight;
     }
-
     return `${calculatedHeight}px`;
   }
 
+  onSearchChange(): void {
+    // Atualiza o valor da pesquisa e dispara o debounce
+    this.searchSubject.next(this.searchQuery);
+  }
 
   search(page: number = 1, reset: boolean = false): void {
-    const trimmedQuery = (this.searchQuery || '').trim();
+    const trimmedQuery = this.searchQuery.trim();
     if (!trimmedQuery) {
-      this.clearSearch();
+      if (reset) this.clearSearch();
       return;
     }
 
@@ -145,28 +181,22 @@ private getAvailable$(id: string) {
 
     this.loading = true;
 
-    this.service.searchProduct({ title: trimmedQuery, page, limit: 25 }).subscribe({
-      next: (response: any) => {
-        if (reset) {
-          this.products = response.products;
-        } else {
-          this.products.push(...response.products);
-        }
-
-        this.totalRecords = response.totalRecords;
-        this.totalPages = Math.ceil(response.totalRecords / 25);
-        this.currentPage = page;
-        this.loading = false;
-      },
-      error: (err: any) => {
-        this.loading = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erro ao Buscar Produtos',
-          detail: 'Houve um erro ao tentar buscar os produtos. ' + (err.message || 'Tente novamente mais tarde.')
-        });
-      }
-    });
+    this.productService
+      .searchProduct({ title: trimmedQuery, page, limit: 25 })
+      .pipe(takeUntil(this.destroy$)) // Evita vazamento de memória
+      .subscribe({
+        next: ({ products, totalRecords }) => {
+          this.products = reset ? products : [...this.products, ...products];
+          this.totalRecords = totalRecords;
+          this.totalPages = Math.ceil(totalRecords / 25);
+          this.currentPage = page;
+          this.loading = false;
+        },
+        error: (err) => {
+          this.loading = false;
+          console.error('Erro de pesquisa', err);
+        },
+      });
   }
 
   loadDataLazy(event: any): void {
@@ -177,7 +207,7 @@ private getAvailable$(id: string) {
     this.loading = true;
     const nextPage = this.currentPage + 1;
 
-    this.service.searchProduct({ title: this.searchQuery.trim(), page: nextPage, limit: 25 }).subscribe({
+    this.productService.searchProduct({ title: this.searchQuery.trim(), page: nextPage, limit: 25 }).subscribe({
       next: (response: any) => {
         this.products.push(...response.products);
         this.totalRecords = response.totalRecords;
@@ -196,71 +226,101 @@ private getAvailable$(id: string) {
     });
   }
 
-
-
-
   clearSearch(): void {
     this.searchQuery = '';
     this.products = [];
   }
-
-
 
   async loadCart() {
     this.boxItems = await this.boxService.getItems();
     this.calculateTotals();
   }
 
-  async addToBox(data: any): Promise<void> {
+ async addToBox(data: any): Promise<void> {
     const product = this.products.find(p => p._id === data._id);
 
     if (!product) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Produto Não Encontrado',
-        detail: 'Produto não encontrado no estoque.'
-      });
-      return;
-    }
-
-    const existingItem = this.boxItems.find(item => item._id === product._id);
-
-    if (existingItem && existingItem.quantity >= product.quantity) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Quantidade Excedida',
-        detail: `Não é possível adicionar mais do que ${product.quantity} unidades de ${product.title}.`
-      });
-      return;
-    }
-
-    const newItem: BoxItem = existingItem
-      ? { ...existingItem, quantity: existingItem.quantity + 1 }
-      : { _id: product._id, title: product.title, price: product.price, purchasePrice: product.purchasePrice,  quantity: 1, discount: 0  };
-
-    await this.boxService.addItem(newItem);
-
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Item Adicionado',
-      detail: `${product.title} foi adicionado ao carrinho.`
-    });
-
-    await this.loadCart();
-  }
-
-  updateQuantity(newQuantity: number, item: BoxItem): void {
-    if (newQuantity <= 0) {
         this.messageService.add({
-            severity: 'warn',
-            summary: 'Aviso',
-            detail: 'Quantidade zerada. verifique os itens antes de continuar.'
+            severity: 'error',
+            summary: 'Produto Não Encontrado',
+            detail: 'Produto não encontrado no estoque.'
         });
         return;
     }
 
+<<<<<<< HEAD
 
     this.service.getProductById(item._id).subscribe({
+=======
+    // Obtém a quantidade já reservada nos orçamentos
+    const { quantity: reservedQuantity, clients } = this.getQuantityInBudget(product._id);
+
+    // Quantidade disponível real no estoque considerando os orçamentos
+    const availableStock = product.quantity - reservedQuantity;
+
+    if (availableStock <= 0) {
+        this.messageService.add({
+            severity: 'error',
+            summary: 'Estoque Indisponível',
+            detail: `Todo o estoque de ${product.title} já está reservado para clientes: ${clients.join(', ')}.`
+        });
+        return;
+    }
+
+    const existingItem = this.boxItems.find(item => item._id === product._id);
+
+    if (existingItem) {
+        // Se o item já existe, verifica se pode adicionar mais
+        if (existingItem.quantity + 1 > availableStock) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Quantidade Excedida',
+                detail: `Não é possível adicionar mais do que ${availableStock} unidades de ${product.title}.`
+            });
+            return;
+        }
+
+        // Incrementa a quantidade e atualiza no sessionStorage
+        existingItem.quantity += 1;
+        this.boxService.updateItem(existingItem);
+    } else {
+        // Adiciona um novo item ao carrinho
+        const newItem: BoxItem = {
+            _id: product._id,
+            title: product.title,
+            price: product.price,
+            purchasePrice: product.purchasePrice,
+            quantity: 1,
+            discount: 0
+        };
+
+        await this.boxService.addItem(newItem);
+    }
+
+    this.messageService.add({
+        severity: 'success',
+        summary: 'Item Adicionado',
+        detail: `${product.title} foi adicionado ao carrinho.`
+    });
+
+    // Recarrega os itens do carrinho para garantir atualização
+    this.boxItems = this.boxService.getItems();
+    await this.loadCart();
+    this.calcTroco();
+}
+
+  updateQuantity(newQuantity: number, item: BoxItem, isFinalUpdate: boolean = false): void {
+    if (newQuantity <= 0) {
+        this.messageService.add({
+            severity: 'warn',
+            summary: 'Aviso',
+            detail: 'Quantidade zerada. Verifique os itens antes de continuar.'
+        });
+        return;
+    }
+
+    this.productService.getProductById(item._id).subscribe({
+>>>>>>> 883ce8c43193148e9bbd1fecea49be4e121dfcd6
         next: (product) => {
             if (!product) {
                 this.messageService.add({
@@ -271,20 +331,44 @@ private getAvailable$(id: string) {
                 return;
             }
 
-            const availableQuantity = product.quantity;
+            // Obtém a quantidade reservada nos orçamentos
+            const { quantity: reservedQuantity, clients } = this.getQuantityInBudget(product._id);
 
-            if (newQuantity > availableQuantity) {
+            // Estoque disponível considerando os orçamentos
+            const availableStock = product.quantity - reservedQuantity;
+
+            if (availableStock <= 0) {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Estoque Insuficiente',
+                    detail: `Todo o estoque de ${product.title} já está reservado para clientes: ${clients.join(', ')}.`
+                });
+                return;
+            }
+
+            if (newQuantity > availableStock) {
                 this.messageService.add({
                     severity: 'warn',
                     summary: 'Aviso',
-                    detail: `Quantidade disponível em estoque: ${availableQuantity}`
+                    detail: `Quantidade disponível em estoque considerando orçamentos: ${availableStock}`
                 });
-                item.quantity = availableQuantity; // Ajusta para a quantidade máxima disponível
+                item.quantity = availableStock; // Ajusta para a quantidade máxima disponível
             } else {
                 item.quantity = newQuantity; // Atualiza para o valor inserido
             }
 
+            // ✅ Atualiza apenas no sessionStorage silenciosamente
+            const items = this.boxService.getItems();
+            const updatedItems = items.map(i => i._id === item._id ? { ...i, quantity: item.quantity } : i);
+            this.boxService['updateStorageSilent'](updatedItems);
+
+            // ✅ Só emite a atualização quando o usuário finalizar a edição
+            if (isFinalUpdate) {
+                this.boxService.updateItem(item);
+            }
+
             this.calculateTotals();
+            this.calcTroco();
         },
         error: (err) => {
             console.error('Erro ao buscar produto pelo ID:', err);
@@ -297,20 +381,21 @@ private getAvailable$(id: string) {
     });
 }
 
+
   async remove(data: any): Promise<void> {
     await this.boxService.removeItem(data._id);
     await this.loadCart();
   }
 
-  async clearCart(): Promise<void> {
-    await this.boxService.clearBox();
-    await this.loadCart();
-  }
 
   calculateTotals(): void {
     this.subtotal = this.boxItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const discountValue = this.subtotal * (this.generalDiscount / 100);
-    this.grandTotal = this.subtotal - discountValue;
+    this.grandTotal = this.subtotal * (1 - this.generalDiscount / 100);
+    this.calcTroco();
+  }
+
+  calcTroco(): void {
+    this.totalTroco = Math.max(0, (this.total || 0) - this.grandTotal);
   }
 
   updateGeneralDiscount(discount: number): void {
@@ -360,15 +445,16 @@ private getAvailable$(id: string) {
 
     // Simula um atraso de 2 segundos (2000 ms) antes de finalizar a venda
     setTimeout(() => {
-        this.service.createOrder(order).subscribe({
+        this.orderService.createOrder(order).subscribe({
             next: () => {
                 this.messageService.add({
                     severity: 'success',
                     summary: 'Venda Finalizada',
                     detail: 'Pedido realizado com sucesso!'
                 });
-                this.clearCart();
+                this.clearBox();
                 this.selectedPayment = undefined;
+                this.clearSearch();
             },
             error: err => {
                 this.messageService.add({
@@ -377,14 +463,11 @@ private getAvailable$(id: string) {
                     detail: 'Falha ao finalizar a venda: ' + (err.message || 'Erro desconhecido.')
                 });
                 this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao finalizar a venda.' });
-      console.error('Erro ao criar venda:', err);
-      console.error('Erro ao criar venda:', validItems);
-
             }
         });
 
-        this.loading = false; // Desativa o loading após a execução
-    }, 1000); // Atraso de 2 segundos
+        this.loading = false;
+    }, 500);
 }
 
 private createOrderObject(validItems: any[]): any {
@@ -406,17 +489,13 @@ private createOrderObject(validItems: any[]): any {
 }
 
 
-
-calcTroco() {
-  // Certifique-se de tratar NaN para evitar problemas ao calcular
-  const totalParsed = this.total || 0;
-  const grandTotalParsed = this.grandTotal || 0;
-  this.totalTroco = totalParsed - grandTotalParsed;
-
-  // Caso o valor recebido seja menor que o total, o troco é 0
-  if (this.totalTroco < 0) {
-    this.totalTroco = 0;
-  }
+listBudget() {
+  this.budgetService.getBudget().subscribe({
+   next: (data: Budget[]) => {
+      this.budgets = data;
+    },
+    error: (error) => console.error(error)
+  });
 }
 
 filterCustomer(event: any) {
@@ -425,7 +504,7 @@ filterCustomer(event: any) {
 }
 
 loadCustomerNames() {
-  this.service.getBudget().subscribe({
+  this.budgetService.getBudget().subscribe({
     next: (data: Budget[]) => {
       this.customerNames = data.map(budget => budget.client);
     },
@@ -465,15 +544,16 @@ async createBudget() {
     };
 
     // Envia o orçamento ao backend
-    const data: any = await this.service.createBudget(budget).toPromise();
+    const data: any = await this.budgetService.createBudget(budget).toPromise();
     this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: data.message });
 
-    // Limpa o armazenamento local
-    await this.boxService.clearBox();
-    this.customerName = ''; // Limpa o nome do cliente
+    this.clearBox();
+    this.customerName = '';
     this.grandTotal = 0;
-    //await this.listBudget();
-    await this.loadCustomerNames();
+    this.subtotal = 0;
+    this.totalTroco = 0;
+    this.listBudget();
+    this.loadCustomerNames();
   } catch (err: any) {
     console.error(err);
     this.messageService.add({ severity: 'error', summary: 'Erro', detail: err.message });
@@ -482,6 +562,12 @@ async createBudget() {
 
 async clearBox() {
   await this.boxService.clearBox();
+    await this.loadCart();
+    this.grandTotal = 0;
+    this.subtotal = 0;
+    this.totalTroco = 0;
+    this.total = null;
+    this.generalDiscount = 0;
 }
 
 
@@ -511,7 +597,7 @@ openSidebar(product: Product): void {
   this.sidebarVisible = true;
 
   // Obter a quantidade real em estoque diretamente do banco
-  this.service.getProductById(product._id).subscribe({
+  this.productService.getProductById(product._id).subscribe({
       next: (productFromDb) => {
           if (!productFromDb) {
               this.messageService.add({
@@ -557,7 +643,11 @@ saveEditedPrice(): void {
     const boxItem = this.boxItems.find(item => item._id === this.selectedProduct!._id);
 
     if (boxItem) {
-      boxItem.price = this.editedPrice; // Atualiza o preço apenas para esta venda
+      boxItem.price = this.editedPrice; // Atualiza o preço no array boxItems
+
+      // Atualiza o sessionStorage
+      sessionStorage.setItem('Box_Items', JSON.stringify(this.boxItems));
+
       this.calculateTotals(); // Recalcula os totais
       this.messageService.add({
         severity: 'success',
@@ -569,10 +659,11 @@ saveEditedPrice(): void {
   }
 }
 
+
 closeSidebar(): void {
   this.sidebarVisible = false;
   this.selectedProduct = null;
-  this.editedPrice = null;
+  this.editedPrice = 0;
 }
 
 
@@ -611,7 +702,6 @@ async printReceipt() {
       this.subtotal,               // Subtotal
       this.grandTotal,             // Total com desconto
       this.generalDiscount,        // Desconto geral
-      this.customerName || '',     // Nome do cliente (ou vazio, caso não informado)
       this.selectedPayment || 'Não especificado' // Método de pagamento
     );
 

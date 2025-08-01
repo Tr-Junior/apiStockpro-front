@@ -1,7 +1,7 @@
 <form [formGroup]="form" class="card form-container py-2 mt-1" (keydown.enter)="submit()">
   <div class="form-item">
     <span class="font-bold block mb-2">Nome do Produto</span>
-    <input pInputText type="text" [(ngModel)]="searchQuery" (ngModelChange)="search()" class="w-full" pInputText
+    <input pInputText type="text" [(ngModel)]="searchQuery" (input)="filterProducts()" class="w-full" pInputText
       id="product" formControlName="title"
       [ngClass]="{'uk-form-danger': (!form.controls['title'].valid && !form.controls['title'].pristine) }" />
   </div>
@@ -19,13 +19,18 @@
   <p-toolbar styleClass="mb-4 gap-2">
     <ng-template pTemplate="left">
       <button pButton pRipple [label]="'Excluir Selecionados'" icon="pi pi-trash" class="p-button-danger"
-        (click)="deleteSelectedProducts()" [disabled]="!selectedProducts || !selectedProducts.length"></button>
+        (click)="confirmDeleteSelected()" [disabled]="!selectedProducts || !selectedProducts.length">
+      </button>
+      <div class="m-2"></div>
+      <button pButton pRipple label="Gerar PDF" icon="pi pi-file-pdf" class="p-button-warning" (click)="generatePDF()"
+        [disabled]="!selectedProducts || !selectedProducts.length">
+      </button>
     </ng-template>
   </p-toolbar>
 
-  <p-table [value]="productsBuy" selectionMode="multiple" [(selection)]="selectedProducts"
+  <p-table [value]="filteredProducts" selectionMode="multiple" [(selection)]="selectedProducts"
     [metaKeySelection]="metaKeySelection" dataKey="_id" editMode="row" [scrollable]="true" scrollHeight="460px"
-    class="responsive-table" [globalFilterFields]="['title']">
+    class="responsive-table">
     <ng-template pTemplate="header">
       <tr>
         <th style="width:3%">
@@ -65,3 +70,4 @@
     </ng-template>
   </p-table>
 </div>
+<p-confirmDialog></p-confirmDialog>

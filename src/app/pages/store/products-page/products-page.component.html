@@ -1,56 +1,28 @@
 <div class="card p-3">
   <p-toast></p-toast>
-  <app-product-registration-page class="hide-on-small"></app-product-registration-page>
+  <app-product-registration-page class="hide-on-small" (productSaved)="listProd()"></app-product-registration-page>
   <!-- Toolbar - Visível apenas em telas menores que 500px -->
   <p-toolbar styleClass="mb-4 gap-2 show-on-small">
     <ng-template pTemplate="left">
-      <p-button severity="success" label="Novo" icon="pi pi-plus" class="mr-2" (onClick)="showDialog()">
+      <p-button severity="success" label="Novo" icon="pi pi-plus" class="mr-2" (click)="showDialog()">
       </p-button>
       <p-dialog header="Novo Produto" [(visible)]="displayDialog" [modal]="true" [closable]="true">
-        <app-product-registration-page (onCancel)="closeDialog()"></app-product-registration-page>
+        <app-product-registration-page (onCancel)="closeDialog()"
+          (productSaved)="listProd()"></app-product-registration-page>
       </p-dialog>
 
     </ng-template>
 
     <ng-template pTemplate="right">
-      <p-button severity="help" label="Exportar" icon="pi pi-file-excel" (onClick)="exportToExcel()"></p-button>
+      <p-button severity="help" label="Exportar" icon="pi pi-file-excel" (click)="exportToExcel()"></p-button>
     </ng-template>
   </p-toolbar>
-
-  <div *ngIf="isLoading">
-    <p-table [value]="[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]" responsiveLayout="scroll" class="p-datatable-striped">
-      <ng-template pTemplate="header">
-        <tr>
-          <th></th>
-          <th>produto</th>
-          <th>Estoque</th>
-          <th>Em orçamento</th>
-          <th>Fornecedor</th>
-          <th>Valor de compra</th>
-          <th>Valor de Venda</th>
-          <th>Ações</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-row>
-        <tr>
-          <td><p-skeleton></p-skeleton></td>
-          <td><p-skeleton></p-skeleton></td>
-          <td><p-skeleton></p-skeleton></td>
-          <td><p-skeleton></p-skeleton></td>
-          <td><p-skeleton></p-skeleton></td>
-          <td><p-skeleton></p-skeleton></td>
-          <td><p-skeleton></p-skeleton></td>
-          <td><p-skeleton></p-skeleton></td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </div>
-
   <!-- Data Table -->
-  <p-table *ngIf="!isLoading" dataKey="_id" editMode="row" [paginator]="true" [rows]="limit" [first]="offset"
+  <p-table dataKey="_id" editMode="row" [paginator]="true" [rows]="limit" [first]="offset" [totalRecords]="total"
     [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} produtos"
-    [rowsPerPageOptions]="[100, 150, 200, 250, 350, 500]" [tableStyle]="{'min-width': '50rem'}" [totalRecords]="total"
+    [rowsPerPageOptions]="[100, 150, 200, 250, 350, 500]" [tableStyle]="{'min-width': '50rem'}"
     styleClass="p-datatable-striped" [value]="filteredProducts" [lazy]="true" (onPage)="pageChange($event)">
+
     <!-- Caption with Search -->
     <ng-template pTemplate="caption">
       <div class="flex align-items-center justify-content-between gap-3">
@@ -58,15 +30,15 @@
         <div class="flex align-items-center gap-2">
           <p-iconField iconPosition="left">
             <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
-            <input type="text" pInputText placeholder="Pesquisar produtos..." [(ngModel)]="searchQuery"
-              (ngModelChange)="search()" />
+            <input type="text" pAutoFocus [autofocus]="true" pInputText placeholder="Pesquisar produtos..."
+              [(ngModel)]="searchQuery" (ngModelChange)="search()" />
           </p-iconField>
-          <p-button icon="pi pi-times" styleClass="p-button-danger p-button-text" (onClick)="clearSearch()"
+          <p-button icon="pi pi-times" styleClass="p-button-danger p-button-text" (click)="clearSearch()"
             [disabled]="!searchQuery"></p-button>
         </div>
 
         <!-- Botão Exportar -->
-        <p-button severity="help" label="Exportar" icon="pi pi-file-excel" (onClick)="exportToExcel()"
+        <p-button severity="help" label="Exportar" icon="pi pi-file-excel" (click)="exportToExcel()"
           class="export-button">
         </p-button>
       </div>
@@ -110,7 +82,7 @@
         <td style="text-align: center">
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <input pInputText type="text" [(ngModel)]="selectedProduct.title" required>
+              <input style=" width: 100%;" pInputText type="text" [(ngModel)]="selectedProduct.title" required>
             </ng-template>
             <ng-template pTemplate="output">
               {{product.title}}
@@ -119,30 +91,34 @@
         </td>
         <td style="text-align: center">
           <p-cellEditor>
+            <!-- Modo de Edição -->
             <ng-template pTemplate="input">
-              <input size="6" pInputText type="text" pKeyFilter="num" id="number"
+              <input size="3" pInputText type="text" pKeyFilter="num" id="number"
                 onkeypress="return event.charCode >= 48 && event.charCode <= 57" [(ngModel)]="selectedProduct.quantity"
                 required>
             </ng-template>
             <ng-template pTemplate="output">
               <div pTooltip="Em orçamentos: {{ getQuantityInBudget(product._id).quantity }}
-                                       Clientes: {{ getQuantityInBudget(product._id).clients.join(', ') }}"
-                tooltipPosition="top" [ngClass]="{'outofstock': (product.quantity - getQuantityInBudget(product._id).quantity) === 0,
-                               'lowstock': ((product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
-                                            (product.quantity - getQuantityInBudget(product._id).quantity) <= 10),
-                               'instock': (product.quantity - getQuantityInBudget(product._id).quantity) > 10}">
+                             Clientes: {{ getQuantityInBudget(product._id).clients.join(', ') }}" tooltipPosition="top"
+                [ngClass]="{
+                  'outofstock': (product.quantity - getQuantityInBudget(product._id).quantity) === 0,
+                  'lowstock': ((product.quantity - getQuantityInBudget(product._id).quantity) > 0 &&
+                              (product.quantity - getQuantityInBudget(product._id).quantity) <= product.min_quantity),
+                  'instock': ((product.quantity - getQuantityInBudget(product._id).quantity) >= 1)
+                }">
                 <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) > 0">
                   {{ product.quantity - getQuantityInBudget(product._id).quantity }}
                 </span>
+
                 <span *ngIf="(product.quantity - getQuantityInBudget(product._id).quantity) === 0" class="badge">
                   Fora de Estoque
                 </span>
               </div>
             </ng-template>
-
           </p-cellEditor>
-
         </td>
+
+
         <td style="text-align: center">
           <p-cellEditor>
             <ng-template pTemplate="input">
@@ -161,7 +137,17 @@
             <ng-template pTemplate="input">
               <p-autoComplete [appendTo]="'body'" [size]="3" [(ngModel)]="selectedProduct.supplier"
                 [suggestions]="filteredSuppliers" (completeMethod)="filterSuppliers($event)" field="name"
-                [dropdown]="true" placeholder="Selecione um fornecedor"></p-autoComplete>
+                [dropdown]="true" placeholder="Selecione um fornecedor">
+                <ng-template let-supplier pTemplate="item">
+                  <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <span>{{ supplier.name }}</span>
+                    <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger small"
+                      (click)="deleteSupplier(supplier, $event)" size="small">
+                    </button>
+                  </div>
+                </ng-template>
+              </p-autoComplete>
+
             </ng-template>
             <ng-template pTemplate="output">
               <span style="text-transform: uppercase;">
@@ -174,8 +160,13 @@
         <td style="text-align: center">
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <p-inputNumber [size]="6" pKeyFilter="num" inputId="currency-user" mode="currency" currency="BRL"
-                locale="pt" [(ngModel)]="selectedProduct.purchasePrice"></p-inputNumber>
+              <p-inputGroup>
+                <p-inputGroupAddon>R$</p-inputGroupAddon>
+                <p-inputNumber size="6" id="editedPrice" [(ngModel)]="selectedProduct.purchasePrice"
+                  inputId="minmaxfraction" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="5" />
+              </p-inputGroup>
+              <!-- <input pInputText size="6" id="editedPrice" [(ngModel)]="selectedProduct.purchasePrice" currencyMask
+                [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',' }" /> -->
             </ng-template>
             <ng-template pTemplate="output">
               {{product.purchasePrice | currency: 'BRL':'symbol':'1.2-2' }}
@@ -185,8 +176,13 @@
         <td style="text-align: center">
           <p-cellEditor>
             <ng-template pTemplate="input">
-              <p-inputNumber [size]="6" pKeyFilter="num" id="number" inputId="currency-user" mode="currency"
-                currency="BRL" locale="br" [(ngModel)]="selectedProduct.price"></p-inputNumber>
+              <p-inputGroup>
+                <p-inputGroupAddon>R$</p-inputGroupAddon>
+                <p-inputNumber size="6" id="editedPrice" [(ngModel)]="selectedProduct.price" inputId="minmaxfraction"
+                  mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="5" />
+              </p-inputGroup>
+              <!-- <input pInputText size="6" id="editedPrice" [(ngModel)]="selectedProduct.price" currencyMask
+                [options]="{ prefix: 'R$ ', thousands: '.', decimal: ',' }" /> -->
             </ng-template>
             <ng-template pTemplate="output">
               {{product.price | currency: 'BRL':'symbol':'1.2-2' }}
@@ -196,7 +192,7 @@
         <td style="text-align: center">
           <div class="flex align-items-center justify-content-center gap-3">
             <p-button *ngIf="!editing" icon="pi pi-cart-plus"
-              styleClass="p-button-rounded p-button-success p-button-outlined">
+              styleClass="p-button-rounded p-button-success p-button-outlined" (click)="addToBox(product)">
             </p-button>
             <button *ngIf="!editing" pButton pRipple type="button" pInitEditableRow icon="pi pi-pencil"
               (click)="onRowEditInit(product)" class="p-button-rounded p-button-warning p-button-outlined">

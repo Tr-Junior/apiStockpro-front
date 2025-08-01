@@ -1,19 +1,21 @@
 import { Component } from '@angular/core';
-import { DataService } from '../../../../../core/services/data.service';
-import { ImportsService } from '../../../../../core/services/imports.service';
-import { Product } from '../../../../../core/models/product.model';
-import { Entrances } from '../../../../../core/models/entrances.model';
+import { ImportsService } from '../../../../core/services/imports.service';
+import { Product } from '../../../../core/models/product.model';
+import { Entrances } from '../../../../core/models/entrances.model';
 import { Router } from '@angular/router';
 import { PrimeNGConfig } from 'primeng/api';
-import { Exits } from '../../../../../core/models/exits.model';
+import { Exits } from '../../../../core/models/exits.model';
 import { Security } from '../../../../utils/Security.util';
 import { ChartPageComponent } from '../../../components/chart-page/chart-page.component';
+import { ExitsService } from '../../../../core/api/exits/exits.service';
+import { EntrancesService } from '../../../../core/api/entrances/entrances.service';
+import { ProductService } from '../../../../core/api/products/product.service';
 
 @Component({
   selector: 'app-costs-page',
   standalone: true,
   imports: [ImportsService.imports, ChartPageComponent],
-  providers: [ImportsService.providers, DataService],
+  providers: [ImportsService.providers],
   templateUrl: './costs-page.component.html',
   styleUrl: './costs-page.component.css'
 })
@@ -37,23 +39,13 @@ export class CostsPageComponent {
   product: Product[] = [];
 
   constructor(
-    private service: DataService,
+    private exitsService: ExitsService,
+    private entrancesService: EntrancesService,
+    private productService: ProductService,
     private primengConfig: PrimeNGConfig,
     private router: Router
 
-  ) {
-
-    this.ptBR = {
-      firstDayOfWeek: 0,
-      dayNames: ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"],
-      dayNamesShort: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
-      dayNamesMin: ["Do", "Se", "Te", "Qu", "Qu", "Se", "Sa"],
-      monthNames: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"],
-      monthNamesShort: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
-      today: 'Hoje',
-      clear: 'Limpar'
-    };
-  }
+  ) {}
 
   ngOnInit() {
     Security.clearPass();
@@ -65,11 +57,10 @@ export class CostsPageComponent {
     this.listExits();
     this.primengConfig.setTranslation(this.ptBR);
     this.listProd();
-
   };
 
   listExits() {
-    this.service.getExits().subscribe((data: any) => {
+    this.exitsService.getExits().subscribe((data: any) => {
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth();
       const currentYear = currentDate.getFullYear();
@@ -83,7 +74,7 @@ export class CostsPageComponent {
   }
 
   listEntrances() {
-    this.service.getEntrances().subscribe((data: any) => {
+    this.entrancesService.getEntrances().subscribe((data: any) => {
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth();
       const currentYear = currentDate.getFullYear();
@@ -117,9 +108,9 @@ export class CostsPageComponent {
   }
 
   getInOutByDateRange(startDate: Date, endDate: Date) {
-    this.service.getExits().subscribe(
+    this.exitsService.getExits().subscribe(
       (exitsData: any) => {
-        this.service.getEntrances().subscribe(
+        this.entrancesService.getEntrances().subscribe(
           (entrancesData: any) => {
             const start = new Date(startDate);
             const end = new Date(endDate);
@@ -150,6 +141,7 @@ export class CostsPageComponent {
     this.listEntrances();
   }
 
+<<<<<<< HEAD
  listProd() {
   this.busy = true;
   this.service
@@ -174,4 +166,32 @@ export class CostsPageComponent {
   }, 0);
 }
 
+=======
+  listProd(page: number = 1, limit: number = 3000) {
+    this.busy = true;
+
+    const params = { page: page.toString(), limit: limit.toString() };
+
+    this.productService.getProducts(params).subscribe(
+      (data: any) => {
+        this.busy = false;
+        this.product = data.data; // Ajuste se a resposta do backend tiver um campo "data"
+        this.totalPurchaseValue = this.calculateTotalPurchaseValue(this.product);
+      },
+      (error) => {
+        console.error('Erro ao carregar produtos:', error);
+        this.busy = false;
+      }
+    );
+  }
+
+
+  calculateTotalPurchaseValue(products: Product[]): number {
+    let totalValue = 0;
+    for (const product of products) {
+      totalValue += product.purchasePrice * product.quantity;
+    }
+    return totalValue;
+  }
+>>>>>>> 883ce8c43193148e9bbd1fecea49be4e121dfcd6
 }

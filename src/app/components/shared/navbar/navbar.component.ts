@@ -6,12 +6,11 @@ import { Router, NavigationEnd } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
 import { ButtonModule } from 'primeng/button';
 import { Security } from '../../../../utils/Security.util';
-import { User } from '../../../../../core/models/user.model';
+import { User } from '../../../../core/models/user.model';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { MenuModule } from 'primeng/menu';
-import { DataService } from '../../../../../core/services/data.service';
-import { ImportsService } from '../../../../../core/services/imports.service';
-import { BoxService } from '../../../../../core/services/box.Service';
+import { ImportsService } from '../../../../core/services/imports.service';
+import { UploadService } from '../../../../core/api/upload/upload.service';
 
 @Component({
     selector: 'app-navbar',
@@ -19,7 +18,7 @@ import { BoxService } from '../../../../../core/services/box.Service';
     styleUrls: ['./navbar.component.css'],
     standalone: true,
     imports: [MenubarModule, CommonModule, AvatarModule, ButtonModule, OverlayPanelModule, MenuModule, ImportsService.imports],
-      providers: [ImportsService.providers, DataService, MessageService],
+      providers: [ImportsService.providers, MessageService],
 })
 export class NavbarComponent implements OnInit {
   items: MenuItem[] = [];
@@ -28,8 +27,9 @@ export class NavbarComponent implements OnInit {
   userItems: MenuItem[] = [];
   logoUrl: string = ''; // Variável para armazenar a URL da logo
 
-  constructor(private router: Router, private service: DataService,
-        private boxService: BoxService,
+  constructor(
+    private router: Router,
+    private uploadService: UploadService,
 
   ) {}
 
@@ -55,7 +55,7 @@ export class NavbarComponent implements OnInit {
       this.userItems = [
           { label: 'Cadastro de usuário', icon: 'pi pi-user-plus', routerLink: '/account/new-user' },
           { label: 'Alterar senha', icon: 'pi pi-key', routerLink: '/account/passwordChange' },
-          { label: 'Informações da empresa', icon: 'pi pi-key', routerLink: '/company' }
+          { label: 'Informações da empresa', icon: 'pi pi-building', routerLink: '/company' }
       ];
 
       this.updateActiveItem(this.router.url);
@@ -74,7 +74,7 @@ export class NavbarComponent implements OnInit {
   }
 
   loadCompanyLogo() {
-      this.service.getImages('logo').subscribe(
+      this.uploadService.getImages('logo').subscribe(
           (data: any) => {
               if (data && data.imageUrl) {
                   this.logoUrl = data.imageUrl; // URL da imagem recebida
